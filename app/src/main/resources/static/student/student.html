@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>Candidate Instruction Manual | SRM INSIDER LAB</title>
+    <link rel="icon" type="image/x-icon" href="/icons/favicon.ico">
+    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192x192.png">
+    <link rel="apple-touch-icon" href="/icons/icon-192x192.png">
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="description" content="Review exam rules, proctoring requirements, and instructions before starting your assessment.">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class'
+        };
+        // Apply default theme (Dark theme default)
+        const savedTheme = localStorage.getItem('app_theme') || 'dark';
+        if (savedTheme === 'dark') {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .font-mono { font-family: 'JetBrains Mono', monospace; }
+
+        /* Custom scrollbars */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #000000; }
+        ::-webkit-scrollbar-thumb { background: #262626; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #3f3f46; }
+
+        /* Pure OLED / Jet Black Dark Theme */
+        html.dark, html.dark body {
+            background-color: #000000 !important;
+            color: #ffffff !important;
+        }
+        html.dark header {
+            background-color: #0a0a0a !important;
+            border-color: #222222 !important;
+        }
+        html.dark .bg-white,
+        html.dark .bg-slate-900,
+        html.dark [class*="bg-slate-900"] {
+            background-color: #0f0f0f !important;
+            border-color: #222222 !important;
+        }
+        html.dark .bg-slate-50,
+        html.dark .bg-slate-800,
+        html.dark [class*="bg-slate-800"] {
+            background-color: #141414 !important;
+            border-color: #222222 !important;
+        }
+        html.dark select {
+            background-color: #181818 !important;
+            border-color: #2c2c2c !important;
+            color: #ffffff !important;
+        }
+        html.dark footer {
+            background-color: #0a0a0a !important;
+            border-color: #222222 !important;
+        }
+        html.dark [class*="border-slate-800"],
+        html.dark [class*="border-slate-700"] {
+            border-color: #222222 !important;
+        }
+    </style>
+</head>
+<body class="bg-slate-100 dark:bg-black text-slate-900 dark:text-white min-h-screen flex flex-col font-sans transition-colors duration-200">
+
+    
+    <header class="bg-white dark:bg-[#0a0a0a] border-b border-slate-200 dark:border-[#222222] px-6 py-3.5 flex justify-between items-center z-20 shadow-xs flex-shrink-0 transition-colors">
+        <div class="flex items-center space-x-3">
+            <img src="/icons/icon-192x192.png" alt="SRM INSIDER LAB" class="w-8 h-8 rounded-lg object-contain shadow-md">
+            <div>
+                <h1 class="font-bold text-slate-800 dark:text-white text-base leading-tight">SRM INSIDER LAB</h1>
+                <p class="text-xs text-slate-500 dark:text-zinc-400 font-medium">Candidate Instruction Manual & Examination Rules</p>
+            </div>
+        </div>
+
+        <div class="flex items-center space-x-3">
+            
+            <button onclick="toggleTheme()" id="themeToggleBtn" class="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-semibold shadow-2xs transition hover:bg-slate-200 dark:hover:bg-slate-700 cursor-pointer" title="Toggle Dark / Light Theme">
+                <span id="themeToggleIcon">🌙</span>
+                <span id="themeToggleText">Dark</span>
+            </button>
+
+            
+            <div id="candidateNavbarPill" class="flex items-center space-x-2 px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 shadow-2xs">
+                <div id="candidateAvatar" class="w-6 h-6 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 text-white font-bold text-[10px] flex items-center justify-center shadow-xs">ST</div>
+                <div class="flex flex-col text-left">
+                    <span id="candidateBadge" class="text-xs font-bold leading-tight truncate max-w-[160px]">Student Name</span>
+                    <span id="candidateMeta" class="text-[9px] text-slate-500 dark:text-slate-400 font-mono leading-none mt-0.5">student@srm.edu.in</span>
+                </div>
+            </div>
+
+            
+            <button onclick="logout()" class="text-slate-500 hover:text-red-600 dark:text-slate-400 dark:hover:text-red-400 px-3 py-1.5 text-xs font-semibold rounded-lg hover:bg-red-50 dark:hover:bg-red-950/30 border border-transparent hover:border-red-200 dark:hover:border-red-900 transition cursor-pointer">
+                Logout
+            </button>
+        </div>
+    </header>
+
+    
+    <main class="flex-1 overflow-y-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="max-w-5xl mx-auto space-y-8">
+
+            
+            <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 sm:p-8 shadow-sm transition-colors">
+                <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+                    <div class="space-y-2">
+                        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
+                            <span class="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span>
+                            Official Online Assessment
+                        </div>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+                            Candidate Assessment Manual & Rules
+                        </h2>
+                        <p class="text-sm text-slate-500 dark:text-slate-400 max-w-2xl leading-relaxed">
+                            Please carefully review the test structure, section durations, proctoring guidelines, and scoring criteria before launching your test window.
+                        </p>
+                    </div>
+
+                    
+                    <div class="bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 rounded-xl p-4 sm:p-5 flex-shrink-0 min-w-[280px] space-y-3">
+                        <div class="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-400">
+                            Your Assessment Track
+                        </div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">Academic Year</label>
+                                <select id="yearSelect" onchange="updateTrackPreview()" class="w-full text-xs font-semibold px-2.5 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <option value="1">Year 1</option>
+                                    <option value="2">Year 2</option>
+                                    <option value="3">Year 3</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">Domain</label>
+                                <select id="domainSelect" onchange="updateTrackPreview()" class="w-full text-xs font-semibold px-2.5 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <option value="Web Dev">Web Dev</option>
+                                    <option value="AIML">AIML</option>
+                                    <option value="Cloud">Cloud</option>
+                                    <option value="App Dev">App Dev</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="pt-1 text-[11px] text-slate-500 dark:text-slate-400 font-medium flex items-center justify-between">
+                            <span>Total Duration:</span>
+                            <strong class="text-blue-600 dark:text-blue-400 font-bold">80 Minutes Total</strong>
+                        </div>
+                    </div>
+                </div>
+
+                
+                <div class="mt-6 pt-5 border-t border-slate-200 dark:border-slate-800 grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
+                    <div class="p-3 bg-slate-50 dark:bg-slate-800/40 rounded-xl border border-slate-200/60 dark:border-slate-750">
+                        <div class="text-[10px] uppercase font-bold text-slate-400">Total Sections</div>
+                        <div class="text-lg font-extrabold text-slate-800 dark:text-slate-100 mt-0.5">4 Sections</div>
+                    </div>
+                    <div class="p-3 bg-slate-50 dark:bg-slate-800/40 rounded-xl border border-slate-200/60 dark:border-slate-750">
+                        <div class="text-[10px] uppercase font-bold text-slate-400">Total Questions</div>
+                        <div class="text-lg font-extrabold text-slate-800 dark:text-slate-100 mt-0.5">50 Questions</div>
+                    </div>
+                    <div class="p-3 bg-slate-50 dark:bg-slate-800/40 rounded-xl border border-slate-200/60 dark:border-slate-750">
+                        <div class="text-[10px] uppercase font-bold text-slate-400">Progression</div>
+                        <div class="text-lg font-extrabold text-emerald-600 dark:text-emerald-400 mt-0.5">Sequential</div>
+                    </div>
+                    <div class="p-3 bg-slate-50 dark:bg-slate-800/40 rounded-xl border border-slate-200/60 dark:border-slate-750">
+                        <div class="text-[10px] uppercase font-bold text-slate-400">Proctoring</div>
+                        <div class="text-lg font-extrabold text-blue-600 dark:text-blue-400 mt-0.5">Webcam</div>
+                    </div>
+                </div>
+            </div>
+
+            
+            <div class="space-y-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="text-lg font-bold text-slate-900 dark:text-white">Assessment Sections & Allocation</h3>
+                        <p class="text-xs text-slate-500 dark:text-slate-400">Each section has an independent server timer and must be solved sequentially.</p>
+                    </div>
+                    <span class="text-xs font-semibold px-2.5 py-1 bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-lg">
+                        Order 1 &rarr; 2 &rarr; 3 &rarr; 4
+                    </span>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    
+                    
+                    <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-5 shadow-2xs hover:border-blue-400 dark:hover:border-blue-600 transition">
+                        <div class="flex justify-between items-start mb-3">
+                            <div class="flex items-center space-x-2.5">
+                                <span class="w-7 h-7 rounded-lg bg-blue-600 text-white font-bold text-xs flex items-center justify-center">1</span>
+                                <div>
+                                    <h4 class="font-bold text-sm text-slate-900 dark:text-white">Programming MCQ</h4>
+                                    <p class="text-[11px] text-slate-500 dark:text-slate-400">Technical language fundamentals & logic</p>
+                                </div>
+                            </div>
+                            <span class="text-xs font-mono font-bold px-2.5 py-1 bg-blue-50 dark:bg-blue-950/80 text-blue-700 dark:text-blue-300 rounded-lg border border-blue-200 dark:border-blue-800">
+                                ⏱ 30 Mins
+                            </span>
+                        </div>
+                        <div class="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-3 text-xs space-y-1.5 text-slate-600 dark:text-slate-300 border border-slate-100 dark:border-slate-800">
+                            <div class="flex justify-between"><span>Number of Questions:</span> <strong class="text-slate-900 dark:text-white font-bold">30 Questions</strong></div>
+                            <div class="flex justify-between"><span>Question Type:</span> <strong class="text-slate-900 dark:text-white font-bold">Single Correct MCQ</strong></div>
+                            <div class="flex justify-between"><span>Marking Scheme:</span> <span class="text-emerald-600 dark:text-emerald-400 font-bold">+1.0 / 0.0</span></div>
+                        </div>
+                        <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-2.5 leading-relaxed">
+                            Focuses on language syntax, code snippet output prediction, loops, logic, and data structure basics.
+                        </p>
+                    </div>
+
+                    
+                    <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-5 shadow-2xs hover:border-blue-400 dark:hover:border-blue-600 transition">
+                        <div class="flex justify-between items-start mb-3">
+                            <div class="flex items-center space-x-2.5">
+                                <span class="w-7 h-7 rounded-lg bg-indigo-600 text-white font-bold text-xs flex items-center justify-center">2</span>
+                                <div>
+                                    <h4 class="font-bold text-sm text-slate-900 dark:text-white">Aptitude MCQ</h4>
+                                    <p class="text-[11px] text-slate-500 dark:text-slate-400">Quantitative & analytical reasoning</p>
+                                </div>
+                            </div>
+                            <span class="text-xs font-mono font-bold px-2.5 py-1 bg-indigo-50 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-300 rounded-lg border border-indigo-200 dark:border-indigo-800">
+                                ⏱ 5 Mins
+                            </span>
+                        </div>
+                        <div class="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-3 text-xs space-y-1.5 text-slate-600 dark:text-slate-300 border border-slate-100 dark:border-slate-800">
+                            <div class="flex justify-between"><span>Number of Questions:</span> <strong class="text-slate-900 dark:text-white font-bold">5 Questions</strong></div>
+                            <div class="flex justify-between"><span>Question Type:</span> <strong class="text-slate-900 dark:text-white font-bold">Speed Aptitude MCQ</strong></div>
+                            <div class="flex justify-between"><span>Lock Policy:</span> <span class="text-amber-600 dark:text-amber-400 font-bold">Unlocks after Section 1</span></div>
+                        </div>
+                        <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-2.5 leading-relaxed">
+                            Fast-paced mathematical problem solving, pattern matching, time & work, and logical deduction.
+                        </p>
+                    </div>
+
+                    
+                    <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-5 shadow-2xs hover:border-blue-400 dark:hover:border-blue-600 transition">
+                        <div class="flex justify-between items-start mb-3">
+                            <div class="flex items-center space-x-2.5">
+                                <span class="w-7 h-7 rounded-lg bg-teal-600 text-white font-bold text-xs flex items-center justify-center">3</span>
+                                <div>
+                                    <h4 class="font-bold text-sm text-slate-900 dark:text-white">Academics</h4>
+                                    <p class="text-[11px] text-slate-500 dark:text-slate-400">Core engineering concepts</p>
+                                </div>
+                            </div>
+                            <span class="text-xs font-mono font-bold px-2.5 py-1 bg-teal-50 dark:bg-teal-950/80 text-teal-700 dark:text-teal-300 rounded-lg border border-teal-200 dark:border-teal-800">
+                                ⏱ 5 Mins
+                            </span>
+                        </div>
+                        <div class="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-3 text-xs space-y-1.5 text-slate-600 dark:text-slate-300 border border-slate-100 dark:border-slate-800">
+                            <div class="flex justify-between"><span>Number of Questions:</span> <strong class="text-slate-900 dark:text-white font-bold">5 Questions</strong></div>
+                            <div class="flex justify-between"><span>Question Type:</span> <strong class="text-slate-900 dark:text-white font-bold">Conceptual MCQ</strong></div>
+                            <div class="flex justify-between"><span>Lock Policy:</span> <span class="text-amber-600 dark:text-amber-400 font-bold">Unlocks after Section 2</span></div>
+                        </div>
+                        <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-2.5 leading-relaxed">
+                            Curriculum-specific computer science fundamentals, OS, networking, or database essentials.
+                        </p>
+                    </div>
+
+                    
+                    <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-5 shadow-2xs hover:border-blue-400 dark:hover:border-blue-600 transition">
+                        <div class="flex justify-between items-start mb-3">
+                            <div class="flex items-center space-x-2.5">
+                                <span class="w-7 h-7 rounded-lg bg-purple-600 text-white font-bold text-xs flex items-center justify-center">4</span>
+                                <div>
+                                    <h4 class="font-bold text-sm text-slate-900 dark:text-white">Programming Question</h4>
+                                    <p class="text-[11px] text-slate-500 dark:text-slate-400">Live code editor & algorithmic solution</p>
+                                </div>
+                            </div>
+                            <span class="text-xs font-mono font-bold px-2.5 py-1 bg-purple-50 dark:bg-purple-950/80 text-purple-700 dark:text-purple-300 rounded-lg border border-purple-200 dark:border-purple-800">
+                                ⏱ 40 Mins
+                            </span>
+                        </div>
+                        <div class="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-3 text-xs space-y-1.5 text-slate-600 dark:text-slate-300 border border-slate-100 dark:border-slate-800">
+                            <div class="flex justify-between"><span>Problem Type:</span> <strong class="text-slate-900 dark:text-white font-bold">Coding Implementation</strong></div>
+                            <div class="flex justify-between"><span>Editor Support:</span> <strong class="text-slate-900 dark:text-white font-bold">In-Browser Code Box</strong></div>
+                            <div class="flex justify-between"><span>Auto-Save:</span> <span class="text-emerald-600 dark:text-emerald-400 font-bold">Debounced Server Save</span></div>
+                        </div>
+                        <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-2.5 leading-relaxed">
+                            Write your code, solution, and explanation directly into the solution editor. Answers are synced continuously.
+                        </p>
+                    </div>
+
+                </div>
+            </div>
+
+            
+            <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 sm:p-8 shadow-sm space-y-6">
+                <div>
+                    <h3 class="text-lg font-bold text-slate-900 dark:text-white">Essential Examination Protocols</h3>
+                    <p class="text-xs text-slate-500 dark:text-slate-400">Violations may lead to automated session flags or administrative termination.</p>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    
+                    <div class="flex items-start space-x-3.5 p-4 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800">
+                        <div class="w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-950 text-blue-600 dark:text-blue-400 flex items-center justify-center flex-shrink-0 font-bold text-sm">
+                            🔒
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-xs text-slate-900 dark:text-white">Sequential Section Progression</h4>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">
+                                Students cannot jump ahead to Section 2 until all Section 1 questions are completed or the section timer runs out.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-start space-x-3.5 p-4 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800">
+                        <div class="w-8 h-8 rounded-lg bg-amber-100 dark:bg-amber-950 text-amber-600 dark:text-amber-400 flex items-center justify-center flex-shrink-0 font-bold text-sm">
+                            ⏱
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-xs text-slate-900 dark:text-white">Server-Authoritative Section Timers</h4>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">
+                                Timers run on the server clock. Refreshing or closing the tab will NOT reset the timer. Expired sections auto-submit.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-start space-x-3.5 p-4 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800">
+                        <div class="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 flex items-center justify-center flex-shrink-0 font-bold text-sm">
+                            💾
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-xs text-slate-900 dark:text-white">Real-Time Database Persistence</h4>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">
+                                Every answer and status is saved to the server on "Save & Next". If your internet drops, log in again to resume seamlessly.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-start space-x-3.5 p-4 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800">
+                        <div class="w-8 h-8 rounded-lg bg-red-100 dark:bg-red-950 text-red-600 dark:text-red-400 flex items-center justify-center flex-shrink-0 font-bold text-sm">
+                            📹
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-xs text-slate-900 dark:text-white">AI & Proctored Video Logging</h4>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">
+                                Webcam and mic feeds are verified. Tab switches and screen blur events are counted and logged on the admin dashboard.
+                            </p>
+                        </div>
+                    </div>
+
+                </div>
+
+                
+                <div class="pt-4 border-t border-slate-200 dark:border-slate-800">
+                    <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">Question Palette Indicators</h4>
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+                        <div class="flex items-center space-x-2.5 p-2.5 rounded-lg bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800">
+                            <span class="w-5 h-5 rounded-md bg-emerald-600 text-white font-bold text-[10px] flex items-center justify-center">1</span>
+                            <div>
+                                <strong class="block text-slate-800 dark:text-slate-200 font-semibold">Answered</strong>
+                                <span class="text-[10px] text-slate-400">Response saved</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-2.5 p-2.5 rounded-lg bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800">
+                            <span class="w-5 h-5 rounded-md bg-purple-600 text-white font-bold text-[10px] flex items-center justify-center">2</span>
+                            <div>
+                                <strong class="block text-slate-800 dark:text-slate-200 font-semibold">Marked Review</strong>
+                                <span class="text-[10px] text-slate-400">Flagged for check</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-2.5 p-2.5 rounded-lg bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800">
+                            <span class="w-5 h-5 rounded-md bg-amber-100 dark:bg-amber-950 text-amber-900 dark:text-amber-200 border border-amber-300 dark:border-amber-800 font-bold text-[10px] flex items-center justify-center">3</span>
+                            <div>
+                                <strong class="block text-slate-800 dark:text-slate-200 font-semibold">Not Answered</strong>
+                                <span class="text-[10px] text-slate-400">Skipped question</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-2.5 p-2.5 rounded-lg bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800">
+                            <span class="w-5 h-5 rounded-md bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-700 font-bold text-[10px] flex items-center justify-center">4</span>
+                            <div>
+                                <strong class="block text-slate-800 dark:text-slate-200 font-semibold">Not Visited</strong>
+                                <span class="text-[10px] text-slate-400">Yet to view</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            
+            <div class="bg-gradient-to-r from-blue-900/10 via-slate-900/20 to-blue-900/10 dark:from-blue-950/40 dark:via-slate-900/80 dark:to-blue-950/40 rounded-2xl border-2 border-blue-500/30 p-6 sm:p-8 text-center space-y-5">
+                <div class="max-w-xl mx-auto space-y-2">
+                    <h3 class="text-xl font-bold text-slate-900 dark:text-white">Ready to Begin Assessment?</h3>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                        Ensure your room is well lit and your webcam and microphone permissions are enabled. Do not close the window once initialized.
+                    </p>
+                </div>
+
+                
+                <div class="flex items-center justify-center space-x-2.5 text-xs text-slate-700 dark:text-slate-300">
+                    <input type="checkbox" id="declareCheck" onchange="toggleStartButton()" class="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500 cursor-pointer">
+                    <label for="declareCheck" class="cursor-pointer select-none font-medium">
+                        I have read, understood, and agree to abide by all assessment rules and proctoring conditions.
+                    </label>
+                </div>
+
+                
+                <div id="alreadySubmittedNotice" class="hidden rounded-xl border border-emerald-300 dark:border-emerald-800/60 bg-emerald-50 dark:bg-emerald-950/40 px-5 py-4">
+                    <div class="flex items-start gap-3">
+                        <svg class="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        <div>
+                            <p class="text-sm font-bold text-emerald-800 dark:text-emerald-300">Your test has already been submitted.</p>
+                            <p id="alreadySubmittedDetail" class="text-xs text-emerald-700/80 dark:text-emerald-400/70 mt-1 font-medium">
+                                You cannot take it again. Contact your invigilator if you believe this is a mistake.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="startTestWrapper">
+                    <button id="startTestBtn" disabled onclick="startTest()" class="inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-xl text-sm font-bold text-white bg-blue-600 opacity-40 cursor-not-allowed shadow-lg shadow-blue-600/20 transition active:scale-95">
+                        <span>Launch Examination Window</span>
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+                    </button>
+                    <p class="text-[11px] text-slate-400 dark:text-slate-500 mt-2">
+                        Camera & microphone hardware access will be prompted upon launch.
+                    </p>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    
+    <footer class="py-3.5 text-center text-xs text-slate-400 dark:text-zinc-500 border-t border-slate-200 dark:border-[#222222] bg-white dark:bg-[#0a0a0a] flex-shrink-0 transition-colors">
+        SRM INSIDER LAB &bull; Secure Computer Based Examination Portal
+    </footer>
+
+    <script>
+        // Authentication Guard
+        const token = localStorage.getItem('token');
+        const role = localStorage.getItem('role');
+        let username = localStorage.getItem('username') || 'STUDENT';
+        let studentName = localStorage.getItem('name') || '';
+        let studentEmail = localStorage.getItem('email') || (username.includes('@') ? username : '');
+
+        if (!token || role !== 'STUDENT') {
+            window.location.href = '/index.html';
+        }
+
+        const updateCandidateNavbar = () => {
+            const displayName = studentName || username;
+            const badgeEl = document.getElementById('candidateBadge');
+            if (badgeEl) badgeEl.innerText = displayName;
+
+            const metaEl = document.getElementById('candidateMeta');
+            if (metaEl) metaEl.innerText = studentEmail || (username.includes('@') ? username : `ID: ${username}`);
+
+            const avatarEl = document.getElementById('candidateAvatar');
+            if (avatarEl) {
+                const words = displayName.trim().split(/\s+/);
+                const initials = words.length > 1 
+                    ? (words[0][0] + words[words.length - 1][0]).toUpperCase()
+                    : (displayName.substring(0, 2).toUpperCase() || 'ST');
+                avatarEl.innerText = initials;
+            }
+        };
+
+        updateCandidateNavbar();
+
+        // Refresh profile from /api/auth/me to guarantee accurate name
+        if (token) {
+            fetch('/api/auth/me', { headers: { 'Authorization': `Bearer ${token}` } })
+                .then(res => res.ok ? res.json() : null)
+                .then(data => {
+                    if (!data) return;
+                    if (data.name) {
+                        studentName = data.name;
+                        localStorage.setItem('name', data.name);
+                        if (data.email) {
+                            studentEmail = data.email;
+                            localStorage.setItem('email', data.email);
+                        }
+                        updateCandidateNavbar();
+                    }
+                    // Else the selects keep their defaults (Year 1 / Web Dev) and the wrong paper is sat.
+                    applyEnrolledTrack(data.year, data.domain);
+                    checkAlreadySubmitted(data.year, data.domain);
+                })
+                .catch(() => {});
+        }
+
+        // Theme Toggle Controller
+        let currentTheme = localStorage.getItem('app_theme') || 'dark';
+
+        const applyTheme = (theme) => {
+            currentTheme = theme;
+            localStorage.setItem('app_theme', theme);
+            const html = document.documentElement;
+            const icon = document.getElementById('themeToggleIcon');
+            const text = document.getElementById('themeToggleText');
+
+            if (theme === 'dark') {
+                html.classList.add('dark');
+                if (icon) icon.innerText = '🌙';
+                if (text) text.innerText = 'Dark';
+            } else {
+                html.classList.remove('dark');
+                if (icon) icon.innerText = '☀️';
+                if (text) text.innerText = 'Light';
+            }
+        };
+
+        const toggleTheme = () => {
+            applyTheme(currentTheme === 'dark' ? 'light' : 'dark');
+        };
+
+        // Initialize Theme
+        applyTheme(currentTheme);
+
+        // Checkbox Toggle for Launch Button
+        const toggleStartButton = () => {
+            const check = document.getElementById('declareCheck');
+            const btn = document.getElementById('startTestBtn');
+            if (check.checked) {
+                btn.disabled = false;
+                btn.classList.remove('opacity-40', 'cursor-not-allowed');
+                btn.classList.add('hover:bg-blue-700', 'cursor-pointer', 'glow-blue');
+            } else {
+                btn.disabled = true;
+                btn.classList.add('opacity-40', 'cursor-not-allowed');
+                btn.classList.remove('hover:bg-blue-700', 'cursor-pointer', 'glow-blue');
+            }
+        };
+
+        const updateTrackPreview = () => {
+            // Can be expanded to show custom domain info if required
+        };
+
+        // Enrolled track is fixed; show it and lock it rather than leaving a free choice.
+        const applyEnrolledTrack = (enrolledYear, enrolledDomain) => {
+            const yearSelect = document.getElementById('yearSelect');
+            const domainSelect = document.getElementById('domainSelect');
+
+            if (yearSelect && enrolledYear != null) {
+                const value = String(enrolledYear);
+                if ([...yearSelect.options].some(o => o.value === value)) {
+                    yearSelect.value = value;
+                    yearSelect.disabled = true;
+                }
+            }
+
+            if (domainSelect && enrolledDomain) {
+                if ([...domainSelect.options].some(o => o.value === enrolledDomain)) {
+                    domainSelect.value = enrolledDomain;
+                    domainSelect.disabled = true;
+                } else {
+                    // Enrolled in a track not in the list; show it rather than silently defaulting.
+                    const opt = document.createElement('option');
+                    opt.value = enrolledDomain;
+                    opt.innerText = enrolledDomain;
+                    domainSelect.appendChild(opt);
+                    domainSelect.value = enrolledDomain;
+                    domainSelect.disabled = true;
+                }
+            }
+
+            updateTrackPreview();
+        };
+
+        const logout = () => {
+            localStorage.clear();
+            window.location.href = '/index.html';
+        };
+
+        let testAlreadySubmitted = false;
+
+        // Else the dashboard offers to start a test that is already finished.
+        const checkAlreadySubmitted = async (year, domain) => {
+            if (year == null || !domain) return;
+            try {
+                const res = await fetch(`/api/student/session/status?year=${encodeURIComponent(year)}&domain=${encodeURIComponent(domain)}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (!res.ok) return;
+
+                const status = await res.json();
+                if (!status.submitted) return;
+
+                testAlreadySubmitted = true;
+
+                const notice = document.getElementById('alreadySubmittedNotice');
+                const wrapper = document.getElementById('startTestWrapper');
+                if (notice) notice.classList.remove('hidden');
+                if (wrapper) wrapper.classList.add('hidden');
+
+                const detail = document.getElementById('alreadySubmittedDetail');
+                if (detail && status.submittedAt) {
+                    detail.innerText = `Submitted on ${new Date(status.submittedAt).toLocaleString()}. `
+                        + 'You cannot take it again. Contact your invigilator if you believe this is a mistake.';
+                }
+            } catch (err) {
+                // A failed check must not block a student who hasn't sat it yet.
+                console.error('Could not check submission status', err);
+            }
+        };
+
+        const startTest = () => {
+            if (testAlreadySubmitted) {
+                alert('Your test has already been submitted. You cannot take it again.');
+                return;
+            }
+            const year = document.getElementById('yearSelect').value;
+            const domain = encodeURIComponent(document.getElementById('domainSelect').value);
+            window.location.href = `/student/identity-verification.html?year=${year}&domain=${domain}`;
+        };
+    </script>
+</body>
+</html>

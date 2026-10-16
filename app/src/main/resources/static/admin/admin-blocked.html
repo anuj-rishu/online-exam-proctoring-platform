@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>Blocked Students | Admin Portal | SRM Insider</title>
+    <link rel="icon" type="image/x-icon" href="/icons/favicon.ico">
+    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192x192.png">
+    <link rel="apple-touch-icon" href="/icons/icon-192x192.png">
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="description" content="Review and unblock students locked out by the automated proctoring system.">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        dark: {
+                            bg: '#000000',
+                            card: '#0f0f13',
+                            sidebar: '#0a0a0e',
+                            header: '#0a0a0d',
+                            border: '#1f1f28',
+                            input: '#14141a',
+                            inputBorder: '#272733',
+                            hover: '#16161e'
+                        }
+                    }
+                }
+            }
+        };
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: #000000;
+            color: #ffffff;
+        }
+        .font-mono { font-family: 'JetBrains Mono', monospace; }
+
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #08080a; }
+        ::-webkit-scrollbar-thumb { background: #22222c; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #3b3b4d; }
+
+        .premium-card {
+            background-color: #0f0f13;
+            border: 1px solid #1f1f28;
+            box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.6);
+        }
+        .premium-input {
+            background-color: #14141a !important;
+            border-color: #272733 !important;
+            color: #ffffff !important;
+        }
+        .premium-input:focus {
+            border-color: #3b82f6 !important;
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+        }
+
+        .nav-item {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .nav-item.active {
+            background: linear-gradient(90deg, rgba(59, 130, 246, 0.15) 0%, rgba(59, 130, 246, 0.05) 100%);
+            color: #60a5fa;
+            border-left: 3px solid #3b82f6;
+            font-weight: 600;
+        }
+        .nav-item:not(.active):hover {
+            background-color: #16161e;
+            color: #f4f4f5;
+        }
+
+        @keyframes livePulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.4; transform: scale(1.15); }
+        }
+        .live-dot { animation: livePulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+
+        .blocked-row { transition: all 0.2s ease; }
+        .blocked-row:hover { background-color: #16161e; border-color: #3b82f6; }
+    </style>
+</head>
+<body class="min-h-screen flex bg-black text-white antialiased overflow-x-hidden">
+
+    <div id="toastContainer" class="fixed top-5 right-5 z-[70] flex flex-col space-y-3 pointer-events-none max-w-sm w-full px-4 sm:px-0"></div>
+
+    
+    <div id="sidebarBackdrop" onclick="toggleMobileSidebar()" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-40 hidden lg:hidden transition-opacity duration-300"></div>
+
+    
+    
+    
+    <aside id="adminSidebar" class="fixed inset-y-0 left-0 z-50 w-72 bg-dark-sidebar border-r border-dark-border flex flex-col transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out shadow-2xl">
+
+        
+        <div class="h-20 px-6 border-b border-dark-border flex items-center justify-between">
+            <div class="flex items-center space-x-3.5">
+                <div class="relative">
+                    <img src="/icons/icon-192x192.png" alt="Logo" class="w-10 h-10 rounded-xl object-contain shadow-lg ring-1 ring-white/10">
+                    <span class="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-emerald-500 border-2 border-[#0a0a0e] rounded-full"></span>
+                </div>
+                <div>
+                    <h1 class="font-extrabold text-white text-base tracking-tight leading-none">SRM INSIDER</h1>
+                    <div class="flex items-center space-x-1.5 mt-1">
+                        <span id="roleBadge" class="px-1.5 py-0.5 rounded text-[9px] font-extrabold tracking-wider bg-blue-500/10 text-blue-400 border border-blue-500/20 uppercase">
+                            ADMIN
+                        </span>
+                    </div>
+                </div>
+            </div>
+            <button onclick="toggleMobileSidebar()" class="lg:hidden p-1.5 text-zinc-400 hover:text-white rounded-lg hover:bg-zinc-800/50">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+        </div>
+
+        
+        <nav class="flex-1 px-4 py-6 space-y-1.5 overflow-y-auto">
+            <div class="px-3 pb-2 text-[10px] font-extrabold uppercase tracking-wider text-zinc-500">
+                Main Menu
+            </div>
+
+            <a href="/admin/admin.html" class="nav-item w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium text-zinc-400 transition hover:text-white">
+                <div class="flex items-center space-x-3">
+                    <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
+                    <span>Problems Library</span>
+                </div>
+            </a>
+
+            <a href="/admin/admin-add-problem.html" class="nav-item w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium text-zinc-400 transition hover:text-white">
+                <div class="flex items-center space-x-3">
+                    <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    <span>Add Question</span>
+                </div>
+            </a>
+
+            <a href="/admin/admin-submissions.html" class="nav-item w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium text-zinc-400 transition hover:text-white">
+                <div class="flex items-center space-x-3">
+                    <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                    <span>Submissions</span>
+                </div>
+            </a>
+
+            <a href="/admin/admin-live.html" class="nav-item w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium text-zinc-400 transition hover:text-white">
+                <div class="flex items-center space-x-3">
+                    <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                    <span>Live Students</span>
+                </div>
+                <div class="flex items-center space-x-1.5 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500 live-dot"></span>
+                    <span class="text-[10px] font-bold text-emerald-400 uppercase tracking-wider">Live</span>
+                </div>
+            </a>
+
+            
+            <a href="/admin/admin-blocked.html" class="nav-item active w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium transition cursor-pointer">
+                <div class="flex items-center space-x-3">
+                    <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"></path></svg>
+                    <span>Blocked Students</span>
+                </div>
+                <span id="navBlockedCount" class="hidden px-2 py-0.5 rounded-full bg-red-500/10 border border-red-500/20 text-[10px] font-bold text-red-400">0</span>
+            </a>
+
+            
+            <div id="navManageAdminsWrapper" class="hidden pt-4">
+                <div class="px-3 pb-2 text-[10px] font-extrabold uppercase tracking-wider text-purple-400/80 flex items-center justify-between">
+                    <span>Administration</span>
+                    <span class="px-1 rounded bg-purple-500/20 text-purple-300 text-[9px] font-bold">SUPER</span>
+                </div>
+                <a href="/admin/admin-plagiarism.html" class="nav-item w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium text-zinc-400 transition hover:text-white">
+                    <div class="flex items-center space-x-3">
+                        <svg class="w-4 h-4 text-amber-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                        <span>Similarity Report</span>
+                    </div>
+                </a>
+                <a href="/admin/admin-admins.html" class="nav-item w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium text-zinc-400 transition hover:text-white">
+                    <div class="flex items-center space-x-3">
+                        <svg class="w-4 h-4 text-purple-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                        <span>Manage Admins</span>
+                    </div>
+                </a>
+                <a href="/admin/admin-students.html" class="nav-item w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium text-zinc-400 transition hover:text-white mt-1">
+                    <div class="flex items-center space-x-3">
+                        <svg class="w-4 h-4 text-emerald-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                        <span>Invite Students</span>
+                    </div>
+                </a>
+            </div>
+        </nav>
+
+        
+        <div class="p-4 border-t border-dark-border bg-[#07070a]">
+            <div class="bg-[#121218] border border-[#20202a] rounded-xl p-3 mb-2 flex items-center justify-between">
+                <div class="flex items-center space-x-2.5 overflow-hidden">
+                    <div id="userAvatar" class="w-8 h-8 rounded-lg bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center text-xs font-black text-white flex-shrink-0 shadow-md">
+                        AD
+                    </div>
+                    <div class="truncate">
+                        <div id="sidebarUserEmail" class="text-xs font-semibold text-zinc-200 truncate">Admin User</div>
+                        <div id="sidebarUserRole" class="text-[10px] text-zinc-400 font-mono">ROLE: ADMIN</div>
+                    </div>
+                </div>
+            </div>
+
+            <button onclick="logout()" class="w-full flex items-center justify-center space-x-1.5 py-2 px-2.5 rounded-lg border border-red-900/40 bg-red-950/20 text-red-400 text-xs font-semibold transition hover:bg-red-900/40 cursor-pointer">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                <span>Logout</span>
+            </button>
+        </div>
+
+    </aside>
+
+    
+    
+    
+    <div class="flex-1 lg:pl-72 flex flex-col min-w-0 min-h-screen bg-black">
+
+        
+        <header class="h-16 px-6 lg:px-8 bg-dark-header/80 backdrop-blur-md border-b border-dark-border flex items-center justify-between sticky top-0 z-30 flex-shrink-0">
+            <div class="flex items-center space-x-3">
+                <button onclick="toggleMobileSidebar()" class="lg:hidden p-2 rounded-lg bg-[#14141a] border border-[#272733] text-zinc-300 hover:text-white focus:outline-none">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+                </button>
+                <div class="flex items-center space-x-2">
+                    <span class="text-xs text-zinc-500 font-medium">Dashboard /</span>
+                    <span class="text-sm font-bold text-white ml-1">Blocked Students</span>
+                </div>
+                <span id="autoRefreshStatus" class="text-xs text-zinc-400 font-mono bg-[#14141a] px-2.5 py-0.5 rounded-full border border-[#272733] hidden sm:inline-block">Auto-refresh 15s</span>
+            </div>
+
+            <div class="flex items-center space-x-2.5">
+                <input id="searchInput" type="text" placeholder="Search student…" oninput="renderBlocked()"
+                       class="premium-input rounded-xl px-3 py-1.5 text-xs font-semibold w-40 sm:w-56">
+                <button onclick="loadBlocked(true)" class="bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold px-3 py-1.5 rounded-xl shadow transition active:scale-[0.98] cursor-pointer flex items-center gap-1.5">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                    <span>Refresh</span>
+                </button>
+
+                <div class="w-px h-6 bg-[#272733]"></div>
+
+                <a href="/admin/admin-live.html" class="hidden sm:flex items-center space-x-1.5 px-3 py-1.5 rounded-lg border border-[#272733] bg-[#14141a] text-zinc-300 text-xs font-semibold hover:bg-[#1f1f28] transition">
+                    <span>Live View</span>
+                </a>
+            </div>
+        </header>
+
+        
+        <main class="flex-1 p-6 lg:p-8">
+
+            
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gradient-to-r from-[#121218] via-[#0f0f15] to-[#0a0a0f] p-6 rounded-2xl border border-[#1f1f28] mb-6">
+                <div>
+                    <div class="flex items-center gap-3">
+                        <h2 class="text-2xl font-extrabold tracking-tight text-white">Blocked Students</h2>
+                        <span id="statusPill" class="px-2 py-0.5 rounded-md text-[10px] font-extrabold uppercase tracking-wider bg-red-500/10 text-red-400 border border-red-500/25">Blocked</span>
+                    </div>
+                    <p class="text-xs text-zinc-400 mt-1.5 max-w-2xl leading-relaxed">
+                        Students locked out by the automated proctoring system. Review their violation history, then release them back into the test or keep them blocked.
+                    </p>
+                </div>
+                <div class="flex items-center gap-3">
+                    <div class="px-4 py-2.5 rounded-xl bg-[#14141a] border border-[#272733] text-center min-w-[92px]">
+                        <div id="blockedCount" class="text-xl font-extrabold text-red-400 font-mono">0</div>
+                        <div class="text-[10px] uppercase tracking-wider text-zinc-500 font-bold mt-0.5">Blocked</div>
+                    </div>
+                    <div class="px-4 py-2.5 rounded-xl bg-[#14141a] border border-[#272733] text-center min-w-[92px]">
+                        <div id="requestedCount" class="text-xl font-extrabold text-amber-400 font-mono">0</div>
+                        <div class="text-[10px] uppercase tracking-wider text-zinc-500 font-bold mt-0.5">Requested</div>
+                    </div>
+                </div>
+            </div>
+
+            
+            <div id="blockedList" class="space-y-3">
+                <div class="premium-card rounded-2xl p-10 text-center text-zinc-500 text-sm">Loading blocked students…</div>
+            </div>
+
+        </main>
+    </div>
+
+    
+    
+    
+    <div id="reviewModal" class="hidden fixed inset-0 bg-black/90 z-[60] flex items-center justify-center p-4 sm:p-8 backdrop-blur-md">
+        <div class="premium-card rounded-2xl w-full max-w-lg overflow-hidden">
+            <div class="px-6 py-4 border-b border-dark-border flex items-center justify-between">
+                <div>
+                    <h3 class="text-base font-bold text-white">Violation report</h3>
+                    <p id="reviewStudentName" class="text-xs text-zinc-400 font-mono mt-0.5">Student</p>
+                </div>
+                <button onclick="closeReviewModal()" class="p-1.5 text-zinc-400 hover:text-white rounded-lg hover:bg-zinc-800/50">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+
+            <div id="reviewReport" class="px-6 py-5 max-h-[45vh] overflow-y-auto text-xs font-mono space-y-2 text-zinc-300">
+                Loading report…
+            </div>
+
+            <div class="px-6 py-4 border-t border-dark-border flex justify-end gap-2.5 bg-[#0b0b0f]">
+                <button onclick="closeReviewModal()" class="bg-[#14141a] hover:bg-[#1f1f28] border border-[#272733] text-zinc-300 text-xs font-semibold px-4 py-2 rounded-xl transition active:scale-[0.98] cursor-pointer">
+                    Keep Blocked
+                </button>
+                <button id="modalUnblockBtn" onclick="confirmUnblock()" class="bg-red-600 hover:bg-red-500 text-white text-xs font-bold px-4 py-2 rounded-xl shadow-lg shadow-red-900/20 transition active:scale-[0.98] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
+                    Unblock Student
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const token = localStorage.getItem('token');
+        const role = localStorage.getItem('role') || 'ADMIN';
+        if (!token || (role !== 'ADMIN' && role !== 'SUPER_ADMIN')) {
+            window.location.href = '/admin/adminlogin.html';
+        }
+
+        const logout = () => {
+            localStorage.clear();
+            window.location.href = '/admin/adminlogin.html';
+        };
+
+        const toggleMobileSidebar = () => {
+            const sidebar = document.getElementById('adminSidebar');
+            const backdrop = document.getElementById('sidebarBackdrop');
+            if (sidebar.classList.contains('-translate-x-full')) {
+                sidebar.classList.remove('-translate-x-full');
+                backdrop.classList.remove('hidden');
+            } else {
+                sidebar.classList.add('-translate-x-full');
+                backdrop.classList.add('hidden');
+            }
+        };
+
+        const escapeHtml = (value) => String(value == null ? '' : value)
+            .replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+        const showToast = (message, type = 'success') => {
+            const container = document.getElementById('toastContainer');
+            if (!container) return;
+            const toast = document.createElement('div');
+            toast.className = `pointer-events-auto flex items-center space-x-3 p-4 rounded-xl shadow-2xl border transition-all duration-300 transform translate-y-[-12px] opacity-0 ${
+                type === 'error'
+                    ? 'bg-[#1a0a0a] border-red-800/90 text-red-200'
+                    : 'bg-[#0a1a0f] border-emerald-800/90 text-emerald-200'
+            }`;
+            const icon = type === 'error'
+                ? `<div class="w-8 h-8 rounded-lg bg-red-950/80 border border-red-800/70 flex items-center justify-center flex-shrink-0 text-red-400 font-bold text-sm">⚠️</div>`
+                : `<div class="w-8 h-8 rounded-lg bg-emerald-950/80 border border-emerald-800/70 flex items-center justify-center flex-shrink-0 text-emerald-400 font-bold text-sm">✓</div>`;
+            toast.innerHTML = `
+                ${icon}
+                <div class="flex-1 text-xs font-semibold leading-relaxed">${message}</div>
+                <button onclick="this.parentElement.remove()" class="text-zinc-400 hover:text-white transition p-1 cursor-pointer">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            `;
+            container.appendChild(toast);
+            requestAnimationFrame(() => {
+                toast.classList.remove('translate-y-[-12px]', 'opacity-0');
+                toast.classList.add('translate-y-0', 'opacity-100');
+            });
+            setTimeout(() => {
+                toast.classList.remove('translate-y-0', 'opacity-100');
+                toast.classList.add('translate-y-[-12px]', 'opacity-0');
+                setTimeout(() => toast.remove(), 350);
+            }, 5000);
+        };
+
+        // ---------------------------------------------------------------- state
+        let blockedStudents = [];
+        let selected = null;
+        let unblockInFlight = false;
+
+        const timeAgo = (ts) => {
+            if (!ts) return '—';
+            const secs = Math.max(0, Math.floor((Date.now() - ts) / 1000));
+            if (secs < 60) return `${secs}s ago`;
+            if (secs < 3600) return `${Math.floor(secs / 60)}m ago`;
+            return `${Math.floor(secs / 3600)}h ago`;
+        };
+
+        const loadBlocked = async (manual = false) => {
+            try {
+                const res = await fetch('/api/admin/submissions/blocked', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (!res.ok) {
+                    if (manual) showToast('Could not load blocked students.', 'error');
+                    return;
+                }
+                const data = await res.json();
+                blockedStudents = Array.isArray(data.blocked) ? data.blocked : [];
+                renderBlocked();
+                if (manual) showToast(`Refreshed — ${blockedStudents.length} blocked.`);
+            } catch (e) {
+                if (manual) showToast('Connection error while loading blocked students.', 'error');
+            }
+        };
+
+        const renderBlocked = () => {
+            const list = document.getElementById('blockedList');
+            const query = (document.getElementById('searchInput').value || '').trim().toLowerCase();
+            const rows = blockedStudents.filter(s =>
+                !query || String(s.username).toLowerCase().includes(query) || String(s.email || '').toLowerCase().includes(query));
+
+            document.getElementById('blockedCount').innerText = blockedStudents.length;
+            document.getElementById('requestedCount').innerText = blockedStudents.filter(s => s.unblockRequested).length;
+
+            const navCount = document.getElementById('navBlockedCount');
+            navCount.innerText = blockedStudents.length;
+            navCount.classList.toggle('hidden', blockedStudents.length === 0);
+
+            if (rows.length === 0) {
+                list.innerHTML = `<div class="premium-card rounded-2xl p-12 text-center">
+                    <div class="w-12 h-12 rounded-full bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 flex items-center justify-center mx-auto mb-3 text-xl">✓</div>
+                    <div class="text-sm font-bold text-white">${blockedStudents.length === 0 ? 'No students are blocked' : 'No matches'}</div>
+                    <div class="text-xs text-zinc-500 mt-1">${blockedStudents.length === 0 ? 'Everyone is testing normally right now.' : 'Try a different search term.'}</div>
+                </div>`;
+                return;
+            }
+
+            list.innerHTML = rows.map(s => {
+                const counts = s.anomalyCounts || {};
+                const chip = (label, value, tone) => value
+                    ? `<span class="px-2 py-0.5 rounded-md border text-[10px] font-bold ${tone}">${label}: ${value}</span>`
+                    : '';
+                return `
+                <div class="blocked-row premium-card rounded-2xl p-5 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                    <div class="min-w-0">
+                        <div class="flex items-center gap-2.5 flex-wrap">
+                            <span class="text-sm font-bold text-white truncate">${escapeHtml(s.email || s.username)}</span>
+                            ${s.unblockRequested
+                                ? '<span class="px-2 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/25 text-[10px] font-bold text-amber-400 uppercase tracking-wider">Unblock requested</span>'
+                                : ''}
+                        </div>
+                        <div class="text-[11px] text-zinc-500 font-mono mt-1 truncate">${escapeHtml(s.username)}</div>
+                        <div class="flex flex-wrap gap-1.5 mt-3">
+                            <span class="px-2 py-0.5 rounded-md border border-[#272733] bg-[#14141a] text-[10px] font-bold text-zinc-400">Year ${escapeHtml(s.year)}</span>
+                            <span class="px-2 py-0.5 rounded-md border border-[#272733] bg-[#14141a] text-[10px] font-bold text-zinc-400">${escapeHtml(s.domain)}</span>
+                            ${s.activeSection ? `<span class="px-2 py-0.5 rounded-md border border-[#272733] bg-[#14141a] text-[10px] font-bold text-zinc-400">${escapeHtml(s.activeSection)}</span>` : ''}
+                            ${chip('Tab switches', s.tabSwitchCount, 'bg-amber-950/40 border-amber-800 text-amber-300')}
+                            ${chip('Screenshots', s.screenshotCount, 'bg-red-950/40 border-red-800 text-red-300')}
+                            ${chip('Events', s.totalAnomalies, 'bg-[#14141a] border-[#272733] text-zinc-400')}
+                            <span class="px-2 py-0.5 rounded-md border border-[#272733] bg-[#14141a] text-[10px] font-bold text-zinc-500">Last event ${timeAgo(s.lastEventAt)}</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2.5 flex-shrink-0">
+                        <button onclick="openReviewModal('${encodeURIComponent(s.username)}')" class="bg-[#14141a] hover:bg-[#1f1f28] border border-[#272733] text-zinc-300 text-xs font-semibold px-4 py-2 rounded-xl transition active:scale-[0.98] cursor-pointer">
+                            Review
+                        </button>
+                        <button onclick="unblockStudent('${encodeURIComponent(s.username)}', ${Number(s.year)}, '${encodeURIComponent(s.domain)}')" class="bg-red-600 hover:bg-red-500 text-white text-xs font-bold px-4 py-2 rounded-xl shadow-lg shadow-red-900/20 transition active:scale-[0.98] cursor-pointer">
+                            Unblock
+                        </button>
+                    </div>
+                </div>`;
+            }).join('');
+        };
+
+        // ------------------------------------------------------------- actions
+        window.unblockStudent = async (encodedUsername, year, encodedDomain) => {
+            if (unblockInFlight) return;
+            const username = decodeURIComponent(encodedUsername);
+            const domain = decodeURIComponent(encodedDomain);
+
+            unblockInFlight = true;
+            try {
+                const res = await fetch('/api/student/session/unblock', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify({ studentId: username, year: Number(year), domain })
+                });
+                const data = await res.json().catch(() => ({}));
+
+                if (!res.ok) {
+                    showToast(data.error || `Could not unblock ${escapeHtml(username)}.`, 'error');
+                } else {
+                    showToast(`Unblocked <strong>${escapeHtml(username)}</strong>.`);
+                }
+            } catch (e) {
+                showToast('Connection error — could not unblock the student.', 'error');
+            } finally {
+                unblockInFlight = false;
+                closeReviewModal();
+                loadBlocked();
+            }
+        };
+
+        window.openReviewModal = async (encodedUsername) => {
+            const username = decodeURIComponent(encodedUsername);
+            selected = blockedStudents.find(s => s.username === username) || null;
+            if (!selected) return;
+
+            document.getElementById('reviewStudentName').innerText = username;
+            document.getElementById('reviewModal').classList.remove('hidden');
+
+            const container = document.getElementById('reviewReport');
+            container.innerHTML = '<div class="text-center text-zinc-500 py-4">Loading report…</div>';
+
+            try {
+                const res = await fetch(`/api/admin/submissions/${encodeURIComponent(username)}/session`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (!res.ok) {
+                    container.innerHTML = '<div class="text-red-400 text-center py-4">Failed to load report.</div>';
+                    return;
+                }
+                const sessionData = await res.json();
+                const anomalies = sessionData.anomalies || [];
+
+                const chip = (label, value, tone) =>
+                    `<span class="px-2 py-0.5 rounded-md border text-[10px] font-bold ${tone}">${label}: ${value}</span>`;
+
+                const summary = `<div class="flex flex-wrap gap-1.5 pb-3 mb-3 border-b border-[#1f1f28]">
+                    ${chip('Screenshots', sessionData.screenshotCount || 0,
+                           (sessionData.screenshotCount || 0) > 0 ? 'bg-red-950/50 border-red-800 text-red-300' : 'bg-[#14141a] border-[#272733] text-zinc-400')}
+                    ${chip('Tab switches', sessionData.tabSwitchCount || 0,
+                           (sessionData.tabSwitchCount || 0) > 0 ? 'bg-amber-950/50 border-amber-800 text-amber-300' : 'bg-[#14141a] border-[#272733] text-zinc-400')}
+                    ${chip('Total events', anomalies.length, 'bg-[#14141a] border-[#272733] text-zinc-400')}
+                </div>`;
+
+                container.innerHTML = summary + (anomalies.length === 0
+                    ? '<div class="text-emerald-400 text-center py-3">No anomalies recorded.</div>'
+                    : anomalies.map(a => {
+                        const timeStr = new Date(a.timestamp).toLocaleTimeString();
+                        const isShot = a.type === 'SCREENSHOT';
+                        return `<div class="border-b border-[#1f1f28] pb-2 last:border-0 last:pb-0">
+                            <span class="text-zinc-500">[${timeStr}]</span>
+                            <span class="${isShot ? 'text-red-400' : 'text-yellow-400'} font-bold">${isShot ? '📸 ' : ''}${escapeHtml(a.type)}</span>:
+                            <span class="text-zinc-300">${escapeHtml(a.description)}</span>
+                        </div>`;
+                    }).join(''));
+            } catch (e) {
+                container.innerHTML = '<div class="text-red-400 text-center py-4">Failed to load report.</div>';
+            }
+        };
+
+        window.closeReviewModal = () => {
+            document.getElementById('reviewModal').classList.add('hidden');
+            selected = null;
+        };
+
+        window.confirmUnblock = () => {
+            if (!selected) return;
+            unblockStudent(encodeURIComponent(selected.username), selected.year, encodeURIComponent(selected.domain));
+        };
+
+        // ---------------------------------------------------------------- init
+        document.addEventListener('DOMContentLoaded', () => {
+            const currentRole = localStorage.getItem('role') || 'ADMIN';
+            const email = localStorage.getItem('admin_email') || localStorage.getItem('username') || 'admin@srminsider.in';
+            document.getElementById('sidebarUserEmail').innerText = email;
+            document.getElementById('sidebarUserRole').innerText = `ROLE: ${currentRole}`;
+
+            if (currentRole === 'SUPER_ADMIN') {
+                document.getElementById('roleBadge').innerText = 'SUPER ADMIN';
+                document.getElementById('roleBadge').className = 'px-1.5 py-0.5 rounded text-[9px] font-extrabold tracking-wider bg-purple-500/10 text-purple-400 border border-purple-500/20 uppercase';
+                document.getElementById('userAvatar').className = 'w-8 h-8 rounded-lg bg-gradient-to-tr from-purple-600 to-indigo-600 flex items-center justify-center text-xs font-black text-white flex-shrink-0 shadow-md';
+                document.getElementById('userAvatar').innerText = 'SA';
+                document.getElementById('navManageAdminsWrapper').classList.remove('hidden');
+            }
+
+            loadBlocked();
+            setInterval(loadBlocked, 15000);
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,1627 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Submissions | Admin Portal | SRM Insider</title>
+    <link rel="icon" type="image/x-icon" href="/icons/favicon.ico">
+    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192x192.png">
+    <link rel="apple-touch-icon" href="/icons/icon-192x192.png">
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="description" content="Review, evaluate, and manage student test submissions.">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        dark: {
+                            bg: '#000000',
+                            card: '#0f0f13',
+                            sidebar: '#0a0a0e',
+                            header: '#0a0a0d',
+                            border: '#1f1f28',
+                            hover: '#16161e',
+                            input: '#14141a',
+                            inputBorder: '#272733'
+                        }
+                    }
+                }
+            }
+        };
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { 
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
+            background-color: #000000;
+            color: #ffffff;
+        }
+        .font-mono { font-family: 'JetBrains Mono', monospace; }
+
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #08080a; }
+        ::-webkit-scrollbar-thumb { background: #22222c; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #3b3b4d; }
+
+        .premium-card {
+            background-color: #0f0f13;
+            border: 1px solid #1f1f28;
+            box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.6);
+        }
+        .table-row-hover:hover { background-color: #12121a; }
+
+        .nav-item {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .nav-item.active {
+            background: linear-gradient(90deg, rgba(59, 130, 246, 0.15) 0%, rgba(59, 130, 246, 0.05) 100%);
+            color: #60a5fa;
+            border-left: 3px solid #3b82f6;
+            font-weight: 600;
+        }
+        .nav-item:not(.active):hover {
+            background-color: #16161e;
+            color: #f4f4f5;
+        }
+
+        @keyframes livePulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.4; transform: scale(1.15); }
+        }
+        .live-dot {
+            animation: livePulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+    </style>
+    <script src="/js/safe-dom.js"></script>
+</head>
+<body class="min-h-screen flex bg-black text-white antialiased overflow-x-hidden">
+
+    
+    <div id="sidebarBackdrop" onclick="toggleMobileSidebar()" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-40 hidden lg:hidden transition-opacity duration-300"></div>
+
+    
+    
+    
+    <aside id="adminSidebar" class="fixed inset-y-0 left-0 z-50 w-72 bg-dark-sidebar border-r border-dark-border flex flex-col transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out shadow-2xl">
+        
+        
+        <div class="h-20 px-6 border-b border-dark-border flex items-center justify-between">
+            <div class="flex items-center space-x-3.5">
+                <div class="relative">
+                    <img src="/icons/icon-192x192.png" 
+                         alt="Logo" class="w-10 h-10 rounded-xl object-contain shadow-lg ring-1 ring-white/10">
+                    <span class="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-emerald-500 border-2 border-[#0a0a0e] rounded-full"></span>
+                </div>
+                <div>
+                    <h1 class="font-extrabold text-white text-base tracking-tight leading-none">SRM INSIDER</h1>
+                    <div class="flex items-center space-x-1.5 mt-1">
+                        <span id="roleBadge" class="px-1.5 py-0.5 rounded text-[9px] font-extrabold tracking-wider bg-blue-500/10 text-blue-400 border border-blue-500/20 uppercase">
+                            ADMIN
+                        </span>
+                    </div>
+                </div>
+            </div>
+            <button onclick="toggleMobileSidebar()" class="lg:hidden p-1.5 text-zinc-400 hover:text-white rounded-lg hover:bg-zinc-800/50">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+        </div>
+
+        
+        <nav class="flex-1 px-4 py-6 space-y-1.5 overflow-y-auto">
+            <div class="px-3 pb-2 text-[10px] font-extrabold uppercase tracking-wider text-zinc-500">
+                Main Menu
+            </div>
+
+            
+            <a href="/admin/admin.html" class="nav-item w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium text-zinc-400 transition hover:text-white">
+                <div class="flex items-center space-x-3">
+                    <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
+                    <span>Problems Library</span>
+                </div>
+            </a>
+
+            
+            <a href="/admin/admin-add-problem.html" class="nav-item w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium text-zinc-400 transition hover:text-white">
+                <div class="flex items-center space-x-3">
+                    <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    <span>Add Question</span>
+                </div>
+            </a>
+
+            
+            <a href="/admin/admin-submissions.html" class="nav-item active w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium transition cursor-pointer">
+                <div class="flex items-center space-x-3">
+                    <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                    <span>Submissions</span>
+                </div>
+                <span id="sidebarSubCount" class="text-[11px] px-2 py-0.5 rounded-md bg-blue-900/30 text-blue-400 font-mono font-semibold">Live</span>
+            </a>
+
+            
+            <a href="/admin/admin-live.html" class="nav-item w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium text-zinc-400 transition hover:text-white">
+                <div class="flex items-center space-x-3">
+                    <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                    <span>Live Students</span>
+                </div>
+                <div class="flex items-center space-x-1.5 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500 live-dot"></span>
+                    <span class="text-[10px] font-bold text-emerald-400 uppercase tracking-wider">Live</span>
+                </div>
+            </a>
+
+            
+            <a href="/admin/admin-blocked.html" class="nav-item w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium text-zinc-400 transition hover:text-white">
+                <div class="flex items-center space-x-3">
+                    <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"></path></svg>
+                    <span>Blocked Students</span>
+                </div>
+            </a>
+
+            
+            <div id="navManageAdminsWrapper" class="hidden pt-4">
+                <div class="px-3 pb-2 text-[10px] font-extrabold uppercase tracking-wider text-purple-400/80 flex items-center justify-between">
+                    <span>Administration</span>
+                    <span class="px-1 rounded bg-purple-500/20 text-purple-300 text-[9px] font-bold">SUPER</span>
+                </div>
+                <a href="/admin/admin-plagiarism.html" class="nav-item w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium text-zinc-400 transition hover:text-white">
+                    <div class="flex items-center space-x-3">
+                        <svg class="w-4 h-4 text-amber-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                        <span>Similarity Report</span>
+                    </div>
+                </a>
+                <a href="/admin/admin-admins.html" class="nav-item w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium text-zinc-400 transition hover:text-white">
+                    <div class="flex items-center space-x-3">
+                        <svg class="w-4 h-4 text-purple-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                        <span>Manage Admins</span>
+                    </div>
+                </a>
+                <a href="/admin/admin-students.html" class="nav-item w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium text-zinc-400 transition hover:text-white mt-1">
+                    <div class="flex items-center space-x-3">
+                        <svg class="w-4 h-4 text-emerald-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                        <span>Invite Students</span>
+                    </div>
+                </a>
+            </div>
+        </nav>
+
+        
+        <div class="p-4 border-t border-dark-border bg-[#07070a]">
+            <div class="bg-[#121218] border border-[#20202a] rounded-xl p-3 mb-2 flex items-center justify-between">
+                <div class="flex items-center space-x-2.5 overflow-hidden">
+                    <div id="userAvatar" class="w-8 h-8 rounded-lg bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center text-xs font-black text-white flex-shrink-0 shadow-md">
+                        AD
+                    </div>
+                    <div class="truncate">
+                        <div id="sidebarUserEmail" class="text-xs font-semibold text-zinc-200 truncate">Admin User</div>
+                        <div id="sidebarUserRole" class="text-[10px] text-zinc-400 font-mono">ROLE: ADMIN</div>
+                    </div>
+                </div>
+            </div>
+
+            <button onclick="logout()" class="w-full flex items-center justify-center space-x-1.5 py-2 px-2.5 rounded-lg border border-red-900/40 bg-red-950/20 text-red-400 text-xs font-semibold transition hover:bg-red-900/40 cursor-pointer">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                <span>Logout</span>
+            </button>
+        </div>
+
+    </aside>
+
+    
+    
+    
+    <div class="flex-1 lg:pl-72 flex flex-col min-w-0 min-h-screen bg-black">
+        
+        
+        <header class="h-16 px-6 lg:px-8 bg-dark-header/80 backdrop-blur-md border-b border-dark-border flex items-center justify-between sticky top-0 z-30 flex-shrink-0">
+            <div class="flex items-center space-x-3">
+                <button onclick="toggleMobileSidebar()" class="lg:hidden p-2 rounded-lg bg-[#14141a] border border-[#272733] text-zinc-300 hover:text-white focus:outline-none">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+                </button>
+                <div>
+                    <span class="text-xs text-zinc-500 font-medium">Dashboard /</span>
+                    <span class="text-sm font-bold text-white ml-1">Submissions</span>
+                </div>
+            </div>
+
+            <div class="flex items-center space-x-3">
+                <button onclick="evaluateAllSubmissions()" id="btnEvaluateAll" class="hidden flex items-center space-x-1.5 px-3 py-1.5 rounded-lg border border-purple-800/40 bg-purple-950/20 text-purple-300 text-xs font-semibold hover:bg-purple-900/30 transition active:scale-[0.98] cursor-pointer" title="Auto-grade every submitted paper: programming answers are run against their test cases">
+                    <svg class="w-3.5 h-3.5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                    <span class="hidden sm:inline">Auto-Grade All</span>
+                    <span class="sm:hidden">Auto-Grade</span>
+                </button>
+                <button onclick="exportSubmissionsCsv()" id="btnExportCsv" class="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg border border-blue-800/40 bg-blue-950/20 text-blue-300 text-xs font-semibold hover:bg-blue-900/30 transition active:scale-[0.98] cursor-pointer" title="Export every student's marks, percentage, and violation counts as a CSV">
+                    <svg class="w-3.5 h-3.5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H8a2 2 0 01-2-2V5a2 2 0 012-2h6l6 6v11a2 2 0 01-2 2z"/></svg>
+                    <span class="hidden sm:inline">Export CSV</span>
+                    <span class="sm:hidden">Export</span>
+                </button>
+                <a href="/admin/admin-live.html" class="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg border border-emerald-900/40 bg-emerald-950/20 text-emerald-300 text-xs font-semibold hover:bg-emerald-900/30 transition">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500 live-dot"></span>
+                    <span class="hidden sm:inline">Live Students</span>
+                </a>
+                <a href="/admin/admin.html" class="hidden sm:flex items-center space-x-1.5 px-3 py-1.5 rounded-lg border border-[#272733] bg-[#14141a] text-zinc-300 text-xs font-semibold hover:bg-[#1f1f28] transition">
+                    <svg class="w-3.5 h-3.5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
+                    <span>Problems</span>
+                </a>
+            </div>
+        </header>
+
+        
+        <main class="flex-1 py-8 px-6 lg:px-8 max-w-7xl w-full mx-auto space-y-6 pb-16">
+            
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gradient-to-r from-[#121218] via-[#0f0f15] to-[#0a0a0f] p-6 rounded-2xl border border-[#1f1f28]">
+                <div>
+                    <h2 class="text-2xl font-extrabold text-white tracking-tight">Student Submissions & Audits</h2>
+                    <p class="text-xs text-zinc-400 mt-1">Review student code, section timings and proctoring anomalies. Evaluate All grades programming answers against their test cases.</p>
+                </div>
+                <div class="flex items-center gap-3">
+                    <div class="relative">
+                        <svg class="w-4 h-4 text-zinc-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M17 11a6 6 0 11-12 0 6 6 0 0112 0z"/></svg>
+                        <input id="submissionSearch" type="search" autocomplete="off"
+                               placeholder="Search by email, name or username"
+                               class="w-72 pl-9 pr-8 py-2 rounded-lg bg-[#14141a] border border-[#272733] text-zinc-200 text-xs font-medium placeholder-zinc-600 focus:outline-none focus:border-blue-700 transition">
+                        <button id="submissionSearchClear" type="button" title="Clear search"
+                                class="hidden absolute right-2 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-200 text-sm cursor-pointer">&times;</button>
+                    </div>
+                    <div class="text-xs font-mono text-blue-400 bg-blue-900/20 px-3 py-1.5 rounded-lg border border-blue-800/30 whitespace-nowrap">
+                        Total Submissions: <span id="submissionCount" class="font-bold">0</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="premium-card rounded-2xl overflow-hidden flex flex-col w-full">
+                <div class="overflow-x-auto relative">
+                    <table class="w-full text-left border-collapse">
+                        <thead class="bg-[#121218] text-xs uppercase tracking-wider text-zinc-400 font-bold border-b border-[#1f1f28]">
+                            <tr>
+                                <th class="px-6 py-4">Student</th>
+                                <th class="px-6 py-4">Year / Domain</th>
+                                <th class="px-6 py-4">Status</th>
+                                <th class="px-6 py-4">Score & Percentage</th>
+                                <th class="px-6 py-4">Section Timing</th>
+                                <th class="px-6 py-4 text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="submissionsTableBody" class="text-sm font-medium text-zinc-300 divide-y divide-[#181822]">
+                            
+                        </tbody>
+                    </table>
+                    <div id="loadingIndicator" class="p-8 text-center text-zinc-500 text-xs font-mono">
+                        <svg class="animate-spin h-5 w-5 mx-auto mb-2 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                        Loading more submissions...
+                    </div>
+                </div>
+            </div>
+
+        </main>
+
+
+
+    </div>
+
+    
+
+    <div id="gradingModal" class="fixed inset-0 bg-black/80 hidden items-center justify-center z-50 p-4 sm:p-6 backdrop-blur-md">
+        <div class="premium-card rounded-2xl w-full max-w-2xl flex flex-col max-h-[85vh]">
+            <div class="px-6 py-5 border-b border-[#1f1f2c] flex items-start justify-between gap-4">
+                <div>
+                    <h3 id="gradingTitle" class="text-lg font-extrabold text-white">Auto-grading submissions</h3>
+                    <p id="gradingSubtitle" class="text-xs text-zinc-400 mt-1 font-medium">Running each programming answer against its test cases…</p>
+                </div>
+                <button id="gradingCloseBtn" onclick="closeGradingModal()" class="hidden text-zinc-500 hover:text-white text-xl leading-none cursor-pointer">&times;</button>
+            </div>
+
+            <div class="px-6 py-5 border-b border-[#1f1f2c]">
+                <div class="flex items-baseline justify-between mb-2">
+                    <span id="gradingCount" class="text-sm font-bold text-white font-mono">0 / 0 papers</span>
+                    <span id="gradingPct" class="text-xs font-mono text-zinc-400">0%</span>
+                </div>
+                <div class="w-full h-2 rounded-full bg-[#1a1a24] overflow-hidden">
+                    <div id="gradingBar" class="h-full bg-gradient-to-r from-purple-600 to-blue-500 transition-all duration-300" style="width:0%"></div>
+                </div>
+                <p id="gradingBatch" class="text-[11px] text-zinc-500 font-mono mt-2">Preparing…</p>
+            </div>
+
+            <div class="flex-1 overflow-y-auto px-6 py-4">
+                <div id="gradingLog" class="space-y-1.5 text-xs font-mono"></div>
+            </div>
+
+            <div class="px-6 py-4 border-t border-[#1f1f2c] flex items-center justify-between gap-3">
+                <span id="gradingHint" class="text-[11px] text-zinc-500">Safe to stop — already-graded papers are skipped when you resume.</span>
+                <button id="gradingStopBtn" onclick="stopGrading()" class="px-4 py-2 rounded-lg border border-red-800/50 bg-red-950/30 text-red-300 text-xs font-bold hover:bg-red-900/40 transition cursor-pointer">Stop</button>
+                <button id="gradingDoneBtn" onclick="closeGradingModal()" class="hidden px-4 py-2 rounded-lg border border-emerald-800/50 bg-emerald-950/30 text-emerald-300 text-xs font-bold hover:bg-emerald-900/40 transition cursor-pointer">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="answersModal" class="fixed inset-0 bg-black/80 hidden items-center justify-center z-50 p-4 sm:p-6 backdrop-blur-md">
+        <div class="premium-card rounded-2xl border border-[#1f1f28] w-full max-w-5xl max-h-[92vh] flex flex-col shadow-2xl">
+            <div class="px-6 py-4 border-b border-[#1f1f28] bg-[#121218] flex justify-between items-center">
+                <div>
+                    <h3 id="modalTitle" class="font-bold text-lg text-white">Evaluation & Submission</h3>
+                    <p id="modalSubtitle" class="text-xs text-zinc-400 font-mono mt-0.5"></p>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <button id="btnModalIdentity" onclick="viewModalIdentity()" class="hidden px-2.5 py-1 rounded-lg bg-[#1c1c24] border border-[#272733] text-zinc-300 text-xs hover:text-white transition flex items-center space-x-1 cursor-pointer">
+                        <svg class="w-3.5 h-3.5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2"/></svg>
+                        <span>Student ID</span>
+                    </button>
+                    <button onclick="closeModal()" class="text-zinc-500 hover:text-red-500 font-bold text-2xl transition cursor-pointer p-1">&times;</button>
+                </div>
+            </div>
+            <div id="modalContent" class="p-6 overflow-y-auto flex-1 space-y-6 text-sm">
+                
+            </div>
+            <div id="modalFooter" class="px-6 py-3.5 border-t border-[#1f1f28] bg-[#0c0c10] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div id="modalFooterScore" class="text-xs font-mono text-zinc-400 flex items-center space-x-3">
+                    
+                </div>
+                <div class="flex items-center space-x-2 justify-end">
+                    <button onclick="closeModal()" class="bg-[#14141a] hover:bg-[#1f1f28] border border-[#272733] text-zinc-300 text-xs font-semibold px-5 py-2.5 rounded-xl transition active:scale-[0.98] cursor-pointer">Close</button>
+                    <button id="btnSaveEvaluation" onclick="saveCurrentEvaluation()" class="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-xs font-bold px-5 py-2.5 rounded-xl transition shadow-md active:scale-[0.98] cursor-pointer flex items-center space-x-1.5">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                        <span>Save Evaluation</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="violationReportModal" class="hidden fixed inset-0 bg-black/90 z-[60] flex items-center justify-center p-4 sm:p-8 backdrop-blur-md">
+        <div class="premium-card rounded-2xl w-full max-w-4xl overflow-hidden flex flex-col max-h-[92vh]">
+            <div class="px-6 py-4 border-b border-[#1f1f28] flex items-center justify-between bg-[#121218]">
+                <div>
+                    <h3 class="text-base font-bold text-white">Proctoring violation report</h3>
+                    <p id="reportStudentName" class="text-xs text-zinc-400 font-mono mt-0.5">Student</p>
+                </div>
+                <button onclick="closeViolationReport()" class="p-1.5 text-zinc-400 hover:text-white rounded-lg hover:bg-zinc-800/50">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+
+            <div id="reportBody" class="px-6 py-5 overflow-y-auto flex-1">
+                <div class="text-center text-zinc-500 py-10 text-sm">Loading report…</div>
+            </div>
+
+            <div class="px-6 py-4 border-t border-[#1f1f28] bg-[#0b0b0f] flex justify-between items-center gap-3">
+                <span class="text-[11px] text-zinc-500">Counts are recorded server-side as each event happens.</span>
+                <div class="flex items-center gap-2">
+                    <button id="downloadPdfBtn" onclick="downloadViolationPdf()" class="bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold px-4 py-2 rounded-xl shadow transition active:scale-[0.98] cursor-pointer flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                        <span id="downloadPdfBtnText">Download PDF</span>
+                    </button>
+                    <button onclick="closeViolationReport()" class="bg-[#14141a] hover:bg-[#1f1f28] border border-[#272733] text-zinc-300 text-xs font-semibold px-4 py-2 rounded-xl transition cursor-pointer">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let submissionsData = [];
+        let problemsData = {};
+        
+        let currentPage = 0;
+        let isFetching = false;
+        let hasMoreData = true;
+        let searchTerm = '';
+        let searchDebounce = null;
+
+        const token = localStorage.getItem('token');
+        const role = localStorage.getItem('role') || 'ADMIN';
+        const isSuperAdmin = role === 'SUPER_ADMIN' || role === 'ROLE_SUPER_ADMIN';
+        if (!token) {
+            window.location.href = '/admin/adminlogin.html';
+        }
+
+        function logout() {
+            localStorage.clear();
+            window.location.href = '/admin/adminlogin.html';
+        }
+
+        const toggleMobileSidebar = () => {
+            const sidebar = document.getElementById('adminSidebar');
+            const backdrop = document.getElementById('sidebarBackdrop');
+            if (sidebar.classList.contains('-translate-x-full')) {
+                sidebar.classList.remove('-translate-x-full');
+                backdrop.classList.remove('hidden');
+            } else {
+                sidebar.classList.add('-translate-x-full');
+                backdrop.classList.add('hidden');
+            }
+        };
+
+        function formatTime(seconds) {
+            if (seconds === undefined || seconds === null || isNaN(seconds)) return "N/A";
+            const m = Math.floor(seconds / 60);
+            const s = Math.floor(seconds % 60);
+            return `${m}m ${s}s`;
+        }
+
+        async function loadSubmissions(reset = false) {
+            if (isFetching || !hasMoreData) return;
+            isFetching = true;
+            
+            if (reset) {
+                currentPage = 0;
+                submissionsData = [];
+                problemsData = {};
+                hasMoreData = true;
+                document.getElementById('submissionsTableBody').innerHTML = '';
+            }
+            
+            const tbody = document.getElementById('submissionsTableBody');
+            const loader = document.getElementById('loadingIndicator');
+            loader.style.display = 'block';
+
+            try {
+                const query = searchTerm ? `&search=${encodeURIComponent(searchTerm)}` : '';
+                const response = await fetch(`/api/admin/submissions?page=${currentPage}&size=20${query}`, {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+
+                if (response.status === 401 || response.status === 403) {
+                    logout();
+                    return;
+                }
+
+                const rawData = await response.json();
+                
+                if (rawData.problems) {
+                    problemsData = { ...problemsData, ...rawData.problems };
+                }
+
+                if (!rawData.submissions || rawData.submissions.length === 0) {
+                    hasMoreData = false;
+                    loader.style.display = 'none';
+                    if (currentPage === 0) {
+                        const message = searchTerm
+                            ? `No submissions match &quot;${searchTerm.replace(/[<>&"]/g, '')}&quot;.`
+                            : 'No submissions found.';
+                        tbody.innerHTML = `<tr><td colspan="6" class="px-6 py-12 text-center text-zinc-500 font-mono text-xs">${message}</td></tr>`;
+                        document.getElementById('submissionCount').innerText = 0;
+                    }
+                    return;
+                }
+                
+                document.getElementById('submissionCount').innerText = rawData.totalElements;
+                
+                rawData.submissions.forEach((sub) => {
+                    const idx = submissionsData.length;
+                    submissionsData.push(sub);
+                    
+                    const tr = document.createElement('tr');
+                    tr.className = 'border-b border-[#181822] table-row-hover transition-colors';
+
+                    let statusBadge = '';
+                    if (sub.submitted) {
+                        if (sub.autoSubmitted) {
+                            statusBadge = `<span class="bg-emerald-950/40 text-emerald-400 border border-emerald-900/50 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide inline-flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>Auto-Submitted</span>`;
+                        } else {
+                            statusBadge = `<span class="bg-emerald-950/40 text-emerald-400 border border-emerald-900/50 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide inline-flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>Submitted</span>`;
+                        }
+                    } else {
+                        statusBadge = `<span class="bg-yellow-950/40 text-yellow-400 border border-yellow-900/50 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide inline-flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-yellow-400 animate-pulse"></span>In Progress</span>`;
+                    }
+
+                    let timingHtml = '<div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-[10px] font-mono">';
+                    if (sub.sectionTimings) {
+                        for (const [section, time] of Object.entries(sub.sectionTimings)) {
+                            timingHtml += `
+                                <div class="bg-[#121218] p-1.5 rounded-lg border border-[#1f1f28]">
+                                    <div class="text-zinc-400 font-bold truncate uppercase tracking-wider" title="${section}">${section}</div>
+                                    <div class="text-zinc-200 mt-0.5">${formatTime(time)}</div>
+                                </div>
+                            `;
+                        }
+                    }
+                    timingHtml += '</div>';
+
+                    let actionsHtml = `<div class="flex items-center justify-end space-x-1.5">`;
+                    if (!sub.submitted && isSuperAdmin) {
+                        actionsHtml += `<button onclick="forceSubmitSession('${sub.username}', ${sub.year}, '${sub.domain}')" class="bg-amber-900/20 border border-amber-800/50 text-amber-400 hover:bg-amber-900/40 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition active:scale-[0.98] cursor-pointer" title="Force end & submit this exam">Submit</button>`;
+                    }
+                    if (isSuperAdmin) {
+                        actionsHtml += `<button onclick="openModal(${idx})" class="bg-purple-900/20 border border-purple-800/50 text-purple-300 hover:bg-purple-900/40 px-3 py-1.5 rounded-lg text-xs font-semibold transition active:scale-[0.98] cursor-pointer flex items-center space-x-1" title="Evaluate submission & view questions">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+                            <span>Evaluate</span>
+                        </button>`;
+                    } else {
+                        actionsHtml += `<button onclick="openModal(${idx})" class="bg-blue-900/20 border border-blue-900/50 text-blue-400 hover:bg-blue-900/40 px-3 py-1.5 rounded-lg text-xs font-semibold transition active:scale-[0.98] cursor-pointer" title="View submission details">View</button>`;
+                    }
+                    actionsHtml += `<button onclick="openViolationReport('${encodeURIComponent(sub.username)}')" class="bg-amber-900/20 border border-amber-800/50 text-amber-300 hover:bg-amber-900/40 px-3 py-1.5 rounded-lg text-xs font-semibold transition active:scale-[0.98] cursor-pointer flex items-center space-x-1" title="Proctoring violation report">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                        <span>Report</span>
+                    </button>`;
+
+                    if (isSuperAdmin) {
+                        actionsHtml += `<button onclick="deleteSubmission('${encodeURIComponent(sub.username)}', ${Number(sub.year)}, '${encodeURIComponent(sub.domain)}')" class="bg-red-900/20 border border-red-800/50 text-red-400 hover:bg-red-900/40 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition active:scale-[0.98] cursor-pointer" title="Permanently delete this submission">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                        </button>`;
+                    }
+                    actionsHtml += `</div>`;
+
+                    // Marks, not question count: showing "/ 48" beside a percentage
+                    // derived from total marks made the two disagree on screen.
+                    const outOf = sub.totalMarksPossible || 0;
+                    const score = sub.totalScore !== undefined ? sub.totalScore : 0;
+                    const pct = sub.percentage !== undefined ? sub.percentage : (outOf > 0 ? (Math.round((score / outOf) * 1000) / 10) : 0);
+                    const pctBadge = getPercentageBadge(pct);
+
+                    tr.innerHTML = `
+                        <td class="px-6 py-4">
+                            <div class="font-bold text-white flex items-center space-x-2">
+                                <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
+                                <span>${sub.name ? escapeHtml(sub.name) : escapeHtml(sub.username)}</span>
+                            </div>
+                            ${sub.email ? `<div class="text-xs text-zinc-400 font-mono mt-0.5 ml-3.5">${escapeHtml(sub.email)}</div>` : ''}
+                            <div class="text-xs text-zinc-500 font-mono mt-0.5 ml-3.5">${new Date(sub.createdAt).toLocaleString()}</div>
+                        </td>
+                        <td class="px-6 py-4 text-zinc-400">
+                            <div class="font-semibold text-white text-xs">Year ${sub.year}</div>
+                            <div class="text-xs text-zinc-500">${sub.domain}</div>
+                        </td>
+                        <td class="px-6 py-4">${statusBadge}</td>
+                        <td class="px-6 py-4">
+                            <div class="flex items-baseline space-x-1.5">
+                                <span class="font-black text-white font-mono text-base">${score}</span>
+                                <span class="text-xs text-zinc-500 font-mono">/ ${outOf}</span>
+                            </div>
+                            <div class="mt-1 flex items-center space-x-2">
+                                <span class="px-2 py-0.5 rounded text-[10px] font-extrabold font-mono ${pctBadge}">${pct}%</span>
+                                ${sub.evaluated 
+                                    ? `<span class="text-[9px] text-emerald-400 font-mono uppercase font-bold" title="Evaluation saved">Graded</span>` 
+                                    : `<span class="text-[9px] text-zinc-500 font-mono uppercase font-semibold" title="Auto-graded">Auto</span>`}
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 min-w-[240px]">${timingHtml}</td>
+                        <td class="px-6 py-4 text-right">${actionsHtml}</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+
+                if (rawData.last) {
+                    hasMoreData = false;
+                    loader.style.display = 'none';
+                } else {
+                    currentPage++;
+                }
+            } catch (error) {
+                console.error("Error loading submissions", error);
+                loader.innerText = 'Failed to load data.';
+            } finally {
+                isFetching = false;
+            }
+        }
+        
+        let currentEvalIdx = null;
+        let currentManualMarks = {};
+        let currentRemarks = {};
+
+        function getPercentageBadge(pct) {
+            pct = Number(pct) || 0;
+            if (pct >= 80) return 'bg-emerald-950/60 text-emerald-400 border border-emerald-800/60';
+            if (pct >= 60) return 'bg-blue-950/60 text-blue-400 border border-blue-800/60';
+            if (pct >= 40) return 'bg-amber-950/60 text-amber-400 border border-amber-800/60';
+            return 'bg-zinc-900 text-zinc-400 border border-zinc-700/60';
+        }
+
+        function openModal(idx) {
+            currentEvalIdx = idx;
+            const sub = submissionsData[idx];
+            if (!sub) return;
+
+            currentManualMarks = Object.assign({}, sub.manualMarks || {});
+            currentRemarks = Object.assign({}, sub.evaluationRemarks || {});
+
+            document.getElementById('modalTitle').innerText = isSuperAdmin ? `Evaluation: ${sub.username}` : `Submission Audit: ${sub.username}`;
+            document.getElementById('modalSubtitle').innerText = `Year ${sub.year} • ${sub.domain} • Started: ${new Date(sub.createdAt).toLocaleString()}`;
+            
+            const btnId = document.getElementById('btnModalIdentity');
+            if (btnId) btnId.classList.remove('hidden');
+
+            renderEvaluationModalContent();
+
+            document.getElementById('answersModal').classList.remove('hidden');
+            document.getElementById('answersModal').classList.add('flex');
+        }
+
+        function renderEvaluationModalContent() {
+            if (currentEvalIdx === null) return;
+            const sub = submissionsData[currentEvalIdx];
+            const content = document.getElementById('modalContent');
+            content.innerHTML = '';
+
+            const totalQ = sub.totalQuestions || (sub.problemIds ? sub.problemIds.length : (sub.totalMarksPossible || 0));
+
+            // Calculate live score based on auto MCQs + currentManualMarks
+            let liveMcqScore = 0;
+            let attemptedCount = 0;
+            let correctMcqCount = 0;
+            let incorrectMcqCount = 0;
+            let totalMarksPossible = 0;
+
+            const qIds = (sub.problemIds && sub.problemIds.length > 0) 
+                ? sub.problemIds 
+                : Object.keys(sub.answers || {});
+
+            // Mirrors the server: the programming section is scaled onto a fixed
+            // band so every track's paper totals the same.
+            const PROGRAMMING_SECTION_MARKS = 10;
+            const PROGRAMMING_SECTION = 'Programming Question';
+            let progRawMax = 0;
+            let progRawScore = 0;
+
+            qIds.forEach(pid => {
+                const prob = problemsData[pid];
+                const studentAns = sub.answers ? sub.answers[pid] : null;
+                const qMarks = (prob && prob.marks) ? prob.marks : 1;
+                if (studentAns) attemptedCount++;
+
+                if (prob && prob.section === PROGRAMMING_SECTION) {
+                    progRawMax += qMarks;
+                    const m = currentManualMarks[pid];
+                    if (m !== undefined && m !== null) progRawScore += Number(m) || 0;
+                    return;
+                }
+
+                totalMarksPossible += qMarks;
+                if (prob && prob.correctOption && studentAns) {
+                    if (prob.correctOption.trim().toLowerCase() === studentAns.trim().toLowerCase()) {
+                        correctMcqCount++;
+                        if (currentManualMarks[pid] === undefined || currentManualMarks[pid] === null) {
+                            liveMcqScore++;
+                        }
+                    } else {
+                        incorrectMcqCount++;
+                    }
+                }
+            });
+
+            let liveManualScore = 0;
+            qIds.forEach(pid => {
+                const prob = problemsData[pid];
+                if (prob && prob.section === PROGRAMMING_SECTION) return;
+                const val = currentManualMarks[pid];
+                if (val !== undefined && val !== null) liveManualScore += Number(val) || 0;
+            });
+
+            let progScaled = 0;
+            if (progRawMax > 0) {
+                totalMarksPossible += PROGRAMMING_SECTION_MARKS;
+                const capped = Math.min(progRawScore, progRawMax);
+                progScaled = Math.round((capped / progRawMax) * PROGRAMMING_SECTION_MARKS * 10) / 10;
+            }
+
+            const liveTotalScore = Math.round((liveMcqScore + liveManualScore + progScaled) * 10) / 10;
+            const livePct = totalMarksPossible > 0 ? (Math.round((liveTotalScore / totalMarksPossible) * 1000) / 10) : 0;
+            const pctBadge = getPercentageBadge(livePct);
+
+            // 1. TOP EVALUATION SUMMARY HERO
+            const heroCard = document.createElement('div');
+            heroCard.className = 'p-5 rounded-2xl bg-gradient-to-r from-[#14141d] via-[#101018] to-[#0d0d12] border border-[#272738] shadow-lg';
+            heroCard.innerHTML = `
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-[#1f1f2c]">
+                    <div>
+                        <span class="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block mb-0.5">Evaluation & Score</span>
+                        <div class="flex items-baseline space-x-3">
+                            <span class="text-3xl font-black text-white font-mono" id="heroScoreVal">${liveTotalScore} <span class="text-base font-semibold text-zinc-500 font-mono">/ ${totalMarksPossible} Marks</span></span>
+                            <span class="px-2.5 py-0.5 rounded-lg text-xs font-black font-mono ${pctBadge}" id="heroPctBadge">${livePct}%</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <span class="${sub.submitted ? 'bg-emerald-950/50 text-emerald-400 border border-emerald-900/60' : 'bg-yellow-950/50 text-yellow-400 border border-yellow-900/60'} px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide inline-flex items-center gap-1.5">
+                            <span class="w-1.5 h-1.5 rounded-full ${sub.submitted ? 'bg-emerald-400' : 'bg-yellow-400 animate-pulse'}"></span>
+                            ${sub.submitted ? (sub.autoSubmitted ? 'Auto-Submitted (Timeout)' : 'Submitted') : 'In Progress'}
+                        </span>
+                        <span class="${sub.isBlocked ? 'bg-red-950/50 text-red-400 border border-red-900/60' : 'bg-emerald-950/30 text-emerald-400 border border-emerald-900/40'} px-2.5 py-1 rounded-full text-[10px] font-bold uppercase">
+                            ${sub.isBlocked ? 'BLOCKED' : 'Integrity: Clean'}
+                        </span>
+                    </div>
+                </div>
+                
+                <div class="mt-4">
+                    <div class="w-full bg-[#181824] rounded-full h-2 overflow-hidden border border-[#272738]">
+                        <div class="bg-gradient-to-r from-purple-500 via-indigo-500 to-emerald-400 h-full rounded-full transition-all duration-300" style="width: ${Math.min(100, livePct)}%"></div>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-2 sm:grid-cols-5 gap-3 mt-4 text-xs font-mono">
+                    <div class="bg-[#0e0e14] p-2.5 rounded-xl border border-[#1f1f2c]">
+                        <span class="text-zinc-500 text-[10px] uppercase font-bold block">Assigned Questions</span>
+                        <span class="text-white font-bold">${totalQ} (${totalQ} Marks)</span>
+                    </div>
+                    <div class="bg-[#0e0e14] p-2.5 rounded-xl border border-[#1f1f2c]">
+                        <span class="text-zinc-500 text-[10px] uppercase font-bold block">Attempted</span>
+                        <span class="text-blue-400 font-bold">${attemptedCount}</span>
+                    </div>
+                    <div class="bg-[#0e0e14] p-2.5 rounded-xl border border-[#1f1f2c]">
+                        <span class="text-zinc-500 text-[10px] uppercase font-bold block">Correct MCQs</span>
+                        <span class="text-emerald-400 font-bold">${correctMcqCount}</span>
+                    </div>
+                    <div class="bg-[#0e0e14] p-2.5 rounded-xl border border-[#1f1f2c]">
+                        <span class="text-zinc-500 text-[10px] uppercase font-bold block">Incorrect MCQs</span>
+                        <span class="text-red-400 font-bold">${incorrectMcqCount}</span>
+                    </div>
+                    <div class="bg-[#0e0e14] p-2.5 rounded-xl border border-[#1f1f2c]">
+                        <span class="text-zinc-500 text-[10px] uppercase font-bold block">Code Marks Awarded</span>
+                        <span class="text-purple-400 font-bold" id="heroManualVal">+${liveManualScore}</span>
+                    </div>
+                </div>
+            `;
+            content.appendChild(heroCard);
+
+            // In-progress force submit banner if applicable
+            if (!sub.submitted) {
+                const forceDiv = document.createElement('div');
+                forceDiv.className = 'p-3 bg-amber-950/20 border border-amber-900/40 rounded-xl flex items-center justify-between';
+                forceDiv.innerHTML = `
+                    <span class="text-xs text-amber-300 font-medium">Exam is currently marked in progress. You can force-finalize submission.</span>
+                    <button onclick="forceSubmitSession('${sub.username}', ${sub.year}, '${sub.domain}')" class="bg-amber-600 hover:bg-amber-500 text-black px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer">Force Submit Exam</button>
+                `;
+                content.appendChild(forceDiv);
+            }
+
+            // Anomalies list if any
+            if (sub.anomalies && sub.anomalies.length > 0) {
+                const anomDiv = document.createElement('div');
+                anomDiv.className = 'space-y-1.5 max-h-32 overflow-y-auto text-xs font-mono bg-[#0e0e14] p-3 border border-[#272738] rounded-xl';
+                anomDiv.innerHTML = `<div class="text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-1">Proctoring Anomalies (${sub.anomalies.length}) • Tab Switches: ${sub.tabSwitchCount || 0}</div>`;
+                sub.anomalies.forEach(a => {
+                    const timeStr = new Date(a.timestamp).toLocaleTimeString();
+                    anomDiv.innerHTML += `<div class="border-b border-[#1a1a24] pb-1 last:border-0"><span class="text-zinc-500">[${timeStr}]</span> <span class="font-bold text-yellow-400">${a.type}</span>: <span class="text-zinc-300">${a.description}</span></div>`;
+                });
+                content.appendChild(anomDiv);
+            }
+
+            // 2. QUESTION-BY-QUESTION EVALUATION LIST
+            const listTitle = document.createElement('div');
+            listTitle.className = 'flex items-center justify-between pt-2 border-t border-[#1f1f28]';
+            listTitle.innerHTML = `
+                <div>
+                    <h4 class="font-bold text-white text-base">Questions & Grading</h4>
+                    <p class="text-xs text-zinc-400">MCQ answers are graded automatically. You can review code submissions and award marks.</p>
+                </div>
+                <div class="text-xs font-mono text-zinc-400 bg-[#121218] px-3 py-1 rounded-lg border border-[#272738]">
+                    ${qIds.length} Questions
+                </div>
+            `;
+            content.appendChild(listTitle);
+
+            if (qIds.length === 0) {
+                const emptyP = document.createElement('p');
+                emptyP.className = 'text-zinc-500 italic text-xs py-4 text-center';
+                emptyP.innerText = 'No assigned questions recorded for this session.';
+                content.appendChild(emptyP);
+            } else {
+                qIds.forEach((pid, qIndex) => {
+                    const prob = problemsData[pid] || { id: pid, text: 'Question ID: ' + pid, section: 'General', type: 'MCQ' };
+                    const studentAns = sub.answers ? sub.answers[pid] : null;
+                    const assignedManual = currentManualMarks[pid] !== undefined ? currentManualMarks[pid] : null;
+                    const currentRemark = currentRemarks[pid] || '';
+
+                    let isCode = false;
+                    let displayAns = studentAns;
+                    let codeLang = '';
+
+                    if (studentAns) {
+                        try {
+                            const parsed = JSON.parse(studentAns);
+                            if (parsed.code !== undefined && parsed.language !== undefined) {
+                                displayAns = parsed.code;
+                                codeLang = parsed.language;
+                                isCode = true;
+                            }
+                        } catch(e) {}
+                    }
+
+                    const isMCQ = !isCode && (prob.type === 'MCQ' || prob.correctOption || prob.optionA);
+
+                    const qCard = document.createElement('div');
+                    qCard.className = 'border border-[#1f1f28] rounded-2xl p-5 bg-[#0c0c12] shadow-sm hover:border-[#2b2b3b] transition';
+                    qCard.id = `qCard_${pid}`;
+
+                    // Header badge
+                    const qMarks = (prob.marks !== undefined && prob.marks !== null) ? prob.marks : (isCode ? 5 : 1);
+                    let markStatusBadge = '';
+                    if (isMCQ) {
+                        if (!studentAns) {
+                            markStatusBadge = `<span class="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase bg-zinc-900 text-zinc-400 border border-zinc-700/60 font-mono">0/${qMarks} Marks • Unanswered</span>`;
+                        } else if (prob.correctOption && prob.correctOption.trim().toLowerCase() === studentAns.trim().toLowerCase()) {
+                            markStatusBadge = `<span class="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase bg-emerald-950/60 text-emerald-400 border border-emerald-800/60 font-mono">✓ ${qMarks}/${qMarks} Marks (Correct)</span>`;
+                        } else if (prob.correctOption) {
+                            markStatusBadge = `<span class="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase bg-red-950/60 text-red-400 border border-red-800/60 font-mono">✗ 0/${qMarks} Marks (Incorrect)</span>`;
+                        } else {
+                            markStatusBadge = `<span class="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase bg-blue-950/60 text-blue-400 border border-blue-800/60 font-mono">Answered</span>`;
+                        }
+                    } else {
+                        // Code question (5 marks max)
+                        const currM = assignedManual !== null ? assignedManual : 0;
+                        markStatusBadge = `<span id="codeBadge_${pid}" class="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase font-mono ${currM > 0 ? 'bg-emerald-950/60 text-emerald-400 border border-emerald-800/60' : 'bg-zinc-900 text-zinc-400 border border-zinc-700/60'}">${currM} / ${qMarks} Marks</span>`;
+                    }
+
+                    // Body
+                    let bodyHtml = `
+                        <div class="flex items-center justify-between gap-2 mb-3">
+                            <div class="flex items-center space-x-2">
+                                <span class="font-black text-white font-mono text-sm">#${qIndex + 1}</span>
+                                <span class="text-[10px] font-bold text-blue-400 uppercase tracking-wide bg-blue-900/20 px-2 py-0.5 rounded border border-blue-900/30">${prob.section || 'General'}</span>
+                                <span class="text-[10px] font-bold text-zinc-400 uppercase tracking-wide bg-[#14141a] px-2 py-0.5 rounded border border-[#272733]">${isCode ? 'Programming' : 'MCQ'}</span>
+                            </div>
+                            <div>${markStatusBadge}</div>
+                        </div>
+                        <div class="text-zinc-200 text-sm font-medium leading-relaxed mb-4">${prob.text || (prob.title || 'No description available.')}</div>
+                    `;
+
+                    // If MCQ: options display
+                    if (isMCQ && (prob.optionA || prob.optionB || prob.optionC || prob.optionD)) {
+                        const optArr = [
+                            { key: 'A', text: prob.optionA },
+                            { key: 'B', text: prob.optionB },
+                            { key: 'C', text: prob.optionC },
+                            { key: 'D', text: prob.optionD }
+                        ].filter(o => o.text);
+
+                        bodyHtml += `<div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-4">`;
+                        optArr.forEach(o => {
+                            const isSelected = studentAns && studentAns.trim().toUpperCase() === o.key;
+                            const isCorrect = prob.correctOption && prob.correctOption.trim().toUpperCase() === o.key;
+
+                            let optClass = 'bg-[#121218] border-[#1f1f28] text-zinc-400';
+                            let optLabel = '';
+
+                            if (isSelected && isCorrect) {
+                                optClass = 'bg-emerald-950/40 border-emerald-700 text-emerald-300 ring-1 ring-emerald-500/50';
+                                optLabel = '<span class="ml-auto text-[9px] font-bold bg-emerald-500 text-black px-1.5 py-0.5 rounded uppercase">Your Ans & Correct</span>';
+                            } else if (isSelected && !isCorrect) {
+                                optClass = 'bg-red-950/40 border-red-800 text-red-300 ring-1 ring-red-500/50';
+                                optLabel = '<span class="ml-auto text-[9px] font-bold bg-red-500 text-white px-1.5 py-0.5 rounded uppercase">Your Answer</span>';
+                            } else if (isCorrect) {
+                                optClass = 'bg-emerald-950/20 border-emerald-800/50 text-emerald-400';
+                                optLabel = '<span class="ml-auto text-[9px] font-bold text-emerald-400 uppercase">Correct Option</span>';
+                            }
+
+                            bodyHtml += `
+                                <div class="flex items-center space-x-2 p-3 rounded-xl border text-xs font-mono ${optClass}">
+                                    <span class="w-5 h-5 rounded-md bg-[#181822] flex items-center justify-center font-bold text-white text-[11px]">${o.key}</span>
+                                    <span class="flex-1 truncate">${o.text}</span>
+                                    ${optLabel}
+                                </div>
+                            `;
+                        });
+                        bodyHtml += `</div>`;
+                    } else if (isMCQ) {
+                        bodyHtml += `
+                            <div class="mt-2 text-xs font-mono bg-[#121218] p-3 rounded-xl border border-[#1f1f28] flex items-center justify-between">
+                                <span class="text-zinc-400">Student Answer: <span class="text-white font-bold">${escapeHtml(studentAns || 'None')}</span></span>
+                                <span class="text-zinc-400">Correct Option: <span class="text-emerald-400 font-bold">${escapeHtml(prob.correctOption || 'N/A')}</span></span>
+                            </div>
+                        `;
+                    }
+
+                    // If Code / Programming Question:
+                    if (isCode) {
+                        bodyHtml += `
+                            <div class="mt-2 mb-3">
+                                <div class="flex items-center justify-between mb-1.5">
+                                    <span class="text-[10px] font-bold text-zinc-400 uppercase tracking-wider bg-[#14141a] px-2 py-0.5 rounded border border-[#272733]">Language: ${codeLang || 'Code'}</span>
+                                    <span class="text-[10px] text-zinc-500 font-mono">${qMarks} marks • ${prob.totalTestCases || 10} test cases • scored proportionally</span>
+                                </div>
+                                ${prob.inputFormat ? `<div class="text-[10px] text-zinc-400 mb-1"><strong>Input:</strong> ${prob.inputFormat}</div>` : ''}
+                                ${prob.outputFormat ? `<div class="text-[10px] text-zinc-400 mb-2"><strong>Output:</strong> ${prob.outputFormat}</div>` : ''}
+                                <pre class="bg-[#09090f] text-zinc-200 p-4 rounded-xl text-xs font-mono whitespace-pre-wrap border border-[#1f1f28] overflow-x-auto max-h-72">${escapeHtml(displayAns)}</pre>
+                            </div>
+                        `;
+                    }
+
+                    // Evaluation & Marks Control Bar
+                    const isAutoCorrect = isMCQ && prob.correctOption && studentAns && (prob.correctOption.trim().toLowerCase() === studentAns.trim().toLowerCase());
+                    const currentAwardedMark = assignedManual !== null ? assignedManual : (isAutoCorrect ? 1 : 0);
+
+                    if (isSuperAdmin) {
+                        if (isCode) {
+                            // Programming question: 0-5 marks selector
+                            let markButtons = '';
+                            for (let m = 0; m <= qMarks; m++) {
+                                const isActive = currentAwardedMark === m;
+                                const btnClass = isActive 
+                                    ? (m > 0 ? 'bg-emerald-600 text-white shadow' : 'bg-red-600 text-white shadow')
+                                    : 'bg-[#181822] text-zinc-400 hover:text-white border border-[#272733]';
+                                markButtons += `<button type="button" onclick="setQuestionMark('${pid}', ${m})" class="px-2.5 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${btnClass}">${m}</button>`;
+                            }
+                            bodyHtml += `
+                                <div class="mt-3 p-3.5 bg-[#111118] border border-[#242432] rounded-xl flex flex-col gap-3">
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-xs font-semibold text-zinc-300">Award Marks (0-${qMarks}):</span>
+                                        ${assignedManual !== null ? '<span class="text-[10px] text-purple-400 font-mono">(Override)</span>' : ''}
+                                    </div>
+                                    <div class="flex items-center space-x-1.5">
+                                        ${markButtons}
+                                    </div>
+                                    <div class="flex-1">
+                                        <input type="text" placeholder="Remark (optional) — overrides the auto-grading note" id="remarkInput_${pid}" oninput="setQuestionRemark('${pid}', this.value)" value="${escapeHtml(currentRemark)}" class="w-full bg-[#161622] border border-[#272738] rounded-lg text-xs px-3 py-1.5 text-zinc-200 placeholder-zinc-500 focus:outline-none focus:border-purple-500">
+                                    </div>
+                                </div>
+                            `;
+                        } else {
+                            // MCQ question: 0 or 1 mark
+                            bodyHtml += `
+                                <div class="mt-3 p-3.5 bg-[#111118] border border-[#242432] rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                                    <div class="flex items-center space-x-2">
+                                        <span class="text-xs font-semibold text-zinc-300">Award Mark:</span>
+                                        <button type="button" onclick="setQuestionMark('${pid}', 0)" id="btnMark0_${pid}" class="px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${currentAwardedMark === 0 ? 'bg-red-600 text-white shadow' : 'bg-[#181822] text-zinc-400 hover:text-white border border-[#272733]'}">0 Marks</button>
+                                        <button type="button" onclick="setQuestionMark('${pid}', 1)" id="btnMark1_${pid}" class="px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${currentAwardedMark === 1 ? 'bg-emerald-600 text-white shadow' : 'bg-[#181822] text-zinc-400 hover:text-white border border-[#272733]'}">1 Mark</button>
+                                        ${assignedManual !== null ? '<span class="text-[10px] text-purple-400 font-mono ml-2">(Override)</span>' : ''}
+                                    </div>
+                                    <div class="flex-1 max-w-sm">
+                                        <input type="text" placeholder="Remarks" id="remarkInput_${pid}" oninput="setQuestionRemark('${pid}', this.value)" value="${escapeHtml(currentRemark)}" class="w-full bg-[#161622] border border-[#272738] rounded-lg text-xs px-3 py-1.5 text-zinc-200 placeholder-zinc-500 focus:outline-none focus:border-purple-500">
+                                    </div>
+                                </div>
+                            `;
+                        }
+                    } else if (sub.evaluated || assignedManual !== null || currentRemark) {
+                        bodyHtml += `
+                            <div class="mt-3 p-3 bg-[#111118] border border-[#1f1f28] rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs font-mono">
+                                <span class="text-zinc-400">Awarded: <strong class="${currentAwardedMark > 0 ? 'text-emerald-400' : 'text-red-400'}">${currentAwardedMark} / ${qMarks} Marks</strong></span>
+                                ${currentRemark ? `<span class="text-zinc-300 italic">Remark: ${escapeHtml(currentRemark)}</span>` : ''}
+                            </div>
+                        `;
+                    }
+
+                    qCard.innerHTML = bodyHtml;
+                    content.appendChild(qCard);
+                });
+            }
+
+            // Update footer live score summary
+            const footerScore = document.getElementById('modalFooterScore');
+            if (footerScore) {
+                footerScore.innerHTML = `
+                    <span>Live Score: <strong class="text-white text-sm">${liveTotalScore}</strong> / ${totalMarksPossible}</span>
+                    <span>•</span>
+                    <span class="text-emerald-400 font-bold">${livePct}%</span>
+                    <span>•</span>
+                    <span class="text-zinc-500">MCQ: 1 mark each • Programming section scaled to 10 marks</span>
+                `;
+            }
+
+            const saveBtn = document.getElementById('btnSaveEvaluation');
+            if (saveBtn) {
+                if (isSuperAdmin) {
+                    saveBtn.classList.remove('hidden');
+                } else {
+                    saveBtn.classList.add('hidden');
+                }
+            }
+        }
+
+        function setQuestionMark(probId, mark) {
+            if (!isSuperAdmin) return;
+            currentManualMarks[probId] = mark;
+            renderEvaluationModalContent();
+        }
+
+        function setQuestionRemark(probId, val) {
+            if (!isSuperAdmin) return;
+            currentRemarks[probId] = val;
+        }
+
+        async function saveCurrentEvaluation() {
+            if (!isSuperAdmin) {
+                alert('Access denied. Only Super Admins can evaluate submissions.');
+                return;
+            }
+            if (currentEvalIdx === null) return;
+            const sub = submissionsData[currentEvalIdx];
+            const btn = document.getElementById('btnSaveEvaluation');
+            if (btn) btn.disabled = true;
+
+            try {
+                const res = await fetch(`/api/admin/submissions/${encodeURIComponent(sub.username)}/evaluate?year=${sub.year}&domain=${encodeURIComponent(sub.domain)}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    },
+                    body: JSON.stringify({
+                        manualMarks: currentManualMarks,
+                        remarks: currentRemarks
+                    })
+                });
+
+                if (res.ok) {
+                    const result = await res.json();
+                    alert(`Evaluation saved successfully!\nTotal Score: ${result.totalScore}/${result.totalQuestions}\nPercentage: ${result.percentage}%`);
+                    
+                    // Update local submission object
+                    sub.totalScore = result.totalScore;
+                    sub.percentage = result.percentage;
+                    sub.totalQuestions = result.totalQuestions;
+                    sub.manualMarks = result.manualMarks;
+                    sub.evaluationRemarks = result.remarks;
+                    sub.evaluated = true;
+
+                    // Reload table
+                    currentPage = 0;
+                    submissionsData = [];
+                    hasMoreData = true;
+                    document.getElementById('submissionsTableBody').innerHTML = '';
+                    loadSubmissions(true);
+
+                    closeModal();
+                } else {
+                    const err = await res.json();
+                    alert(err.error || 'Failed to save evaluation');
+                }
+            } catch (e) {
+                console.error(e);
+                alert('An error occurred while saving evaluation.');
+            } finally {
+                if (btn) btn.disabled = false;
+            }
+        }
+
+        // Student-supplied values go into innerHTML, so escape them.
+        function escapeHtml(value) {
+            return String(value ?? '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        function applySearch(value) {
+            const next = (value || '').trim();
+            if (next === searchTerm) return;
+            searchTerm = next;
+
+            const clearBtn = document.getElementById('submissionSearchClear');
+            if (clearBtn) clearBtn.classList.toggle('hidden', searchTerm === '');
+
+            // Else loadSubmissions no-ops and the table keeps the previous term's rows.
+            isFetching = false;
+            hasMoreData = true;
+            loadSubmissions(true);
+        }
+
+        function initSubmissionSearch() {
+            const input = document.getElementById('submissionSearch');
+            const clearBtn = document.getElementById('submissionSearchClear');
+            if (!input) return;
+
+            input.addEventListener('input', () => {
+                clearTimeout(searchDebounce);
+                searchDebounce = setTimeout(() => applySearch(input.value), 300);
+            });
+
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    clearTimeout(searchDebounce);
+                    applySearch(input.value);
+                } else if (e.key === 'Escape') {
+                    input.value = '';
+                    clearTimeout(searchDebounce);
+                    applySearch('');
+                }
+            });
+
+            if (clearBtn) {
+                clearBtn.addEventListener('click', () => {
+                    input.value = '';
+                    clearTimeout(searchDebounce);
+                    applySearch('');
+                    input.focus();
+                });
+            }
+        }
+
+        async function exportSubmissionsCsv() {
+            const btn = document.getElementById('btnExportCsv');
+            if (btn) btn.disabled = true;
+
+            try {
+                const res = await fetch('/api/admin/submissions/export', {
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+                });
+
+                if (!res.ok) {
+                    const err = await res.json().catch(() => ({}));
+                    alert(err.error || 'Failed to export submissions.');
+                    return;
+                }
+
+                const blob = await res.blob();
+                const disposition = res.headers.get('Content-Disposition') || '';
+                const match = disposition.match(/filename=([^;]+)/);
+                const filename = match ? match[1].trim() : 'submissions-export.csv';
+
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                URL.revokeObjectURL(url);
+            } catch (e) {
+                console.error(e);
+                alert('An error occurred while exporting.');
+            } finally {
+                if (btn) btn.disabled = false;
+            }
+        }
+
+        let evaluationCancelled = false;
+
+        function openGradingModal(total) {
+            document.getElementById('gradingLog').innerHTML = '';
+            document.getElementById('gradingTitle').innerText = 'Auto-grading submissions';
+            document.getElementById('gradingSubtitle').innerText = 'Running each programming answer against its test cases…';
+            document.getElementById('gradingCount').innerText = `0 / ${total} papers`;
+            document.getElementById('gradingPct').innerText = '0%';
+            document.getElementById('gradingBar').style.width = '0%';
+            document.getElementById('gradingBatch').innerText = 'Preparing…';
+            document.getElementById('gradingStopBtn').classList.remove('hidden');
+            document.getElementById('gradingDoneBtn').classList.add('hidden');
+            document.getElementById('gradingCloseBtn').classList.add('hidden');
+            const m = document.getElementById('gradingModal');
+            m.classList.remove('hidden'); m.classList.add('flex');
+        }
+
+        function closeGradingModal() {
+            const m = document.getElementById('gradingModal');
+            m.classList.add('hidden'); m.classList.remove('flex');
+        }
+
+        function stopGrading() {
+            evaluationCancelled = true;
+            document.getElementById('gradingBatch').innerText = 'Stopping after this batch…';
+            document.getElementById('gradingStopBtn').disabled = true;
+        }
+
+        function gradingLogLine(html, tone) {
+            const colours = { ok: 'text-emerald-400', info: 'text-zinc-400', warn: 'text-amber-400', head: 'text-blue-300' };
+            const el = document.createElement('div');
+            el.className = colours[tone] || 'text-zinc-400';
+            el.innerHTML = html;
+            const log = document.getElementById('gradingLog');
+            log.appendChild(el);
+            log.parentElement.scrollTop = log.parentElement.scrollHeight;
+        }
+
+        function updateGradingProgress(processed, total, batchNo) {
+            const pct = total > 0 ? Math.round((processed / total) * 100) : 0;
+            document.getElementById('gradingCount').innerText = `${processed} / ${total} papers`;
+            document.getElementById('gradingPct').innerText = `${pct}%`;
+            document.getElementById('gradingBar').style.width = `${pct}%`;
+            document.getElementById('gradingBatch').innerText = `Batch ${batchNo} complete — ${total - processed} paper(s) remaining`;
+        }
+
+        function finishGradingModal(processed, stopped) {
+            document.getElementById('gradingStopBtn').classList.add('hidden');
+            document.getElementById('gradingDoneBtn').classList.remove('hidden');
+            document.getElementById('gradingCloseBtn').classList.remove('hidden');
+            document.getElementById('gradingHint').innerText = stopped
+                ? 'Run Auto-Grade All again to continue from here.'
+                : 'Every submitted paper has been graded.';
+            document.getElementById('gradingTitle').innerText = stopped ? 'Grading stopped' : 'All grading complete';
+            document.getElementById('gradingSubtitle').innerText = stopped
+                ? `${processed} paper(s) graded before stopping.`
+                : `${processed} paper(s) graded.`;
+            document.getElementById('gradingBatch').innerText = stopped ? 'Stopped.' : 'Finished.';
+            gradingLogLine(stopped
+                ? `<span class="font-bold">■ Stopped after ${processed} paper(s)</span>`
+                : `<span class="font-bold">✓ All grading completed — ${processed} paper(s)</span>`,
+                stopped ? 'warn' : 'ok');
+        }
+
+        async function evaluateAllSubmissions() {
+            if (!isSuperAdmin) {
+                alert('Access denied. Only Super Admins can run batch evaluations.');
+                return;
+            }
+            // Papers graded before auto-scoring existed are already flagged as
+            // evaluated, so the default pass would skip them and leave them at 0.
+            const regrade = confirm(
+                'Auto-grade submitted papers.\n\n' +
+                'OK      = re-grade EVERY paper (use this if papers were graded before, or scored 0 wrongly)\n' +
+                'Cancel  = only grade papers not yet graded\n\n' +
+                'Marks you entered by hand with a remark are kept either way.');
+
+            const btn = document.getElementById('btnEvaluateAll');
+            if (btn) btn.disabled = true;
+            evaluationCancelled = false;
+
+            let processed = 0, total = 0, batchNo = 0;
+            openGradingModal(0);
+            gradingLogLine(regrade ? 'Re-grading every submitted paper…' : 'Grading papers not yet graded…', 'head');
+
+            try {
+                while (!evaluationCancelled) {
+                    const url = `/api/admin/submissions/evaluate-all?batchSize=10${(regrade && processed === 0) ? '&force=true' : ''}`;
+                    const res = await fetch(url, {
+                        method: 'POST',
+                        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+                    });
+
+                    if (!res.ok) {
+                        const err = await res.json().catch(() => ({}));
+                        gradingLogLine(`✕ ${escapeHtml(err.error || 'Grading failed')}`, 'warn');
+                        finishGradingModal(processed, true);
+                        return;
+                    }
+
+                    const data = await res.json();
+                    total = data.totalSubmitted || total;
+
+                    if ((data.processed || 0) === 0) {
+                        if (processed === 0) gradingLogLine('Nothing to grade — every paper is already done.', 'info');
+                        break;
+                    }
+
+                    batchNo++;
+                    (data.graded || []).forEach(g => {
+                        processed++;
+                        const who = escapeHtml(g.name || g.username);
+                        const mail = g.email ? ` <span class="text-zinc-600">${escapeHtml(g.email)}</span>` : '';
+                        const pct = (g.percentage != null) ? `${g.percentage}%` : '—';
+                        gradingLogLine(`✓ ${who}${mail} <span class="text-zinc-500">— ${g.score ?? 0} marks (${pct})</span>`, 'ok');
+                    });
+
+                    updateGradingProgress(processed, total, batchNo);
+                    gradingLogLine(`<span class="text-zinc-600">— batch ${batchNo} complete —</span>`, 'info');
+
+                    if (data.done) break;
+                }
+
+                finishGradingModal(processed, evaluationCancelled);
+
+                currentPage = 0;
+                submissionsData = [];
+                hasMoreData = true;
+                isFetching = false;
+                document.getElementById('submissionsTableBody').innerHTML = '';
+                loadSubmissions(true);
+            } catch (e) {
+                console.error(e);
+                gradingLogLine('✕ Connection lost. Run Auto-Grade All again to continue.', 'warn');
+                finishGradingModal(processed, true);
+            } finally {
+                if (btn) btn.disabled = false;
+            }
+        }
+
+        async function viewModalIdentity() {
+            if (currentEvalIdx === null) return;
+            const sub = submissionsData[currentEvalIdx];
+            try {
+                const res = await fetch(`/api/admin/submissions/${encodeURIComponent(sub.username)}/identity`, {
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+                });
+                if (res.ok) {
+                    const idData = await res.json();
+                    const win = window.open('', '_blank');
+                    win.document.title = `Student Verification - ${sub.username}`;
+                    win.document.body.style.cssText = 'background:#0a0a0f;color:#fff;font-family:sans-serif;padding:32px;display:flex;gap:32px;justify-content:center;align-items:flex-start;';
+
+                    const panel = (heading, url, width) => {
+                        const wrap = win.document.createElement('div');
+                        const title = win.document.createElement('h3');
+                        title.style.cssText = 'margin-bottom:12px;font-size:14px;color:#a1a1aa;text-transform:uppercase;letter-spacing:1px;';
+                        title.textContent = heading;
+                        wrap.appendChild(title);
+
+                        if (url) {
+                            const img = win.document.createElement('img');
+                            img.style.cssText = `max-width:${width}px;border-radius:16px;border:1px solid #272733;box-shadow:0 10px 25px rgba(0,0,0,0.5);`;
+                            img.src = url;
+                            wrap.appendChild(img);
+                        } else {
+                            const empty = win.document.createElement('div');
+                            empty.style.cssText = `width:${width}px;height:260px;background:#121218;border-radius:16px;display:flex;align-items:center;justify-content:center;color:#666;`;
+                            empty.textContent = 'Not available';
+                            wrap.appendChild(empty);
+                        }
+                        return wrap;
+                    };
+
+                    win.document.body.appendChild(panel('Webcam Face Capture', idData.facePhotoUrl, 340));
+                    win.document.body.appendChild(panel('Uploaded ID Card', idData.idCardPhotoUrl, 440));
+                } else {
+                    alert('Could not retrieve student identity photos.');
+                }
+            } catch(e) {
+                alert('Error retrieving student identity photos.');
+            }
+        }
+
+        // === Proctoring violation report ==================================
+        // Every signal the system records, counted and then listed in order,
+        // so a proctor can see at a glance whether a submission is clean and
+        // drill into exactly what happened and when.
+        const VIOLATION_TYPES = [
+            { key: 'TAB_SWITCH',     label: 'Tab switches',      icon: '🗂',  hint: 'Left the exam tab or minimised the window' },
+            { key: 'APP_SWITCH',     label: 'App switches',      icon: '🪟', hint: 'Another application took focus over the exam' },
+            { key: 'COPY_PASTE',     label: 'Copy / paste',      icon: '📋', hint: 'Blocked clipboard or right-click attempts' },
+            { key: 'SCREENSHOT',     label: 'Screenshots',       icon: '📸', hint: 'Screen-capture shortcuts pressed' },
+            { key: 'FACE_MISMATCH',  label: 'Different face',    icon: '🚫', hint: 'Someone other than the enrolled student on camera' },
+            { key: 'MULTIPLE_FACES', label: 'Multiple faces',    icon: '👥', hint: 'More than one person visible in frame' },
+            { key: 'LOOKING_AWAY',   label: 'Looking away',      icon: '👀', hint: 'Facing away from the screen across consecutive checks' },
+            { key: 'VOICE_DETECTED', label: 'Talking detected',  icon: '🎙', hint: 'Sustained speech picked up by the microphone' }
+        ];
+        // FULLSCREEN_EXIT / FACE_NOT_VISIBLE / DEVTOOLS are accepted by the
+        // anomaly schema but nothing currently emits them. Showing a
+        // permanent zero for those would read as "clean" when the truth is
+        // "not monitored", so they are left out. Anything that does arrive
+        // still appears in the timeline below.
+
+        let reportUsername = null;
+
+        // The PDF is built server-side, so it needs the auth header like any
+        // other API call — fetched as a blob and saved, rather than pointed at
+        // with a plain link that would arrive unauthenticated.
+        async function downloadViolationPdf() {
+            if (!reportUsername) return;
+            const btn = document.getElementById('downloadPdfBtn');
+            const label = document.getElementById('downloadPdfBtnText');
+            btn.disabled = true;
+            label.innerText = 'Preparing…';
+
+            try {
+                const res = await fetch(`/api/admin/submissions/${encodeURIComponent(reportUsername)}/report.pdf`, {
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+                });
+                if (!res.ok) {
+                    alert(res.status === 404
+                        ? 'No exam session found for this student.'
+                        : 'Could not generate the report PDF.');
+                    return;
+                }
+
+                const blob = await res.blob();
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `violation-report-${reportUsername.replace(/[^A-Za-z0-9._-]/g, '_')}.pdf`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+            } catch (e) {
+                console.error('PDF download failed', e);
+                alert('Could not generate the report PDF.');
+            } finally {
+                btn.disabled = false;
+                label.innerText = 'Download PDF';
+            }
+        }
+
+        function openViolationReport(encodedUsername) {
+            const username = decodeURIComponent(encodedUsername);
+            reportUsername = username;
+            document.getElementById('reportStudentName').innerText = username;
+            document.getElementById('reportBody').innerHTML =
+                '<div class="text-center text-zinc-500 py-10 text-sm">Loading report…</div>';
+            document.getElementById('violationReportModal').classList.remove('hidden');
+            loadViolationReport(username);
+        }
+
+        function closeViolationReport() {
+            document.getElementById('violationReportModal').classList.add('hidden');
+        }
+
+        async function loadViolationReport(username) {
+            const container = document.getElementById('reportBody');
+            try {
+                const res = await fetch(`/api/admin/submissions/${encodeURIComponent(username)}/session`, {
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+                });
+
+                if (!res.ok) {
+                    container.innerHTML = `<div class="text-center text-red-400 py-10 text-sm">${
+                        res.status === 404 ? 'No exam session found for this student.' : 'Failed to load the report.'
+                    }</div>`;
+                    return;
+                }
+
+                const data = await res.json();
+                const counts = data.anomalyCounts || {};
+                const anomalies = data.anomalies || [];
+                const total = anomalies.length;
+
+                const tiles = VIOLATION_TYPES.map(t => {
+                    const n = counts[t.key] || 0;
+                    const hot = n > 0;
+                    return `<div class="rounded-xl border p-3 ${hot
+                        ? 'border-red-900/50 bg-red-950/25'
+                        : 'border-[#1f1f28] bg-[#121218]'}" title="${escapeHtml(t.hint)}">
+                        <div class="flex items-center justify-between">
+                            <span class="text-base leading-none">${t.icon}</span>
+                            <span class="text-xl font-extrabold font-mono ${hot ? 'text-red-400' : 'text-zinc-600'}">${n}</span>
+                        </div>
+                        <div class="text-[10px] font-bold uppercase tracking-wider mt-1.5 ${hot ? 'text-red-300' : 'text-zinc-500'}">${t.label}</div>
+                    </div>`;
+                }).join('');
+
+                const statusChip = data.isBlocked
+                    ? '<span class="px-2 py-0.5 rounded-md border border-red-800 bg-red-950/50 text-red-300 text-[10px] font-bold">BLOCKED</span>'
+                    : (data.submitted
+                        ? '<span class="px-2 py-0.5 rounded-md border border-emerald-800 bg-emerald-950/50 text-emerald-300 text-[10px] font-bold">SUBMITTED</span>'
+                        : '<span class="px-2 py-0.5 rounded-md border border-blue-800 bg-blue-950/50 text-blue-300 text-[10px] font-bold">IN PROGRESS</span>');
+
+                const timeline = total === 0
+                    ? '<div class="text-center text-emerald-400 py-8 text-sm font-semibold">No violations recorded — this submission is clean.</div>'
+                    : anomalies.slice().reverse().map(a => {
+                        const meta = VIOLATION_TYPES.find(t => t.key === a.type);
+                        const when = new Date(a.timestamp);
+                        return `<div class="flex items-start gap-3 py-2 border-b border-[#1f1f28] last:border-0">
+                            <span class="text-sm leading-none mt-0.5">${meta ? meta.icon : '⚠️'}</span>
+                            <div class="min-w-0 flex-1">
+                                <div class="text-[11px] font-bold text-amber-300">${escapeHtml(a.type || 'UNKNOWN')}</div>
+                                <div class="text-[11px] text-zinc-400 mt-0.5 break-words">${escapeHtml(a.description || '')}</div>
+                            </div>
+                            <div class="text-[10px] text-zinc-500 font-mono whitespace-nowrap">
+                                ${when.toLocaleDateString()}<br>${when.toLocaleTimeString()}
+                            </div>
+                        </div>`;
+                    }).join('');
+
+                container.innerHTML = `
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center gap-2">
+                            ${statusChip}
+                            <span class="text-xs text-zinc-500 font-mono">Year ${data.year ?? '–'} · ${escapeHtml(data.domain || '–')}</span>
+                        </div>
+                        <div class="text-xs text-zinc-400">
+                            Total events: <span class="font-mono font-bold ${total > 0 ? 'text-amber-300' : 'text-emerald-400'}">${total}</span>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5 mb-5">${tiles}</div>
+
+                    <div class="text-[10px] font-extrabold uppercase tracking-wider text-zinc-500 mb-2">Event timeline (most recent first)</div>
+                    <div class="rounded-xl border border-[#1f1f28] bg-[#0b0b0f] px-4 py-2 max-h-[38vh] overflow-y-auto">${timeline}</div>
+                `;
+            } catch (e) {
+                container.innerHTML =
+                    '<div class="text-center text-red-400 py-10 text-sm">Failed to load the report.</div>';
+            }
+        }
+
+        async function deleteSubmission(encodedUsername, year, encodedDomain) {
+            // Server-enforced too (SUPER_ADMIN in SecurityConfig and on the
+            // endpoint); this is only to keep the button out of the way.
+            if (!isSuperAdmin) {
+                alert('Access denied. Only Super Admins can delete submissions.');
+                return;
+            }
+
+            const username = decodeURIComponent(encodedUsername);
+            const domain = decodeURIComponent(encodedDomain);
+
+            if (!confirm(`Permanently delete the submission of ${username} (Year ${year}, ${domain})?\n\nThis erases their answers, score and proctoring history. It cannot be undone.`)) {
+                return;
+            }
+
+            try {
+                const res = await fetch(
+                    `/api/admin/submissions/${encodeURIComponent(username)}?year=${Number(year)}&domain=${encodeURIComponent(domain)}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+                });
+                const data = await res.json().catch(() => ({}));
+
+                if (!res.ok) {
+                    alert(data.error || (res.status === 403
+                        ? 'Access denied. Only Super Admins can delete submissions.'
+                        : 'Failed to delete the submission.'));
+                    return;
+                }
+
+                closeModal();
+                currentPage = 0;
+                submissionsData = [];
+                hasMoreData = true;
+                document.getElementById('submissionsTableBody').innerHTML = '';
+                loadSubmissions(true);
+            } catch (e) {
+                console.error('Error deleting submission', e);
+                alert('An error occurred while deleting the submission.');
+            }
+        }
+
+        async function forceSubmitSession(username, year, domain) {
+            if (!confirm(`Are you sure you want to force-submit the test for ${username}? This will immediately calculate score, lock all sections, and mark it submitted.`)) {
+                return;
+            }
+
+            try {
+                let url = `/api/admin/submissions/${encodeURIComponent(username)}/force-submit`;
+                if (year && domain) {
+                    url += `?year=${year}&domain=${encodeURIComponent(domain)}`;
+                }
+                const res = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    }
+                });
+
+                if (res.ok) {
+                    closeModal();
+                    // Reset and reload submissions table
+                    currentPage = 0;
+                    submissionsData = [];
+                    hasMoreData = true;
+                    document.getElementById('submissionsTableBody').innerHTML = '';
+                    loadSubmissions(true);
+                } else {
+                    const err = await res.json();
+                    alert(err.error || 'Failed to force submit session');
+                }
+            } catch (e) {
+                console.error('Error force submitting session', e);
+                alert('An error occurred while attempting to force submit.');
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('answersModal').classList.add('hidden');
+            document.getElementById('answersModal').classList.remove('flex');
+        }
+
+        const observer = new IntersectionObserver((entries) => {
+            if (entries[0].isIntersecting && !isFetching && hasMoreData) {
+                loadSubmissions(false);
+            }
+        }, { rootMargin: '100px' });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initSubmissionSearch();
+            const currentRole = localStorage.getItem('role') || 'ADMIN';
+            let userEmail = localStorage.getItem('admin_email');
+            if (!userEmail || userEmail === 'superadmin@srminsider.in') {
+                userEmail = (currentRole === 'SUPER_ADMIN' ? 'admin@srminsider.in' : (localStorage.getItem('username') || 'admin@srminsider.in'));
+                localStorage.setItem('admin_email', userEmail);
+            }
+            
+            document.getElementById('sidebarUserEmail').innerText = userEmail;
+            document.getElementById('sidebarUserRole').innerText = `ROLE: ${currentRole}`;
+
+            // Fetch verified admin email from backend
+            fetch('/api/admin/me', {
+                headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+            })
+            .then(res => res.ok ? res.json() : null)
+            .then(data => {
+                if (data && data.email) {
+                    localStorage.setItem('admin_email', data.email);
+                    const emailEl = document.getElementById('sidebarUserEmail');
+                    if (emailEl) emailEl.innerText = data.email;
+                }
+            })
+            .catch(() => {});
+            
+            if (currentRole === 'SUPER_ADMIN') {
+                document.getElementById('roleBadge').innerText = 'SUPER ADMIN';
+                document.getElementById('roleBadge').className = 'px-1.5 py-0.5 rounded text-[9px] font-extrabold tracking-wider bg-purple-500/10 text-purple-400 border border-purple-500/20 uppercase';
+                document.getElementById('userAvatar').className = 'w-8 h-8 rounded-lg bg-gradient-to-tr from-purple-600 to-indigo-600 flex items-center justify-center text-xs font-black text-white flex-shrink-0 shadow-md';
+                document.getElementById('userAvatar').innerText = 'SA';
+                document.getElementById('navManageAdminsWrapper').classList.remove('hidden');
+                const btnEvalAll = document.getElementById('btnEvaluateAll');
+                if (btnEvalAll) btnEvalAll.classList.remove('hidden');
+            } else {
+                document.getElementById('roleBadge').innerText = 'ADMIN';
+                document.getElementById('userAvatar').innerText = 'AD';
+                const btnEvalAll = document.getElementById('btnEvaluateAll');
+                if (btnEvalAll) btnEvalAll.classList.add('hidden');
+            }
+
+            observer.observe(document.getElementById('loadingIndicator'));
+        });
+    </script>
+</body>
+</html>

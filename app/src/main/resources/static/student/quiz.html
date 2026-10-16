@@ -1,0 +1,3513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>Online Assessment Portal | Proctored Test</title>
+    <link rel="icon" type="image/x-icon" href="/icons/favicon.ico">
+    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192x192.png">
+    <link rel="apple-touch-icon" href="/icons/icon-192x192.png">
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="description" content="Take your proctored coding assessment with live webcam monitoring, section timing, and an in-browser IDE.">
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/theme/dracula.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/python/python.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/clike/clike.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/javascript/javascript.min.js"></script>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/addon/edit/closebrackets.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/addon/edit/matchbrackets.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/addon/selection/active-line.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/addon/comment/comment.min.js"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class'
+        };
+ 
+        const savedTheme = localStorage.getItem('app_theme') || 'dark';
+        if (savedTheme === 'dark') {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .font-mono { font-family: 'JetBrains Mono', monospace; }
+        
+        /* Custom scrollbars */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        /* Option Card Transitions */
+        .option-card {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .option-card:hover {
+            transform: translateY(-1px);
+        }
+        .option-card.selected {
+            border-color: #2563eb;
+            background-color: #eff6ff;
+            box-shadow: 0 0 0 1px #2563eb;
+        }
+        /* The rule above is more specific than the bg-* utility the renderer
+           applies, so without this the selected card keeps its light
+           background in dark mode and the light text becomes unreadable. */
+        html.dark .option-card.selected {
+            border-color: #3b82f6;
+            background-color: #172554;
+            box-shadow: 0 0 0 1px #3b82f6;
+        }
+
+        /* Palette Buttons */
+        .palette-btn {
+            transition: all 0.15s ease;
+        }
+        .palette-btn:hover {
+            transform: scale(1.06);
+        }
+
+        @keyframes pulse-dot {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.4; transform: scale(1.2); }
+        }
+        .animate-live-dot {
+            animation: pulse-dot 1.5s infinite;
+        }
+
+        /* ====================================================
+           DARK THEME STYLES (Pure OLED Black, Zero Blue Tint)
+           ==================================================== */
+        html.dark body {
+            background-color: #000000 !important;
+            color: #ffffff !important;
+        }
+
+        html.dark header {
+            background-color: #0a0a0a !important;
+            border-color: #222222 !important;
+        }
+        html.dark header h1 {
+            color: #ffffff !important;
+        }
+        html.dark header p#testSubTitle {
+            color: #a1a1aa !important;
+        }
+        html.dark #sidebarToggleBtn {
+            background-color: #141414 !important;
+            border-color: #262626 !important;
+            color: #e4e4e7 !important;
+        }
+        html.dark #sidebarToggleBtn:hover {
+            background-color: #222222 !important;
+        }
+
+        html.dark #leftSidebar {
+            background-color: #0a0a0a !important;
+            border-color: #222222 !important;
+        }
+        html.dark #leftSidebar > div:first-child {
+            background-color: #0f0f0f !important;
+            border-color: #222222 !important;
+        }
+        html.dark #leftSidebar .divide-slate-200 > :not([hidden]) ~ :not([hidden]),
+        html.dark #leftSidebar .border-slate-200 {
+            border-color: #222222 !important;
+        }
+        html.dark #leftSidebar h2,
+        html.dark #paletteSectionTitle {
+            color: #ffffff !important;
+        }
+        html.dark #leftSectionTotalBadge {
+            background-color: #181818 !important;
+            color: #a1a1aa !important;
+        }
+
+        html.dark section {
+            background-color: #000000 !important;
+            border-color: #222222 !important;
+        }
+        html.dark #questionSubBar {
+            background-color: #0a0a0a !important;
+            border-color: #222222 !important;
+        }
+        /* The watermark is an absolutely positioned overlay across the whole
+           pane. It must stay transparent — giving it a background hides every
+           element painted beneath it. */
+        #questionWatermark {
+            background-color: transparent !important;
+        }
+        html.dark #questionTitle {
+            color: #ffffff !important;
+        }
+        html.dark #questionNumberBadge {
+            background-color: #181818 !important;
+            color: #ffffff !important;
+            border: 1px solid #2e2e2e;
+        }
+        html.dark #questionSectionBadge {
+            background-color: #1e3a8a !important;
+            color: #93c5fd !important;
+            border-color: #2563eb !important;
+        }
+        html.dark #questionNavBar {
+            background-color: #0a0a0a !important;
+            border-color: #222222 !important;
+        }
+        html.dark #prevBtn {
+            background-color: #141414 !important;
+            border-color: #262626 !important;
+            color: #e4e4e7 !important;
+        }
+        html.dark #prevBtn:hover {
+            background-color: #222222 !important;
+        }
+        html.dark #clearBtn {
+            background-color: #141414 !important;
+            border-color: #262626 !important;
+            color: #a1a1aa !important;
+        }
+        html.dark #clearBtn:hover {
+            background-color: #450a0a !important;
+            color: #f87171 !important;
+            border-color: #7f1d1d !important;
+        }
+        html.dark #markReviewNextBtn {
+            background-color: #2e1065 !important;
+            color: #d8b4fe !important;
+            border-color: #581c87 !important;
+        }
+        html.dark #markReviewNextBtn:hover {
+            background-color: #3b0764 !important;
+        }
+
+        html.dark aside:last-of-type {
+            background-color: #0a0a0a !important;
+            border-color: #222222 !important;
+        }
+        html.dark aside:last-of-type > div {
+            background-color: #0f0f0f !important;
+            border-color: #222222 !important;
+        }
+        html.dark aside:last-of-type .bg-white {
+            background-color: #141414 !important;
+            border-color: #222222 !important;
+        }
+        html.dark aside:last-of-type .text-slate-800 {
+            color: #ffffff !important;
+        }
+        html.dark aside:last-of-type .text-slate-400 {
+            color: #a1a1aa !important;
+        }
+        html.dark aside:last-of-type .bg-slate-100\/70 {
+            background-color: #0f0f0f !important;
+            border-color: #222222 !important;
+        }
+
+        html.dark #submitModal > div {
+            background-color: #0f0f0f !important;
+            border-color: #222222 !important;
+            color: #ffffff !important;
+        }
+        html.dark #submitModal h3 {
+            color: #ffffff !important;
+        }
+        html.dark #submitModal .bg-slate-50 {
+            background-color: #141414 !important;
+            border-color: #222222 !important;
+        }
+        html.dark #submitModal strong {
+            color: #ffffff !important;
+        }
+        html.dark #submitModal .text-slate-700 {
+            color: #d4d4d8 !important;
+        }
+        html.dark #submitModal button[onclick="closeSubmitModal()"] {
+            background-color: #181818 !important;
+            border-color: #262626 !important;
+            color: #e4e4e7 !important;
+        }
+        html.dark #submitModal button[onclick="closeSubmitModal()"]:hover {
+            background-color: #262626 !important;
+        }
+
+        /* Dark scrollbar */
+        html.dark ::-webkit-scrollbar-track { background: #000000 !important; }
+        html.dark ::-webkit-scrollbar-thumb { background: #262626 !important; border-radius: 4px; }
+        html.dark ::-webkit-scrollbar-thumb:hover { background: #3f3f46 !important; }
+        /* Face Violation Overlay */
+        .face-violation-overlay {
+            position: fixed; inset: 0; z-index: 9999;
+            background: rgba(0,0,0,0.97);
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            backdrop-filter: blur(20px);
+            transition: opacity 0.4s;
+        }
+        .face-violation-overlay.hidden { display: none; }
+        .violation-pulse { animation: violation-pulse 1.5s infinite; }
+        @keyframes violation-pulse { 0%,100% { opacity:1; transform:scale(1); } 50% { opacity:0.7; transform:scale(1.05); } }
+    </style>
+
+    
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_detection"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
+</head>
+<body class="bg-slate-100 dark:bg-black text-slate-900 dark:text-white h-screen flex flex-col overflow-hidden select-none transition-colors duration-200">
+
+    
+    <div id="faceViolationOverlay" class="face-violation-overlay hidden">
+        <div class="max-w-4xl mx-auto px-6 flex flex-col md:flex-row items-center gap-10">
+            <div class="text-center md:text-left flex-1">
+                <div class="violation-pulse text-7xl mb-6 flex justify-center md:justify-start">⚠️</div>
+                <h2 class="text-3xl font-extrabold text-white mb-3">Face Not Detected</h2>
+                <p class="text-slate-300 text-base leading-relaxed mb-6">
+                    Your face and shoulders must be clearly visible in the camera at all times during the test.
+                    The test is paused but <span class="text-red-400 font-bold">the timer is still running</span>.
+                </p>
+                <div class="bg-red-900/40 border border-red-700 rounded-xl px-5 py-4 text-red-200 text-sm font-semibold shadow-inner">
+                    Please look at the camera and ensure your face and shoulders are visible to resume the test.
+                </div>
+                <div id="violationCounter" class="mt-4 text-slate-500 text-sm font-medium">Violations: <span id="violationCount">0</span></div>
+            </div>
+            <div class="flex-1 w-full flex justify-center">
+                <div class="relative w-72 h-72 md:w-80 md:h-80 rounded-2xl overflow-hidden border-4 border-red-600 shadow-[0_0_30px_rgba(220,38,38,0.5)]">
+                    <video id="violationVideo" autoplay playsinline muted class="w-full h-full object-cover transform scale-x-[-1]"></video>
+                    <div class="absolute inset-0 pointer-events-none flex flex-col items-center justify-center border-4 border-dashed border-red-500/50 rounded-2xl m-2">
+                        <div class="w-32 h-40 border-2 border-red-400/80 rounded-[40%] mb-4 shadow-[0_0_15px_rgba(248,113,113,0.3)]"></div>
+                        <div class="w-48 h-20 border-2 border-red-400/80 rounded-t-[50%] shadow-[0_0_15px_rgba(248,113,113,0.3)]"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    
+    <div id="fullscreenOverlay" class="fixed inset-0 bg-slate-900/95 z-[60] flex items-center justify-center p-6 backdrop-blur-xl hidden">
+        <div class="max-w-2xl mx-auto flex flex-col items-center text-center">
+            <div class="violation-pulse text-7xl mb-6 flex justify-center">🖥️</div>
+            <h2 class="text-3xl font-extrabold text-white mb-3">Full Screen Required</h2>
+            <p class="text-slate-300 text-base leading-relaxed mb-6">
+                This test must be taken in full-screen mode to ensure a secure proctoring environment. The test is currently paused but <span class="text-red-400 font-bold">the timer is still running</span>.
+            </p>
+            <p class="text-red-400 text-sm mb-6">
+                For security reasons, we cannot close your other tabs automatically. Please close any unauthorized tabs manually.
+            </p>
+            <button onclick="requestFullScreen()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-8 rounded-xl shadow-lg transition-all text-lg cursor-pointer">
+                Enter Full Screen to Resume
+            </button>
+        </div>
+    </div>
+
+    
+    <div id="blockedOverlay" class="fixed inset-0 bg-red-950/95 z-[70] flex items-center justify-center p-6 backdrop-blur-xl hidden">
+        <div class="max-w-2xl mx-auto flex flex-col items-center text-center">
+            <div class="violation-pulse text-7xl mb-6 flex justify-center">🚫</div>
+            <h2 class="text-3xl font-extrabold text-white mb-3">Test Blocked</h2>
+            <p id="blockedReason" class="text-red-200 text-base leading-relaxed mb-6">
+                Your test has been blocked by the automated proctoring system due to excessive violations (e.g., tab switching). The timer is still running.
+            </p>
+            <button id="requestUnblockBtn" onclick="requestUnblock()" class="bg-red-600 hover:bg-red-700 text-white font-bold py-4 px-8 rounded-xl shadow-lg transition-all text-lg cursor-pointer flex items-center justify-center gap-2">
+                <span>Contact Proctor to Unblock</span>
+            </button>
+            <div id="unblockStatus" class="mt-4 text-slate-300 font-medium hidden">Request sent. Waiting for admin approval...</div>
+        </div>
+    </div>
+
+    
+    <header class="bg-white border-b border-slate-200 px-6 py-3 flex justify-between items-center z-20 shadow-sm flex-shrink-0">
+        <div class="flex items-center space-x-5">
+            <div class="flex items-center space-x-2.5">
+                <img src="/icons/icon-192x192.png" alt="SRM INSIDER LAB" class="w-8 h-8 rounded-lg object-contain shadow-md">
+                <div>
+                    <h1 class="font-bold text-slate-800 text-base leading-tight">SRM INSIDER LAB</h1>
+                    <p id="testSubTitle" class="text-xs text-slate-500 font-medium">Domain: Loading... | Year: -</p>
+                </div>
+            </div>
+
+            
+            <button onclick="toggleLeftSidebar()" id="sidebarToggleBtn" class="flex items-center space-x-2 px-3 py-1.5 rounded-lg border border-slate-300 bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-semibold shadow-2xs transition cursor-pointer" title="Hide/Show Sections & Question Palette">
+                <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7"></path>
+                </svg>
+                <span id="sidebarToggleText">Hide Questions</span>
+            </button>
+        </div>
+
+        <div class="flex items-center space-x-3">
+            
+            <div id="quizStudentNavPill" class="hidden md:flex items-center space-x-2 px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 shadow-2xs">
+                <div id="quizNavAvatar" class="w-6 h-6 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 text-white font-bold text-[10px] flex items-center justify-center shadow-xs">ST</div>
+                <div class="flex flex-col text-left">
+                    <span id="quizNavStudentName" class="text-xs font-bold leading-tight truncate max-w-[140px] xl:max-w-[180px]">Student Name</span>
+                    <span id="quizNavStudentEmail" class="text-[9px] text-slate-500 dark:text-slate-400 font-mono leading-none mt-0.5">student@srm.edu.in</span>
+                </div>
+            </div>
+
+            
+            <button onclick="requestHelp()" id="helpBtn" class="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg border border-red-300 bg-red-50 text-red-700 text-xs font-semibold shadow-2xs transition hover:bg-red-100 cursor-pointer" title="Request help from admin via voice">
+                <span id="helpBtnIcon">✋</span>
+                <span id="helpBtnText">Request Help</span>
+            </button>
+
+            
+            <button onclick="toggleTheme()" id="themeToggleBtn" class="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-semibold shadow-2xs transition hover:bg-slate-200 dark:hover:bg-slate-700 cursor-pointer" title="Toggle Dark / Light Theme">
+                <span id="themeToggleIcon">🌙</span>
+                <span id="themeToggleText">Dark</span>
+            </button>
+
+            
+            <div class="flex items-center space-x-2.5 bg-slate-900 text-white px-4 py-1.5 rounded-lg font-mono text-sm shadow-sm border border-slate-800" id="timerBadge">
+                <div class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" id="timerPulseDot"></div>
+                <div class="flex flex-col text-right">
+                    <span id="timerSectionLabel" class="text-[10px] uppercase tracking-wider text-slate-400 leading-none truncate max-w-[130px]">Section Timer</span>
+                    <span id="countdownTimer" class="font-bold text-base tracking-wider text-emerald-400">--:--</span>
+                </div>
+            </div>
+
+            
+            <button onclick="openSubmitModal()" class="bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white px-5 py-2 rounded-lg font-semibold text-sm shadow-sm transition flex items-center space-x-2">
+                <span>Finish Test</span>
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                </svg>
+            </button>
+
+            
+            <button onclick="confirmExit()" title="Exit test" class="text-slate-400 hover:text-red-600 p-2 rounded-lg hover:bg-slate-100 transition">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+                </svg>
+            </button>
+        </div>
+    </header>
+
+    
+    <div id="proctorAlert" class="hidden bg-amber-500 text-white px-4 py-1.5 text-xs font-semibold flex items-center justify-between z-10">
+        <div class="flex items-center space-x-2">
+            <span>⚠️ Warning: Screen activity is actively logged. Please keep this assessment window focused.</span>
+            <span id="tabSwitchCount" class="bg-black/20 px-2 py-0.5 rounded text-[11px]">Tab Switches: 0</span>
+        </div>
+        <button onclick="document.getElementById('proctorAlert').classList.add('hidden')" class="hover:text-amber-100 font-bold">✕</button>
+    </div>
+
+    <div id="screenshotAlert" class="hidden bg-red-600 text-white px-4 py-1.5 text-xs font-semibold flex items-center justify-between z-10">
+        <div class="flex items-center space-x-2">
+            <span>📸</span>
+            <span id="screenshotAlertText">Screenshot detected and reported to your proctor.</span>
+        </div>
+        <button onclick="document.getElementById('screenshotAlert').classList.add('hidden')" class="hover:text-red-100 font-bold">✕</button>
+    </div>
+
+    <div id="faceIntegrityAlert" class="hidden bg-red-600 text-white px-4 py-1.5 text-xs font-semibold flex items-center justify-between z-10">
+        <div class="flex items-center space-x-2">
+            <span>🚫</span>
+            <span id="faceIntegrityAlertText">Face verification issue detected and reported to your proctor.</span>
+        </div>
+        <button onclick="document.getElementById('faceIntegrityAlert').classList.add('hidden')" class="hover:text-red-100 font-bold">✕</button>
+    </div>
+
+    <div id="desktopOnlyGate" class="hidden fixed inset-0 z-[200] bg-slate-950 text-white flex items-center justify-center p-6">
+        <div class="max-w-md w-full text-center">
+            <div class="text-6xl mb-5">🖥️</div>
+            <h1 class="text-2xl font-extrabold tracking-tight mb-3">Use a desktop to start the test</h1>
+            <p id="desktopOnlyReason" class="text-sm text-slate-300 leading-relaxed mb-6">
+                This test can only be taken on a desktop or laptop computer.
+            </p>
+            <div class="rounded-xl border border-slate-700 bg-slate-900/70 p-4 text-left space-y-2.5 text-xs text-slate-300">
+                <div class="flex items-start gap-2.5">
+                    <span class="text-emerald-400 font-bold mt-0.5">✓</span>
+                    <span>Open this link on a desktop or laptop</span>
+                </div>
+                <div class="flex items-start gap-2.5">
+                    <span class="text-emerald-400 font-bold mt-0.5">✓</span>
+                    <span>Use a screen at least 1024&times;600 and maximise the browser window</span>
+                </div>
+                <div class="flex items-start gap-2.5">
+                    <span class="text-emerald-400 font-bold mt-0.5">✓</span>
+                    <span>Make sure a working webcam and microphone are connected</span>
+                </div>
+            </div>
+            <p class="text-[11px] text-slate-500 mt-5">
+                Your progress is saved. Nothing is lost by switching devices now.
+            </p>
+        </div>
+    </div>
+
+    <div id="appSwitchAlert" class="hidden bg-red-600 text-white px-4 py-1.5 text-xs font-semibold flex items-center justify-between z-10">
+        <div class="flex items-center space-x-2">
+            <span>🪟</span>
+            <span id="appSwitchAlertText">Another application was opened over the exam. This has been reported to your proctor.</span>
+        </div>
+        <button onclick="document.getElementById('appSwitchAlert').classList.add('hidden')" class="hover:text-red-100 font-bold">✕</button>
+    </div>
+
+    <div id="pasteBlockedAlert" class="hidden bg-red-600 text-white px-4 py-1.5 text-xs font-semibold flex items-center justify-between z-10">
+        <div class="flex items-center space-x-2">
+            <span>📋</span>
+            <span>Pasting content from outside the code editor is not allowed and has been reported to your proctor.</span>
+        </div>
+        <button onclick="document.getElementById('pasteBlockedAlert').classList.add('hidden')" class="hover:text-red-100 font-bold">✕</button>
+    </div>
+
+    
+    <div id="adminWarningAlert" class="hidden bg-red-600 text-white px-6 py-3 text-sm font-bold flex items-center justify-between z-50 shadow-xl transition-all fixed top-16 left-1/2 transform -translate-x-1/2 rounded-xl animate-bounce border-2 border-white">
+        <div class="flex items-center space-x-3">
+            <span class="text-xl">🚨</span>
+            <div>
+                <div class="text-[10px] uppercase tracking-wider text-red-200">Message from Proctor</div>
+                <div id="adminWarningText">Warning text goes here</div>
+            </div>
+        </div>
+        <button onclick="document.getElementById('adminWarningAlert').classList.add('hidden')" class="hover:text-red-200 text-lg font-bold ml-6 bg-red-700/50 rounded-full w-8 h-8 flex items-center justify-center">✕</button>
+    </div>
+
+    
+    <div id="sectionLockAlert" class="hidden bg-red-600 text-white px-6 py-2 text-xs font-semibold flex items-center justify-between z-20 shadow-md transition-all">
+        <div class="flex items-center space-x-2.5">
+            <span class="text-base">⏰</span>
+            <span id="sectionLockAlertText">Time has expired for this section. Your answers have been auto-submitted and locked!</span>
+        </div>
+        <button onclick="document.getElementById('sectionLockAlert').classList.add('hidden')" class="hover:text-red-200 text-sm font-bold ml-4">✕</button>
+    </div>
+
+    
+    <main id="mainWorkspace" class="flex-1 flex overflow-hidden relative transition-all duration-300">
+
+        
+        <button id="sidebarFloatingOpenBtn" onclick="toggleLeftSidebar()" class="hidden absolute top-1/2 -translate-y-1/2 left-0 z-30 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white w-8 py-6 rounded-r-xl shadow-xl transition flex items-center justify-center cursor-pointer" title="Open Sections &amp; Question Palette" aria-label="Open Sections and Question Palette">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+            </svg>
+        </button>
+
+        
+        <aside id="leftSidebar" class="w-72 xl:w-80 flex flex-col bg-slate-50 border-r border-slate-200 overflow-hidden flex-shrink-0 transition-all duration-300">
+            
+            
+            <div class="px-4 py-3 border-b border-slate-200 bg-white flex justify-between items-center flex-shrink-0">
+                <div class="flex items-center space-x-2">
+                    <div class="w-2.5 h-2.5 rounded-full bg-blue-600"></div>
+                    <h2 class="text-xs font-bold uppercase tracking-wider text-slate-800">Sections & Palette</h2>
+                </div>
+                <button onclick="toggleLeftSidebar()" class="text-slate-400 hover:text-slate-700 px-2 py-1 rounded-md hover:bg-slate-100 transition flex items-center space-x-1 text-xs font-semibold cursor-pointer" title="Hide Sidebar">
+                    <span>Hide</span>
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                    </svg>
+                </button>
+            </div>
+
+            
+            <div class="flex-1 overflow-y-auto divide-y divide-slate-200">
+                
+                
+                <div class="p-3.5 space-y-2">
+                    <div class="flex justify-between items-center px-1">
+                        <span class="text-[11px] font-bold uppercase tracking-wider text-slate-500">Test Sections</span>
+                        <span class="text-[10px] bg-slate-200 text-slate-700 font-semibold px-1.5 py-0.5 rounded" id="leftSectionTotalBadge">4 Sections</span>
+                    </div>
+                    <div id="leftSectionList" class="space-y-1.5">
+                        
+                    </div>
+                </div>
+
+                
+                <div class="p-4 flex flex-col">
+                    <div class="flex justify-between items-center mb-3">
+                        <h3 id="paletteSectionTitle" class="text-xs font-bold uppercase tracking-wider text-slate-700 truncate max-w-[170px]">QUESTION PALETTE</h3>
+                        <span class="text-[11px] text-slate-500 font-medium font-mono" id="paletteCount">30 Questions</span>
+                    </div>
+
+                    
+                    <div id="paletteGrid" class="grid grid-cols-5 gap-2 content-start">
+                        
+                    </div>
+
+                    
+                    <div class="mt-4 pt-3 border-t border-slate-200 grid grid-cols-2 gap-2 text-[11px] text-slate-600 font-medium">
+                        <div class="flex items-center space-x-1.5">
+                            <span class="w-2.5 h-2.5 rounded-full bg-emerald-600 flex-shrink-0"></span>
+                            <span>Answered</span>
+                        </div>
+                        <div class="flex items-center space-x-1.5">
+                            <span class="w-2.5 h-2.5 rounded-full bg-amber-500 flex-shrink-0"></span>
+                            <span>Not Answered</span>
+                        </div>
+                        <div class="flex items-center space-x-1.5">
+                            <span class="w-2.5 h-2.5 rounded-full bg-purple-600 flex-shrink-0"></span>
+                            <span>Marked Review</span>
+                        </div>
+                        <div class="flex items-center space-x-1.5">
+                            <span class="w-2.5 h-2.5 rounded-full bg-slate-300 border border-slate-400 flex-shrink-0"></span>
+                            <span>Not Visited</span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </aside>
+
+        
+        <section class="flex-1 flex flex-col bg-white overflow-hidden border-r border-slate-200 relative" id="questionPane">
+            
+            
+            <div id="questionWatermark" class="pointer-events-none absolute inset-0 z-10 overflow-hidden select-none" style="background-repeat: repeat;"></div>
+
+            
+            <div id="questionSubBar" class="px-8 py-3.5 border-b border-slate-200 flex justify-between items-center bg-slate-50/70 flex-shrink-0 z-20">
+                <div class="flex items-center space-x-3">
+                    <span id="questionNumberBadge" class="bg-slate-800 text-white text-xs font-bold px-3 py-1 rounded-md">
+                        Question 1 of --
+                    </span>
+                    <span id="questionSectionBadge" class="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-1 rounded-md border border-blue-200">
+                        General
+                    </span>
+                    <span class="text-xs font-medium text-slate-500">
+                        Marks: <strong class="text-slate-700">+1.0</strong> | Negative: <strong class="text-slate-700">0.0</strong>
+                    </span>
+                </div>
+
+                
+                <button onclick="toggleMarkForReview()" id="reviewToggleBtn" class="flex items-center space-x-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg border border-purple-200 text-purple-700 bg-purple-50 hover:bg-purple-100 transition cursor-pointer">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" id="reviewIcon">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"></path>
+                    </svg>
+                    <span id="reviewBtnText">Mark for Review</span>
+                </button>
+            </div>
+
+            
+            <div id="questionBody" class="flex-1 overflow-y-auto px-8 py-6 space-y-5">
+
+                
+                <div id="lockedSectionNotice" class="hidden bg-amber-50 border border-amber-300 text-amber-900 px-4 py-2.5 rounded-xl text-xs font-semibold flex items-center space-x-2 shadow-2xs">
+                    <span class="text-sm">🔒</span>
+                    <span>This section is timed out and locked. Your answers have been saved and cannot be edited.</span>
+                </div>
+
+                
+                <div>
+                    <h2 id="questionTitle" class="text-lg font-semibold text-slate-900 leading-relaxed">
+                        Loading questions...
+                    </h2>
+                </div>
+
+                
+                <div id="answerContainer" class="space-y-3 pt-2">
+                    
+                </div>
+            </div>
+
+            
+            <div id="questionNavBar" class="px-8 py-4 bg-slate-50 border-t border-slate-200 flex justify-between items-center flex-shrink-0">
+                <div>
+                    <button onclick="clearCurrentResponse()" id="clearBtn" class="text-slate-600 hover:text-red-600 text-xs font-semibold px-3 py-2 rounded-lg border border-slate-300 hover:border-red-300 bg-white hover:bg-red-50 transition flex items-center space-x-1.5 cursor-pointer">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                        </svg>
+                        <span>Clear Response</span>
+                    </button>
+                </div>
+
+                <div class="flex items-center space-x-3">
+                    <button onclick="markReviewAndNext()" id="markReviewNextBtn" class="text-purple-700 bg-purple-50 hover:bg-purple-100 border border-purple-200 text-xs font-semibold px-4 py-2.5 rounded-lg transition cursor-pointer">
+                        Mark for Review & Next
+                    </button>
+                    
+                    <button onclick="goToPreviousQuestion()" id="prevBtn" class="text-slate-700 bg-white hover:bg-slate-100 border border-slate-300 text-xs font-semibold px-4 py-2.5 rounded-lg transition disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer">
+                        &larr; Previous
+                    </button>
+
+                    <button onclick="saveAndNextQuestion()" id="nextBtn" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-6 py-2.5 rounded-lg shadow-sm hover:shadow transition flex items-center space-x-1.5 cursor-pointer">
+                        <span id="nextBtnLabel">Save & Next</span>
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        
+        <aside class="w-64 xl:w-72 flex flex-col bg-slate-50 overflow-hidden flex-shrink-0 border-l border-slate-200">
+
+            
+            <div class="p-3.5 border-b border-slate-200 bg-white flex-shrink-0">
+                <div class="flex justify-between items-center mb-2">
+                    <div class="flex items-center space-x-1.5">
+                        <div class="w-2.5 h-2.5 bg-emerald-500 rounded-full animate-live-dot"></div>
+                        <span class="text-xs font-bold tracking-wide uppercase text-slate-800">Proctoring Active</span>
+                    </div>
+                    <span class="text-[10px] bg-emerald-50 text-emerald-700 border border-emerald-200 font-bold px-2 py-0.5 rounded-full">
+                        WEBCAM
+                    </span>
+                </div>
+
+                
+                <div class="relative rounded-xl overflow-hidden bg-slate-900 border border-slate-800 shadow-inner aspect-[4/3]">
+                    <video id="localVideo" autoplay playsinline muted class="w-full h-full object-cover transform scale-x-[-1]"></video>
+                    
+                    
+                    <div class="absolute bottom-2 left-2 right-2 flex justify-between items-center text-[10px] text-white/90 bg-black/60 backdrop-blur-sm px-2 py-0.5 rounded-md">
+                        <span id="candidateBadge" class="truncate font-mono">ID: Loading...</span>
+                        <span class="flex items-center space-x-1 text-emerald-400 font-semibold">
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                            <span>LIVE</span>
+                        </span>
+                    </div>
+                </div>
+
+                <div class="mt-2 flex items-center justify-between text-[11px] text-slate-500 px-1 font-medium">
+                    <span class="flex items-center space-x-1">
+                        <svg class="w-3.5 h-3.5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                        </svg>
+                        <span>Cam: ON</span>
+                    </span>
+                    <span class="flex items-center space-x-1">
+                        <svg class="w-3.5 h-3.5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path>
+                        </svg>
+                        <span>Mic: ON</span>
+                    </span>
+                    <span class="text-slate-400">Proctored</span>
+                </div>
+            </div>
+
+            
+            <div class="p-3.5 border-b border-slate-200 bg-slate-100/70 flex-shrink-0">
+                <div class="text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-2 px-0.5">Summary Status</div>
+                <div class="grid grid-cols-2 gap-2 text-xs">
+                    <div class="flex items-center space-x-2 bg-white p-2 rounded-lg border border-slate-200 shadow-2xs">
+                        <span class="w-3 h-3 rounded-full bg-emerald-500 flex-shrink-0"></span>
+                        <div class="leading-tight">
+                            <div class="text-[10px] text-slate-400 uppercase font-semibold">Answered</div>
+                            <div class="font-bold text-slate-800 text-sm" id="statAnswered">0</div>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-2 bg-white p-2 rounded-lg border border-slate-200 shadow-2xs">
+                        <span class="w-3 h-3 rounded-full bg-amber-500 flex-shrink-0"></span>
+                        <div class="leading-tight">
+                            <div class="text-[10px] text-slate-400 uppercase font-semibold">Not Answered</div>
+                            <div class="font-bold text-slate-800 text-sm" id="statSkipped">0</div>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-2 bg-white p-2 rounded-lg border border-slate-200 shadow-2xs">
+                        <span class="w-3 h-3 rounded-full bg-purple-500 flex-shrink-0"></span>
+                        <div class="leading-tight">
+                            <div class="text-[10px] text-slate-400 uppercase font-semibold">Marked Review</div>
+                            <div class="font-bold text-slate-800 text-sm" id="statReview">0</div>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-2 bg-white p-2 rounded-lg border border-slate-200 shadow-2xs">
+                        <span class="w-3 h-3 rounded-full bg-slate-300 flex-shrink-0"></span>
+                        <div class="leading-tight">
+                            <div class="text-[10px] text-slate-400 uppercase font-semibold">Not Visited</div>
+                            <div class="font-bold text-slate-800 text-sm" id="statNotVisited">0</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            
+            <div class="p-3.5 text-[11px] text-slate-500 leading-relaxed">
+                <div class="bg-blue-50 border border-blue-200 rounded-lg p-2.5 text-blue-900">
+                    <span class="font-bold">Instructions:</span>
+                    <ul class="list-disc pl-3.5 mt-1 space-y-0.5 text-[10px]">
+                        <li>Use the left sidebar to navigate sections & questions.</li>
+                        <li>You can hide the left bar anytime for wider screen view.</li>
+                        <li>Do not leave or minimize the test tab.</li>
+                    </ul>
+                </div>
+            </div>
+        </aside>
+
+    </main>
+
+    
+    <div id="examDialog" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm flex items-center justify-center p-4 z-[65] hidden">
+        <div class="bg-white dark:bg-[#0f0f0f] rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 dark:border-[#262626]">
+            <h3 id="examDialogTitle" class="text-base font-bold text-slate-900 dark:text-white mb-2">Please confirm</h3>
+            <p id="examDialogMessage" class="text-xs text-slate-600 dark:text-zinc-300 leading-relaxed whitespace-pre-line"></p>
+            <div class="flex justify-end gap-2.5 mt-6">
+                <button id="examDialogCancel" class="px-4 py-2 rounded-lg border border-slate-300 dark:border-[#2c2c2c] bg-white dark:bg-[#181818] text-slate-700 dark:text-zinc-200 text-xs font-semibold hover:bg-slate-100 dark:hover:bg-[#222] transition cursor-pointer">Cancel</button>
+                <button id="examDialogConfirm" class="px-5 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-sm transition cursor-pointer">OK</button>
+            </div>
+        </div>
+    </div>
+
+    
+    <div id="submitModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 hidden">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-100 transform transition-all">
+            <div class="text-center mb-5">
+                <div class="w-12 h-12 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto mb-3">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+                <h3 class="text-xl font-bold text-slate-900">Are you sure you want to finish?</h3>
+                <p class="text-xs text-slate-500 mt-1">Please review your test progress summary below before final submission.</p>
+            </div>
+
+            
+            <div class="bg-slate-50 rounded-xl p-4 mb-6 border border-slate-200 space-y-2.5 text-xs font-medium">
+                <div class="flex justify-between items-center text-slate-700">
+                    <span>Total Questions</span>
+                    <strong class="text-slate-900 font-bold text-sm" id="modalTotal">50</strong>
+                </div>
+                <div class="flex justify-between items-center text-emerald-700">
+                    <span class="flex items-center space-x-1.5">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                        <span>Answered</span>
+                    </span>
+                    <strong class="font-bold text-sm" id="modalAnswered">0</strong>
+                </div>
+                <div class="flex justify-between items-center text-amber-700">
+                    <span class="flex items-center space-x-1.5">
+                        <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+                        <span>Not Answered / Skipped</span>
+                    </span>
+                    <strong class="font-bold text-sm" id="modalSkipped">0</strong>
+                </div>
+                <div class="flex justify-between items-center text-purple-700">
+                    <span class="flex items-center space-x-1.5">
+                        <span class="w-2 h-2 rounded-full bg-purple-500"></span>
+                        <span>Marked for Review</span>
+                    </span>
+                    <strong class="font-bold text-sm" id="modalReview">0</strong>
+                </div>
+            </div>
+
+            
+            <div class="flex space-x-3">
+                <button onclick="closeSubmitModal()" class="flex-1 py-2.5 border border-slate-300 text-slate-700 font-semibold rounded-xl text-xs hover:bg-slate-50 transition">
+                    Cancel & Return
+                </button>
+                <button onclick="finalizeSubmission()" class="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl text-xs shadow-md shadow-emerald-600/20 transition">
+                    Yes, Final Submit
+                </button>
+            </div>
+        </div>
+    </div>
+
+    
+    <audio id="adminAudio" autoplay></audio>
+
+    
+    <script>
+        // 1. Auth Guard
+        const token = localStorage.getItem('token');
+        if (!token || localStorage.getItem('role') !== 'STUDENT') {
+            window.location.href = '/index.html';
+        }
+
+        // === Desktop-only gate =============================================
+        // The exam needs a real screen: the code editor, question palette and
+        // proctoring panels don't fit a phone, and a touch device can't be
+        // proctored the same way. This blocks the page; the server repeats the
+        // check in /system-check so editing this out doesn't release the
+        // questions.
+        // Physical screen, not viewport: browser chrome made 1366x768 laptops fail.
+        const MIN_DESKTOP_WIDTH = 800;
+        const MIN_DESKTOP_HEIGHT = 500;
+
+        // A touchscreen laptop reports a fine primary pointer (its mouse) and
+        // only `any-pointer: coarse`, so keying off the *primary* pointer
+        // singles out phones and tablets without locking those laptops out.
+        const isTouchPrimary = () =>
+            window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
+
+        const screenWidthPx = () => (window.screen && window.screen.width) || window.innerWidth;
+        const screenHeightPx = () => (window.screen && window.screen.height) || window.innerHeight;
+
+        const isScreenTooSmall = () =>
+            screenWidthPx() < MIN_DESKTOP_WIDTH || screenHeightPx() < MIN_DESKTOP_HEIGHT;
+
+        const enforceDesktopOnly = () => {
+            const gate = document.getElementById('desktopOnlyGate');
+            if (!gate) return;
+
+            const tooSmall = isScreenTooSmall();
+            const touch = isTouchPrimary();
+
+            if (tooSmall || touch) {
+                const reason = document.getElementById('desktopOnlyReason');
+                if (reason) {
+                    reason.innerText = touch
+                        ? 'This looks like a phone or tablet. The test can only be taken on a desktop or laptop computer.'
+                        : `Your screen is ${screenWidthPx()}×${screenHeightPx()}. The test needs at least ${MIN_DESKTOP_WIDTH}×${MIN_DESKTOP_HEIGHT} — please use a desktop or laptop.`;
+                }
+                gate.classList.remove('hidden');
+                document.body.style.overflow = 'hidden';
+            } else {
+                gate.classList.add('hidden');
+                document.body.style.overflow = '';
+            }
+        };
+
+        window.addEventListener('resize', enforceDesktopOnly);
+        window.addEventListener('orientationchange', enforceDesktopOnly);
+        enforceDesktopOnly();
+
+        // STUN alone often can't establish a direct path between two real
+        // networks (unlike on a LAN during dev) — this fetches a TURN relay
+        // too, if one has been configured server-side. Falls back to the
+        // STUN-only default below if the request fails or none is set.
+        let iceServers = [{ urls: 'stun:stun.l.google.com:19302' }];
+        (async () => {
+            try {
+                const res = await fetch('/api/webrtc/ice-servers', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    if (Array.isArray(data.iceServers) && data.iceServers.length) {
+                        iceServers = data.iceServers;
+                    }
+                }
+            } catch (e) {
+                // Keep the STUN-only default.
+            }
+        })();
+
+        // Promise-based replacements for confirm()/alert(). Native dialogs
+        // force the browser out of fullscreen, which trips the fullscreen
+        // overlay and the proctoring checks mid-exam.
+        const examDialog = ({ title, message, confirmText = 'OK', cancelText = 'Cancel', showCancel = true }) => {
+            return new Promise((resolve) => {
+                const wrap = document.getElementById('examDialog');
+                const okBtn = document.getElementById('examDialogConfirm');
+                const cancelBtn = document.getElementById('examDialogCancel');
+                if (!wrap || !okBtn || !cancelBtn) {
+                    resolve(true);
+                    return;
+                }
+
+                document.getElementById('examDialogTitle').innerText = title;
+                document.getElementById('examDialogMessage').innerText = message;
+                okBtn.innerText = confirmText;
+                cancelBtn.innerText = cancelText;
+                cancelBtn.classList.toggle('hidden', !showCancel);
+                wrap.classList.remove('hidden');
+
+                const done = (value) => {
+                    wrap.classList.add('hidden');
+                    okBtn.onclick = null;
+                    cancelBtn.onclick = null;
+                    resolve(value);
+                };
+                okBtn.onclick = () => done(true);
+                cancelBtn.onclick = () => done(false);
+            });
+        };
+
+        const showConfirm = (message, title = 'Please confirm', confirmText = 'Confirm') =>
+            examDialog({ title, message, confirmText });
+
+        const showAlert = (message, title = 'Notice') =>
+            examDialog({ title, message, confirmText: 'OK', showCancel: false });
+
+        const confirmExit = async () => {
+            const ok = await showConfirm(
+                "Exit the assessment? Your current responses are saved, but leaving is recorded by the proctoring system.",
+                "Exit assessment",
+                "Exit");
+            if (ok) logout();
+        };
+
+        const logout = () => {
+            localStorage.clear();
+            window.location.href = '/index.html';
+        };
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const year = urlParams.get('year') || '1';
+        const domain = urlParams.get('domain') || 'Web Dev';
+
+        document.getElementById('testSubTitle').innerText = `Domain: ${domain} | Year: ${year}`;
+
+        // 2. Section Durations Configuration (Seconds)
+        const SECTION_DURATIONS = {
+            "Programming MCQ": 30 * 60,      // 30 min (1800s)
+            "Aptitude MCQ": 5 * 60,          // 5 min (300s)
+            "Academics": 5 * 60,             // 5 min (300s)
+            "Programming Question": 40 * 60  // 40 min (2400s)
+        };
+
+        // 3. Global Test State
+        let allProblems = [];
+        let currentIndex = 0; // index in allProblems
+        let answers = {}; // { [problemId]: 'A' | 'B' | ... | 'codeText' }
+        let questionStatus = {}; // { [problemId]: 'answered' | 'skipped' | 'review' | 'not_visited' }
+        let currentSectionFilter = 'ALL';
+        let sectionOrder = []; // ordered list of section names
+        let completedSections = new Set(); // sections where all Qs are answered/skipped/reviewed
+        let tabSwitches = 0;
+        let isBlocked = false;
+
+        // 3.5 Strict Anti-Cheat Event Listeners (Block Copy/Paste/Right-Click)
+        //
+        // Copy/cut/paste are blocked everywhere on the page EXCEPT inside
+        // the code editor — and even there, a paste is only let through if
+        // its content is exactly what the student most recently copied/cut
+        // from within that same editor. This stops pasting in a pre-written
+        // solution from outside the page (another tab, an AI tool, a file)
+        // while still letting a student rearrange or duplicate their own
+        // code normally. Right-click stays blocked everywhere, unchanged.
+        let lastEditorClipboardText = null;
+
+        const isInsideCodeEditor = (target) =>
+            !!(window.ideEditor && window.ideEditor.getWrapperElement().contains(target));
+
+        const reportRestrictedAction = (type, description) => {
+            fetch('/api/student/session/anomaly', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + localStorage.getItem('token')
+                },
+                body: JSON.stringify({
+                    type: type,
+                    description: description,
+                    year: urlParams.get('year') ? parseInt(urlParams.get('year')) : 1,
+                    domain: urlParams.get('domain') || 'Web Dev'
+                })
+            }).catch(err => console.error(err));
+        };
+
+        const showPasteBlockedWarning = () => {
+            const el = document.getElementById('pasteBlockedAlert');
+            if (!el) return;
+            el.classList.remove('hidden');
+            clearTimeout(showPasteBlockedWarning._t);
+            showPasteBlockedWarning._t = setTimeout(() => el.classList.add('hidden'), 6000);
+        };
+
+        ['copy', 'cut'].forEach(evt => {
+            document.addEventListener(evt, (e) => {
+                if (isInsideCodeEditor(e.target)) {
+                    // Let the browser perform the native copy/cut, and
+                    // remember exactly what left the editor so a later
+                    // paste of this same text is recognized as "from
+                    // inside the editor" rather than from an outside source.
+                    lastEditorClipboardText = window.ideEditor.getSelection();
+                    return;
+                }
+                e.preventDefault();
+                console.warn(`[Proctor Warning] ${evt} action blocked.`);
+                reportRestrictedAction('COPY_PASTE', `Student attempted to '${evt}' outside the code editor.`);
+            });
+        });
+
+        document.addEventListener('paste', (e) => {
+            if (isInsideCodeEditor(e.target)) {
+                const pasted = (e.clipboardData || window.clipboardData).getData('text');
+                if (pasted && pasted === lastEditorClipboardText) {
+                    return; // Exactly what was just copied from this editor — allow it.
+                }
+                e.preventDefault();
+                console.warn('[Proctor Warning] paste blocked — content did not originate from the code editor.');
+                showPasteBlockedWarning();
+                reportRestrictedAction('COPY_PASTE', 'Student attempted to paste content that did not originate from the code editor.');
+                return;
+            }
+            e.preventDefault();
+            console.warn('[Proctor Warning] paste action blocked.');
+            reportRestrictedAction('COPY_PASTE', 'Student attempted to paste outside the code editor.');
+        });
+
+        document.addEventListener('contextmenu', (e) => {
+            e.preventDefault();
+            console.warn('[Proctor Warning] contextmenu action blocked.');
+            reportRestrictedAction('COPY_PASTE', 'Student attempted to open the right-click context menu.');
+        });
+
+        // WebSocket Section Timers (Zero Polling, Server-Authoritative, MongoDB-backed)
+        let sectionTimers = {}; // { [sectionName]: { remaining: number, total: number } }
+        let sectionExpiryTimestamps = {}; // { [sectionName]: epochMsDeadline }
+        let lockedSections = new Set();
+        let activeSection = null;
+        let tickerInterval = null;
+
+        // Persistent identity from JWT (NOT random)
+        let username = localStorage.getItem('username') || 'unknown';
+        let studentId = username; // backward compat alias
+        let studentName = localStorage.getItem('name') || '';
+        let studentEmail = localStorage.getItem('email') || (username.includes('@') ? username : '');
+
+        function updateQuestionWatermark() {
+            const overlay = document.getElementById('questionWatermark');
+            if (!overlay) return;
+
+            const displayName = (studentName || username || 'STUDENT').toUpperCase();
+            const displayEmail = studentEmail || (username.includes('@') ? username : '');
+
+            // Create offscreen canvas for crisp high-DPI diagonal pattern
+            const canvas = document.createElement('canvas');
+            const tileW = 440;
+            const tileH = 240;
+            canvas.width = tileW;
+            canvas.height = tileH;
+            const ctx = canvas.getContext('2d');
+
+            const isDark = document.documentElement.classList.contains('dark') || (typeof currentTheme !== 'undefined' && currentTheme === 'dark');
+
+            ctx.clearRect(0, 0, tileW, tileH);
+            ctx.save();
+            ctx.translate(tileW / 2, tileH / 2);
+            ctx.rotate(-26 * Math.PI / 180); // Diagonal angle
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+
+            // Candidate Name (Bold & Crisp)
+            ctx.font = '700 14px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+            ctx.fillStyle = isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(15, 23, 42, 0.065)';
+            ctx.fillText(displayName, 0, -10);
+
+            // Candidate Email & Proctor Stamp
+            ctx.font = '600 11px monospace';
+            ctx.fillStyle = isDark ? 'rgba(255, 255, 255, 0.06)' : 'rgba(15, 23, 42, 0.05)';
+            const subtext = displayEmail ? `${displayEmail} • SRM INSIDER` : 'SRM INSIDER LAB PROCTORED';
+            ctx.fillText(subtext, 0, 10);
+
+            ctx.restore();
+
+            const patternDataUrl = canvas.toDataURL();
+            overlay.style.backgroundImage = `url("${patternDataUrl}")`;
+            overlay.style.backgroundRepeat = 'repeat';
+        }
+
+        function updateStudentIdentityUI() {
+            const displayName = studentName || username;
+
+            // 1. Update Top Navbar Pill
+            const navNameEl = document.getElementById('quizNavStudentName');
+            if (navNameEl) navNameEl.innerText = displayName;
+
+            const navEmailEl = document.getElementById('quizNavStudentEmail');
+            if (navEmailEl) navEmailEl.innerText = studentEmail || (username.includes('@') ? username : `ID: ${username}`);
+
+            const navAvatarEl = document.getElementById('quizNavAvatar');
+            if (navAvatarEl) {
+                const words = displayName.trim().split(/\s+/);
+                const initials = words.length > 1 
+                    ? (words[0][0] + words[words.length - 1][0]).toUpperCase()
+                    : (displayName.substring(0, 2).toUpperCase() || 'ST');
+                navAvatarEl.innerText = initials;
+            }
+
+            // 2. Update Video badge
+            const badgeEl = document.getElementById('candidateBadge');
+            if (badgeEl) badgeEl.innerText = `CANDIDATE: ${displayName.toUpperCase()}`;
+
+            // 3. Render / Update diagonal watermark
+            updateQuestionWatermark();
+        }
+
+        updateStudentIdentityUI();
+
+        // Sync latest profile from /api/auth/me if token exists
+        if (token) {
+            fetch('/api/auth/me', { headers: { 'Authorization': `Bearer ${token}` } })
+                .then(res => res.ok ? res.json() : null)
+                .then(data => {
+                    if (data && data.name) {
+                        studentName = data.name;
+                        localStorage.setItem('name', data.name);
+                        if (data.email) {
+                            studentEmail = data.email;
+                            localStorage.setItem('email', data.email);
+                        }
+                        updateStudentIdentityUI();
+                    }
+                })
+                .catch(() => {});
+        }
+
+        // 4. Tab Switch Proctoring Detector
+        document.addEventListener('visibilitychange', async () => {
+            if (document.hidden) {
+                document.getElementById('proctorAlert').classList.remove('hidden');
+                console.warn(`[Proctor Warning] Candidate switched tabs!`);
+                
+                try {
+                    const res = await fetch('/api/student/session/anomaly', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify({
+                            year: parseInt(year),
+                            domain: domain,
+                            type: 'TAB_SWITCH',
+                            description: 'Student switched tabs or minimized the browser window.'
+                        })
+                    });
+                    
+                    if (res.ok) {
+                        const anomalyData = await res.json();
+                        tabSwitches = anomalyData.tabSwitchCount;
+                        document.getElementById('tabSwitchCount').innerText = `Tab Switches: ${tabSwitches}`;
+                        
+                        if (anomalyData.isBlocked && !isBlocked) {
+                            isBlocked = true;
+                            document.getElementById('blockedOverlay').classList.remove('hidden');
+                        }
+                    }
+                } catch (e) {
+                    console.error("Failed to report anomaly", e);
+                }
+            }
+        });
+
+        // 4.2 Another application taking focus over the exam window
+        //
+        // A page cannot see what else is running on the machine, but it can
+        // see the moment it stops being the focused window while still being
+        // on screen — which is what happens when a student alt-tabs to
+        // another app or a window opens over the top of the exam.
+        //
+        // Deliberately separate from the tab-switch detector above: switching
+        // browser tabs or minimising fires `visibilitychange` and is already
+        // recorded as TAB_SWITCH, so this waits a moment and bows out if that
+        // is what actually happened, to avoid recording the same act twice.
+        //
+        // Limitation worth knowing: an overlay that never takes focus (a
+        // transparent always-on-top window, or a second screen) cannot be
+        // detected from inside a browser at all.
+        let appSwitchActive = false;
+
+        const showAppSwitchWarning = (count) => {
+            const el = document.getElementById('appSwitchAlert');
+            const textEl = document.getElementById('appSwitchAlertText');
+            if (!el || !textEl) return;
+            textEl.innerText = count
+                ? `Another application was opened over the exam. This has been reported to your proctor (${count} time${count === 1 ? '' : 's'}).`
+                : 'Another application was opened over the exam. This has been reported to your proctor.';
+            el.classList.remove('hidden');
+            clearTimeout(showAppSwitchWarning._t);
+            showAppSwitchWarning._t = setTimeout(() => el.classList.add('hidden'), 8000);
+        };
+
+        const reportAppSwitch = async () => {
+            try {
+                const res = await fetch('/api/student/session/anomaly', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify({
+                        year: parseInt(year, 10),
+                        domain: domain,
+                        type: 'APP_SWITCH',
+                        description: 'Exam window lost focus to another application while still on screen.'
+                    })
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    showAppSwitchWarning(data.appSwitchCount);
+                    if (data.isBlocked && !isBlocked) {
+                        isBlocked = true;
+                        document.getElementById('blockedOverlay').classList.remove('hidden');
+                    }
+                } else {
+                    showAppSwitchWarning();
+                }
+            } catch (e) {
+                console.error('Failed to report app switch', e);
+                showAppSwitchWarning();
+            }
+        };
+
+        window.addEventListener('blur', () => {
+            if (isBlocked || appSwitchActive) return;
+
+            // Let visibilitychange settle first: if the tab went hidden, the
+            // student switched tabs or minimised, which TAB_SWITCH covers.
+            setTimeout(() => {
+                if (document.hidden) return;
+                if (document.hasFocus()) return;  // focus bounced straight back
+                appSwitchActive = true;
+                console.warn('[Proctor Warning] Focus moved to another application.');
+                reportAppSwitch();
+            }, 400);
+        });
+
+        // One record per episode: re-arm only once the student comes back.
+        window.addEventListener('focus', () => {
+            appSwitchActive = false;
+        });
+
+        // 4.4 Screenshot Detection
+        // A web page cannot truly observe an OS screen capture; what we can
+        // catch are the keyboard shortcuts that trigger one. Best effort by
+        // design — a capture started from a menu or a second device won't fire.
+        let screenshotsDetected = 0;
+
+        const reportScreenshot = async (how) => {
+            screenshotsDetected++;
+            showScreenshotWarning();
+
+            try {
+                const res = await fetch('/api/student/session/anomaly', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify({
+                        year: parseInt(year, 10),
+                        domain: domain,
+                        type: 'SCREENSHOT',
+                        description: `Screenshot attempt detected (${how}).`
+                    })
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    if (typeof data.screenshotCount === 'number') {
+                        screenshotsDetected = data.screenshotCount;
+                        showScreenshotWarning();
+                    }
+                }
+            } catch (e) {
+                console.error("Failed to report screenshot", e);
+            }
+        };
+
+        const showScreenshotWarning = () => {
+            const el = document.getElementById('screenshotAlert');
+            const textEl = document.getElementById('screenshotAlertText');
+            if (!el || !textEl) return;
+            textEl.innerText = `Screenshot detected and reported to your proctor. This has been recorded ${screenshotsDetected} time${screenshotsDetected === 1 ? '' : 's'}.`;
+            el.classList.remove('hidden');
+            clearTimeout(showScreenshotWarning._t);
+            showScreenshotWarning._t = setTimeout(() => el.classList.add('hidden'), 8000);
+        };
+
+        document.addEventListener('keydown', (e) => {
+            if (isBlocked) return;
+            const key = (e.key || '').toLowerCase();
+
+            // Windows / Linux: PrintScreen
+            if (key === 'printscreen' || e.code === 'PrintScreen') {
+                reportScreenshot('PrintScreen');
+                return;
+            }
+            // macOS: Cmd+Shift+3 / 4 / 5
+            if (e.metaKey && e.shiftKey && ['3', '4', '5'].includes(key)) {
+                e.preventDefault();
+                reportScreenshot('Cmd+Shift+' + key);
+                return;
+            }
+            // Windows Snipping Tool: Win+Shift+S (metaKey maps to the Win key)
+            if (e.metaKey && e.shiftKey && key === 's') {
+                reportScreenshot('Win+Shift+S');
+            }
+        });
+
+        // 4.5 Fullscreen Enforcement
+        const requestFullScreen = async () => {
+            const elem = document.documentElement;
+            try {
+                if (elem.requestFullscreen) {
+                    await elem.requestFullscreen();
+                } else if (elem.webkitRequestFullscreen) {
+                    await elem.webkitRequestFullscreen();
+                } else if (elem.msRequestFullscreen) {
+                    await elem.msRequestFullscreen();
+                }
+            } catch (err) {
+                console.warn("Fullscreen request failed:", err);
+            }
+        };
+
+        document.addEventListener('fullscreenchange', () => {
+            const isFullScreen = document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement;
+            const overlay = document.getElementById('fullscreenOverlay');
+            
+            if (!isFullScreen) {
+                overlay.classList.remove('hidden');
+            } else {
+                overlay.classList.add('hidden');
+                trySystemCheck();
+            }
+        });
+
+        // Fallback interval to enforce fullscreen and show initial overlay
+        setInterval(() => {
+            const isFullScreen = document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement;
+            const overlay = document.getElementById('fullscreenOverlay');
+            const submittedScreen = document.getElementById('submittedScreen');
+            
+            // Don't enforce if submitted
+            if (submittedScreen && !submittedScreen.classList.contains('hidden')) {
+                if (overlay) overlay.classList.add('hidden');
+                return;
+            }
+            
+            if (!isFullScreen && overlay) {
+                overlay.classList.remove('hidden');
+            } else if (isFullScreen) {
+                trySystemCheck();
+            }
+        }, 1000);
+
+        // 4.6 Unblock Request Logic
+        const requestUnblock = async () => {
+            const btn = document.getElementById('requestUnblockBtn');
+            btn.disabled = true;
+            btn.classList.add('opacity-50', 'cursor-not-allowed');
+
+            try {
+                const res = await fetch('/api/student/session/request-unblock', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify({ year: parseInt(year, 10), domain })
+                });
+
+                if (res.ok) {
+                    document.getElementById('unblockStatus').classList.remove('hidden');
+                } else {
+                    const data = await res.json().catch(() => ({}));
+                    showAlert(data.error || "Could not send the unblock request. Please try again.", "Unblock request");
+                    btn.disabled = false;
+                    btn.classList.remove('opacity-50', 'cursor-not-allowed');
+                }
+            } catch (err) {
+                showAlert("Connection error — could not reach the server. Please check your connection and try again.", "Connection problem");
+                btn.disabled = false;
+                btn.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+        };
+
+        // 4.3 Theme Management (Default: Dark, with instant switch)
+        let currentTheme = localStorage.getItem('app_theme') || 'dark';
+
+        const applyTheme = (theme) => {
+            currentTheme = theme;
+            localStorage.setItem('app_theme', theme);
+            const html = document.documentElement;
+            const icon = document.getElementById('themeToggleIcon');
+            const text = document.getElementById('themeToggleText');
+
+            if (theme === 'dark') {
+                html.classList.add('dark');
+                if (icon) icon.innerText = '🌙';
+                if (text) text.innerText = 'Dark';
+            } else {
+                html.classList.remove('dark');
+                if (icon) icon.innerText = '☀️';
+                if (text) text.innerText = 'Light';
+            }
+
+            // Sync theme button in submitted screen if present
+            const subBtn = document.getElementById('submittedThemeToggle');
+            if (subBtn) {
+                subBtn.innerHTML = theme === 'dark' ? '<span>🌙 Dark</span>' : '<span>☀️ Light</span>';
+            }
+
+            // Update diagonal watermark contrast to match new theme
+            if (typeof updateQuestionWatermark === 'function') {
+                updateQuestionWatermark();
+            }
+
+            // Re-render UI components if test problems are active
+            if (allProblems && allProblems.length > 0) {
+                if (typeof renderLeftSectionList === 'function' && sectionOrder.length > 0) {
+                    renderLeftSectionList(sectionOrder);
+                }
+                if (typeof renderPalette === 'function') {
+                    renderPalette();
+                }
+                if (typeof renderQuestion === 'function' && typeof currentIndex === 'number') {
+                    renderQuestion(currentIndex);
+                }
+            }
+        };
+
+        const toggleTheme = () => {
+            applyTheme(currentTheme === 'dark' ? 'light' : 'dark');
+        };
+
+        // Initialize theme UI state
+        applyTheme(currentTheme);
+
+        // 4.5 Render Submitted Confirmation Screen (Adapts to Active Theme)
+        const renderSubmittedScreen = () => {
+            // Stop media streams & tickers if active
+            if (stream) {
+                try { stream.getTracks().forEach(t => t.stop()); } catch(e) {}
+            }
+            if (snapshotInterval) clearInterval(snapshotInterval);
+            if (tickerInterval) clearInterval(tickerInterval);
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                try { ws.close(); } catch(e) {}
+            }
+
+            const isDark = document.documentElement.classList.contains('dark');
+            document.body.className = isDark 
+                ? "bg-black text-white min-h-screen flex flex-col font-sans select-none"
+                : "bg-slate-100 text-slate-900 min-h-screen flex flex-col font-sans select-none";
+            document.body.innerHTML = `
+                
+                <header class="${isDark ? 'bg-[#0a0a0a] border-[#222222] text-white' : 'bg-white border-slate-200 text-slate-800'} border-b px-6 py-3.5 flex justify-between items-center shadow-xs flex-shrink-0">
+                    <div class="flex items-center space-x-3">
+                        <img src="/icons/icon-192x192.png" alt="SRM INSIDER LAB" class="w-8 h-8 rounded-lg object-contain shadow-md">
+                        <div>
+                            <h1 class="font-bold text-base leading-tight ${isDark ? 'text-white' : 'text-slate-800'}">SRM INSIDER LAB</h1>
+                            <p class="text-xs ${isDark ? 'text-zinc-400' : 'text-slate-500'} font-medium">Domain: ${domain || 'Web Dev'} | Year: ${year || 1}</p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center space-x-3">
+                        <button onclick="toggleTheme(); renderSubmittedScreen();" id="submittedThemeToggle" class="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg border ${isDark ? 'border-[#2c2c2c] bg-[#181818] text-zinc-200' : 'border-slate-300 bg-slate-100 text-slate-700'} text-xs font-semibold shadow-2xs transition cursor-pointer">
+                            <span>${isDark ? '🌙 Dark' : '☀️ Light'}</span>
+                        </button>
+                        <span class="text-xs font-semibold px-3 py-1.5 rounded-lg ${isDark ? 'bg-[#181818] text-zinc-300 border-[#2c2c2c]' : 'bg-slate-100 text-slate-700 border-slate-200'} border font-mono">
+                            CANDIDATE: ${(username || 'STUDENT').toUpperCase()}
+                        </span>
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold ${isDark ? 'bg-emerald-950/60 text-emerald-300 border-emerald-800' : 'bg-emerald-50 text-emerald-700 border-emerald-200'} border">
+                            <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                            COMPLETED
+                        </span>
+                    </div>
+                </header>
+
+                
+                <main class="flex-1 flex items-center justify-center p-6 ${isDark ? 'bg-black' : 'bg-slate-100'}">
+                    <div class="max-w-lg w-full ${isDark ? 'bg-[#0f0f0f] border-[#222222] shadow-2xl' : 'bg-white border-slate-200 shadow-xl shadow-slate-200/50'} rounded-2xl border p-8 sm:p-10 text-center">
+                        
+                        
+                        <div class="w-16 h-16 rounded-2xl ${isDark ? 'bg-[#141414] border-emerald-900 text-emerald-400' : 'bg-emerald-50 border-emerald-200 text-emerald-600'} border flex items-center justify-center mx-auto mb-5 shadow-xs">
+                            <svg class="w-8 h-8" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+                            </svg>
+                        </div>
+
+                        <h2 class="text-2xl font-bold ${isDark ? 'text-white' : 'text-slate-900'} tracking-tight mb-2">
+                            Test Submitted Successfully
+                        </h2>
+                        <p class="text-sm ${isDark ? 'text-zinc-400' : 'text-slate-500'} mb-6 leading-relaxed max-w-sm mx-auto">
+                            Your assessment responses and proctoring logs have been recorded and locked for evaluation.
+                        </p>
+
+                        
+                        <div class="${isDark ? 'bg-[#141414] border-[#222222]' : 'bg-slate-50 border-slate-200'} rounded-xl border p-5 mb-6 text-left">
+                            <div class="grid grid-cols-2 gap-y-4 gap-x-6">
+                                <div>
+                                    <span class="text-[11px] font-bold uppercase tracking-wider ${isDark ? 'text-zinc-500' : 'text-slate-400'} block mb-1">Candidate</span>
+                                    <span class="text-sm font-bold ${isDark ? 'text-white' : 'text-slate-800'} font-mono">${(username || 'STUDENT').toUpperCase()}</span>
+                                </div>
+                                <div>
+                                    <span class="text-[11px] font-bold uppercase tracking-wider ${isDark ? 'text-zinc-500' : 'text-slate-400'} block mb-1">Domain</span>
+                                    <span class="text-sm font-bold ${isDark ? 'text-white' : 'text-slate-800'}">${domain || 'Web Dev'}</span>
+                                </div>
+                                <div>
+                                    <span class="text-[11px] font-bold uppercase tracking-wider ${isDark ? 'text-zinc-500' : 'text-slate-400'} block mb-1">Academic Year</span>
+                                    <span class="text-sm font-bold ${isDark ? 'text-white' : 'text-slate-800'}">Year ${year || 1}</span>
+                                </div>
+                                <div>
+                                    <span class="text-[11px] font-bold uppercase tracking-wider ${isDark ? 'text-zinc-500' : 'text-slate-400'} block mb-1">Status</span>
+                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold ${isDark ? 'bg-emerald-950 text-emerald-300 border-emerald-800' : 'bg-emerald-100 text-emerald-800 border-emerald-200'} border">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                                        ✓ Submitted
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        
+                        <div class="flex items-center justify-center space-x-2 text-xs ${isDark ? 'text-zinc-400 bg-[#141414] border-[#222222]' : 'text-slate-500 bg-slate-50 border-slate-200/80'} rounded-lg py-2.5 px-3.5 mb-6 border">
+                            <svg class="w-4 h-4 text-emerald-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                            </svg>
+                            <span>Proctored session ended. Camera & microphone feeds closed.</span>
+                        </div>
+
+                        
+                        <div class="flex items-center justify-center space-x-3">
+                            <a href="/student/student.html" class="flex-1 inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-semibold text-sm rounded-xl shadow-sm transition">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+                                Back to Portal
+                            </a>
+                            <button onclick="localStorage.clear();window.location.href='/index.html'" class="px-5 py-2.5 border ${isDark ? 'border-[#2c2c2c] bg-[#181818] hover:bg-[#222222] text-zinc-300' : 'border-slate-300 bg-white hover:bg-slate-50 text-slate-700'} active:scale-95 font-semibold text-sm rounded-xl transition shadow-2xs">
+                                Logout
+                            </button>
+                        </div>
+                    </div>
+                </main>
+
+                
+                <footer class="py-3 text-center text-xs ${isDark ? 'text-zinc-500 border-[#222222] bg-[#0a0a0a]' : 'text-slate-400 border-slate-200 bg-white'} border-t flex-shrink-0">
+                    SRM INSIDER LAB &bull; Secure Computer Based Examination Portal
+                </footer>
+            `;
+        };
+
+        // 5. Load or Restore Session from Server (MongoDB-backed persistence)
+        const initSession = async () => {
+            try {
+                const res = await fetch(`/api/student/session?year=${year}&domain=${encodeURIComponent(domain)}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (!res.ok) {
+                    document.getElementById('questionTitle').innerText = "Failed to load session. Please re-login.";
+                    return;
+                }
+                const data = await res.json();
+
+                // If test was already submitted
+                if (data.submitted === true && !data.problems) {
+                    renderSubmittedScreen();
+                    return;
+                }
+
+                allProblems = data.problems || [];
+                if (allProblems.length === 0) {
+                    document.getElementById('questionTitle').innerText = "No problems available for this domain and year.";
+                    return;
+                }
+
+                // Assign UIDs
+                allProblems.forEach((p, idx) => {
+                    p._uid = p.id || `q-${idx}`;
+                });
+
+                // Restore saved state from server
+                const savedAnswers = data.answers || {};
+                const savedStatuses = data.questionStatuses || {};
+                const savedIndex = data.currentIndex || 0;
+                const savedActiveSection = data.activeSection;
+                const savedLockedSections = data.lockedSections || [];
+                const savedTabSwitches = data.tabSwitchCount || 0;
+                const sectionTimerState = data.sectionTimerState || {};
+
+                // Apply saved answers
+                Object.assign(answers, savedAnswers);
+
+                // A saved answer wins over a stale status; the server goes by answers.
+                allProblems.forEach(p => {
+                    const status = savedStatuses[p._uid] || 'not_visited';
+                    const hasAnswer = savedAnswers[p._uid] != null && String(savedAnswers[p._uid]).trim() !== '';
+                    questionStatus[p._uid] = (hasAnswer && status !== 'review') ? 'answered' : status;
+                });
+                // Ensure current question is at least 'skipped'
+                if (allProblems[savedIndex] && questionStatus[allProblems[savedIndex]._uid] === 'not_visited') {
+                    questionStatus[allProblems[savedIndex]._uid] = 'skipped';
+                }
+
+                // Apply locked sections
+                savedLockedSections.forEach(s => lockedSections.add(s));
+
+                // Apply tab switch count
+                tabSwitches = savedTabSwitches;
+                document.getElementById('tabSwitchCount').innerText = `Tab Switches: ${tabSwitches}`;
+                
+                isBlocked = data.isBlocked || false;
+                if (isBlocked) {
+                    document.getElementById('blockedOverlay').classList.remove('hidden');
+                }
+
+                // Restore timers from server-calculated remaining seconds
+                for (const [section, timerInfo] of Object.entries(sectionTimerState)) {
+                    sectionTimers[section] = {
+                        remaining: timerInfo.remainingSeconds,
+                        total: timerInfo.totalSeconds
+                    };
+                    sectionExpiryTimestamps[section] = Date.now() + (timerInfo.remainingSeconds * 1000);
+                    if (timerInfo.isLocked) {
+                        lockedSections.add(section);
+                    }
+                }
+
+                // Build ordered section list (server is authoritative on order)
+                sectionOrder = (Array.isArray(data.sectionOrder) && data.sectionOrder.length > 0)
+                    ? data.sectionOrder.filter(s => allProblems.some(p => p.section === s))
+                    : Array.from(new Set(allProblems.map(p => p.section).filter(Boolean)));
+
+                // Recompute completed sections from restored statuses
+                recomputeCompletedSections();
+
+                // Find first accessible (not locked AND not completed, or first unlocked) section
+                let startSection = savedActiveSection;
+                if (!startSection || lockedSections.has(startSection)) {
+                    startSection = sectionOrder.find(s => !lockedSections.has(s) && isSectionAccessible(s)) || sectionOrder[0];
+                }
+                activeSection = startSection;
+                currentSectionFilter = startSection;
+                currentIndex = savedIndex;
+
+                // Ensure saved index is within the accessible section
+                const savedQ = allProblems[savedIndex];
+                if (savedQ && !isSectionAccessible(savedQ.section)) {
+                    const firstAccessible = allProblems.findIndex(p => p.section === startSection);
+                    currentIndex = firstAccessible !== -1 ? firstAccessible : 0;
+                }
+
+                buildSectionPills();
+                applyFilterAndRender(currentIndex);
+
+                // Start section timer via WebSocket (will use persisted start time, won't reset)
+                requestSectionTimerSync(activeSection);
+                startTimerTicker();
+
+            } catch (err) {
+                console.error("Failed to load session:", err);
+                document.getElementById('questionTitle').innerText = "Failed to load test questions. Please check connection.";
+            }
+        };
+
+        // Helper: save current answer to server (called on every Save & Next)
+        // Retry failed saves; a silent failure strands the student at section submit.
+        const unsavedAnswers = new Set();
+
+        const saveAnswerToServer = async (problemId, answer, status, newIndex, attempt = 0) => {
+            try {
+                const res = await fetch('/api/student/session/answer', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        year: parseInt(year),
+                        domain: domain,
+                        problemId: problemId,
+                        answer: answer || null,
+                        status: status,
+                        currentIndex: newIndex,
+                        activeSection: activeSection,
+                        tabSwitchCount: tabSwitches
+                    })
+                });
+
+                if (res.ok) {
+                    unsavedAnswers.delete(problemId);
+                    return true;
+                }
+
+                // Locked/blocked refuses every time, so don't retry.
+                if (res.status === 400 || res.status === 403) {
+                    unsavedAnswers.add(problemId);
+                    return false;
+                }
+                throw new Error(`save failed with ${res.status}`);
+            } catch (err) {
+                if (attempt < 3) {
+                    await new Promise(r => setTimeout(r, 400 * Math.pow(2, attempt)));
+                    return saveAnswerToServer(problemId, answer, status, newIndex, attempt + 1);
+                }
+                unsavedAnswers.add(problemId);
+                console.error("Failed to save answer to server:", err);
+                return false;
+            }
+        };
+
+        // 5.5 Collapsible Left Sidebar Controller
+        let isLeftSidebarOpen = true;
+        const toggleLeftSidebar = () => {
+            isLeftSidebarOpen = !isLeftSidebarOpen;
+            const sidebar = document.getElementById('leftSidebar');
+            const floatingBtn = document.getElementById('sidebarFloatingOpenBtn');
+            const toggleText = document.getElementById('sidebarToggleText');
+            const toggleBtn = document.getElementById('sidebarToggleBtn');
+
+            const workspace = document.getElementById('mainWorkspace');
+
+            if (isLeftSidebarOpen) {
+                sidebar.classList.remove('hidden');
+                if (floatingBtn) floatingBtn.classList.add('hidden');
+                if (workspace) workspace.classList.remove('pl-8');
+                if (toggleText) toggleText.innerText = "Hide Questions";
+                if (toggleBtn) {
+                    toggleBtn.classList.remove('bg-blue-100', 'text-blue-800', 'border-blue-400');
+                    toggleBtn.classList.add('bg-slate-50', 'text-slate-700', 'border-slate-300');
+                }
+            } else {
+                sidebar.classList.add('hidden');
+                if (floatingBtn) floatingBtn.classList.remove('hidden');
+                if (workspace) workspace.classList.add('pl-8');
+                if (toggleText) toggleText.innerText = "Show Questions";
+                if (toggleBtn) {
+                    toggleBtn.classList.add('bg-blue-100', 'text-blue-800', 'border-blue-400');
+                    toggleBtn.classList.remove('bg-slate-50', 'text-slate-700', 'border-slate-300');
+                }
+            }
+        };
+
+        // 5.6 Sequential Section Helpers
+        const recomputeCompletedSections = () => {
+            completedSections.clear();
+            sectionOrder.forEach(sec => {
+                const secProblems = allProblems.filter(p => p.section === sec);
+                const allDone = secProblems.every(p => {
+                    const s = questionStatus[p._uid] || 'not_visited';
+                    return s === 'answered' || s === 'review';
+                });
+                if (allDone && secProblems.length > 0) {
+                    completedSections.add(sec);
+                }
+            });
+        };
+
+        // Sections run strictly in order: a section only opens once every
+        // section before it has been submitted or timed out. Mirrors the
+        // server-side rule in TestSessionController.isSectionAccessible.
+        const isSectionAccessible = (sec) => {
+            if (lockedSections.has(sec)) return false;
+            const index = sectionOrder.indexOf(sec);
+            if (index < 0) return false;
+            for (let i = 0; i < index; i++) {
+                if (!lockedSections.has(sectionOrder[i])) return false;
+            }
+            return true;
+        };
+
+        const blockingSectionFor = (sec) => {
+            const index = sectionOrder.indexOf(sec);
+            if (index < 0) return null;
+            for (let i = 0; i < index; i++) {
+                if (!lockedSections.has(sectionOrder[i])) return sectionOrder[i];
+            }
+            return null;
+        };
+
+        // Describes how test cases convert to marks, e.g. 5 tests / 5 marks
+        // reads "1 Passed = 1 Mark", 10 tests / 5 marks reads "2 Passed = 1 Mark".
+        const marksRatioLabel = (totalTests, maxMarks) => {
+            if (!totalTests || !maxMarks) return 'Scored on test cases';
+            const perMark = totalTests / maxMarks;
+            if (Number.isInteger(perMark)) {
+                return perMark === 1 ? '1 Passed = 1 Mark' : `${perMark} Passed = 1 Mark`;
+            }
+            return `${totalTests} Test Cases = ${maxMarks} Marks`;
+        };
+
+        // Count saved non-empty answers, matching the server's submit-section rule.
+        const getCurrentSectionProgress = (sec) => {
+            const secProblems = allProblems.filter(p => p.section === sec);
+            const answered = secProblems.filter(p =>
+                answers[p._uid] != null && String(answers[p._uid]).trim() !== ''
+            ).length;
+            return { answered, total: secProblems.length };
+        };
+
+        // 6. Section Navigation & Left Sidebar Renderer
+        const buildSectionPills = () => {
+            renderLeftSectionList(sectionOrder);
+        };
+
+        const renderLeftSectionList = (sections) => {
+            const listEl = document.getElementById('leftSectionList');
+            if (!listEl) return;
+            recomputeCompletedSections();
+            listEl.innerHTML = '';
+
+            const badgeTotal = document.getElementById('leftSectionTotalBadge');
+            if (badgeTotal) {
+                badgeTotal.innerText = `${sections.length} Sections`;
+            }
+
+            // (No "All Questions" option — sequential sections only)
+
+            // 2. Individual Section Cards: Section 1: Programming MCQ (30 Questions), Section 2: Aptitude MCQ (5 Questions)
+            sections.forEach((sec, idx) => {
+                const count = allProblems.filter(p => p.section === sec).length;
+                const isLocked = lockedSections.has(sec);
+                const isCurrent = currentSectionFilter === sec;
+                const secNumber = idx + 1;
+                const durationMinutes = SECTION_DURATIONS[sec] ? Math.round(SECTION_DURATIONS[sec] / 60) : null;
+                const accessible = isSectionAccessible(sec);
+                const isCompleted = completedSections.has(sec);
+                const progress = getCurrentSectionProgress(sec);
+
+                const btn = document.createElement('button');
+                btn.id = `leftSec-${sec.replace(/\s+/g, '_')}`;
+                btn.onclick = () => {
+                    filterSection(sec);
+                };
+
+                let cardClass = "";
+                let secBadgeClass = "";
+                let countBadgeClass = "";
+                let statusLabel = "";
+                let progressBar = "";
+
+                const isDark = document.documentElement.classList.contains('dark');
+
+                if (isLocked) {
+                    cardClass = isDark
+                        ? "w-full text-left p-3 rounded-xl border border-slate-800 bg-slate-900/60 text-slate-500 flex flex-col gap-1.5 transition cursor-not-allowed opacity-75"
+                        : "w-full text-left p-3 rounded-xl border border-slate-200 bg-slate-100/75 text-slate-400 flex flex-col gap-1.5 transition cursor-not-allowed opacity-80";
+                    secBadgeClass = isDark ? "bg-slate-800 text-slate-400 font-bold" : "bg-slate-200 text-slate-500 font-bold";
+                    countBadgeClass = isDark ? "bg-slate-800 text-slate-400" : "bg-slate-200 text-slate-600";
+                    statusLabel = '<span class="text-[10px] font-bold text-red-500 dark:text-red-400 flex items-center gap-1">🔒 Timed Out</span>';
+                } else if (isCompleted && !isCurrent) {
+                    cardClass = isDark
+                        ? "w-full text-left p-3 rounded-xl border border-emerald-800/80 bg-emerald-950/40 text-emerald-200 flex flex-col gap-1.5 transition cursor-pointer hover:border-emerald-700"
+                        : "w-full text-left p-3 rounded-xl border border-emerald-300 bg-emerald-50/80 text-emerald-900 flex flex-col gap-1.5 transition cursor-pointer";
+                    secBadgeClass = "bg-emerald-600 text-white font-bold";
+                    countBadgeClass = isDark ? "bg-emerald-900/80 text-emerald-200 font-bold" : "bg-emerald-200 text-emerald-900 font-bold";
+                    statusLabel = '<span class="text-[10px] font-bold text-emerald-500 dark:text-emerald-400 flex items-center gap-1">✅ Completed</span>';
+                } else if (isCurrent) {
+                    cardClass = isDark
+                        ? "w-full text-left p-3 rounded-xl border-2 border-blue-500 bg-blue-950/70 text-blue-100 shadow-sm ring-1 ring-blue-500/40 flex flex-col gap-1.5 transition cursor-pointer"
+                        : "w-full text-left p-3 rounded-xl border-2 border-blue-600 bg-blue-50/90 text-blue-950 shadow-sm ring-1 ring-blue-500/30 flex flex-col gap-1.5 transition cursor-pointer";
+                    secBadgeClass = "bg-blue-600 text-white font-extrabold shadow-2xs";
+                    countBadgeClass = isDark ? "bg-blue-900 text-blue-200 font-bold" : "bg-blue-200 text-blue-900 font-bold";
+                    statusLabel = '<span class="text-[10px] font-bold text-blue-500 dark:text-blue-400 flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-blue-500 animate-ping"></span>Active</span>';
+                    const pct = progress.total > 0 ? Math.round((progress.answered / progress.total) * 100) : 0;
+                    progressBar = `<div class="w-full ${isDark ? 'bg-slate-800' : 'bg-blue-100'} rounded-full h-1.5 mt-1"><div class="bg-blue-500 h-1.5 rounded-full transition-all duration-500" style="width: ${pct}%"></div></div>`;
+                } else if (!accessible) {
+                    cardClass = isDark
+                        ? "w-full text-left p-3 rounded-xl border border-slate-800 bg-slate-900/50 text-slate-500 flex flex-col gap-1.5 transition cursor-not-allowed opacity-70"
+                        : "w-full text-left p-3 rounded-xl border border-slate-200 bg-slate-100/70 text-slate-400 flex flex-col gap-1.5 transition cursor-not-allowed opacity-80";
+                    secBadgeClass = isDark ? "bg-slate-800 text-slate-500 font-bold" : "bg-slate-200 text-slate-500 font-bold";
+                    countBadgeClass = isDark ? "bg-slate-800 text-slate-500" : "bg-slate-200 text-slate-500";
+                    statusLabel = '<span class="text-[10px] font-bold text-slate-500 dark:text-slate-400 flex items-center gap-1">🔒 Locked</span>';
+                } else {
+                    cardClass = isDark
+                        ? "w-full text-left p-3 rounded-xl border border-slate-700/80 bg-slate-800/80 hover:bg-slate-800 hover:border-slate-600 text-slate-200 shadow-2xs flex flex-col gap-1.5 transition cursor-pointer"
+                        : "w-full text-left p-3 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 hover:border-slate-300 text-slate-800 shadow-2xs flex flex-col gap-1.5 transition cursor-pointer";
+                    secBadgeClass = isDark ? "bg-slate-700 text-slate-200 font-bold border border-slate-600" : "bg-slate-100 text-slate-700 font-bold border border-slate-200";
+                    countBadgeClass = isDark ? "bg-slate-700 text-slate-300 font-semibold" : "bg-slate-100 text-slate-700 font-semibold";
+                    statusLabel = '<span class="text-[10px] font-medium text-emerald-500 dark:text-emerald-400">● Available</span>';
+                }
+
+                btn.className = cardClass;
+                btn.innerHTML = `
+                    <div class="flex justify-between items-center w-full">
+                        <span class="text-[10px] uppercase tracking-wider px-2 py-0.5 rounded font-bold ${secBadgeClass}">
+                            Section ${secNumber}
+                        </span>
+                        <div class="flex items-center space-x-1.5">
+                            ${statusLabel}
+                            <span class="text-[11px] px-2 py-0.5 rounded-md font-mono font-bold ${countBadgeClass}">
+                                ${progress.answered}/${count} Done
+                            </span>
+                        </div>
+                    </div>
+                    <div class="flex justify-between items-baseline mt-0.5">
+                        <span class="text-xs font-bold leading-snug ${isCurrent ? (isDark ? 'text-blue-300 text-sm font-extrabold' : 'text-blue-950 text-sm font-extrabold') : (isDark ? 'text-slate-200' : 'text-slate-800')}">
+                            Section ${secNumber}: ${sec}
+                        </span>
+                        ${durationMinutes ? `<span class="text-[10px] font-mono ${isDark ? 'text-slate-400' : 'text-slate-500'} ml-2 whitespace-nowrap">⏱ ${durationMinutes} min</span>` : ''}
+                    </div>
+                    ${progressBar}
+                `;
+                listEl.appendChild(btn);
+            });
+        };
+
+        const updateSectionPillsUI = () => {
+            // Keep left sidebar section cards in sync. Prefer the server's
+            // section order: this runs on every answer now, and deriving the
+            // order from allProblems instead would let the cards reshuffle
+            // under the student mid-exam.
+            const sections = sectionOrder && sectionOrder.length
+                ? sectionOrder
+                : Array.from(new Set(allProblems.map(p => p.section).filter(Boolean)));
+            renderLeftSectionList(sections);
+        };
+
+        const filterSection = (sectionName) => {
+            // Block access to locked sections
+            if (lockedSections.has(sectionName)) {
+                showSectionAlert(`🔒 "${sectionName}" is closed and can no longer be edited.`, 'bg-slate-600');
+                return;
+            }
+            // Sections must be taken in order
+            if (sectionName !== 'ALL' && !isSectionAccessible(sectionName)) {
+                const blocker = blockingSectionFor(sectionName);
+                showSectionAlert(
+                    blocker
+                        ? `🔒 Finish and submit "${blocker}" before opening "${sectionName}".`
+                        : `🔒 "${sectionName}" is not available yet.`,
+                    'bg-amber-600');
+                return;
+            }
+
+            currentSectionFilter = sectionName;
+
+            if (sectionName !== 'ALL') {
+                activeSection = sectionName;
+                requestSectionTimerSync(sectionName);
+            }
+
+            updateSectionPillsUI();
+
+            const currentQ = allProblems[currentIndex];
+            if (sectionName !== 'ALL' && currentQ && currentQ.section !== sectionName) {
+                const firstMatchIndex = allProblems.findIndex(p => p.section === sectionName);
+                if (firstMatchIndex !== -1) {
+                    jumpToQuestion(firstMatchIndex);
+                    return;
+                }
+            }
+            renderPalette();
+            updateTimerDisplay();
+        };
+
+        // 7. Render Current Question
+        // One shared request per question; concurrent renders must not race each other.
+        const inFlightProblemFetches = new Map();
+
+        const fetchProblemOnce = (uid) => {
+            if (inFlightProblemFetches.has(uid)) return inFlightProblemFetches.get(uid);
+
+            const pending = fetch(`/api/student/session/problem/${uid}?year=${year}&domain=${encodeURIComponent(domain)}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                })
+                .then(async (res) => res.ok
+                    ? { ok: true, data: await res.json() }
+                    : { ok: false, status: res.status, error: (await res.json().catch(() => ({}))).error })
+                .finally(() => inFlightProblemFetches.delete(uid));
+
+            inFlightProblemFetches.set(uid, pending);
+            return pending;
+        };
+
+        const renderQuestion = async (index) => {
+            if (!allProblems[index]) return;
+            currentIndex = index;
+            const p = allProblems[index];
+
+            if (p.section && p.section !== activeSection) {
+                activeSection = p.section;
+                requestSectionTimerSync(p.section);
+            }
+
+            if (p.section && p.section !== currentSectionFilter) {
+                currentSectionFilter = p.section;
+                updateSectionPillsUI();
+            }
+
+            if (questionStatus[p._uid] === 'not_visited') {
+                questionStatus[p._uid] = 'skipped';
+            }
+
+            document.getElementById('questionNumberBadge').innerText = `Question ${index + 1} of ${allProblems.length}`;
+            document.getElementById('questionSectionBadge').innerText = p.section || 'General';
+
+            const isLocked = lockedSections.has(p.section);
+            const lockedNotice = document.getElementById('lockedSectionNotice');
+            if (isLocked) {
+                lockedNotice.classList.remove('hidden');
+            } else {
+                lockedNotice.classList.add('hidden');
+            }
+
+            const isReview = questionStatus[p._uid] === 'review';
+            updateReviewButtonUI(isReview);
+
+            // Lazy fetch problem text and options if not loaded
+            if (!p.title && !p.description) {
+                document.getElementById('questionTitle').innerHTML = '<span class="animate-pulse text-slate-400">Loading question...</span>';
+                document.getElementById('answerContainer').innerHTML = '';
+                
+                try {
+                    const result = await fetchProblemOnce(p._uid);
+
+                    if (currentIndex !== index) return; // User navigated away while fetching
+
+                    if (result.ok) {
+                        Object.assign(p, result.data);
+
+                        if (p.type === 'MCQ' && !p._shuffledOptions) {
+                            const rawOptions = [
+                                { key: 'A', text: p.optionA },
+                                { key: 'B', text: p.optionB },
+                                { key: 'C', text: p.optionC },
+                                { key: 'D', text: p.optionD }
+                            // Drop blanks too; the admin form posts empty option fields.
+                            ].filter(opt => opt.text != null && String(opt.text).trim() !== '');
+                            
+                            const seed = p._uid.split('').reduce((a, c) => a + c.charCodeAt(0), 0);
+                            for (let i = rawOptions.length - 1; i > 0; i--) {
+                                const j = (seed * (i + 1) + 7) % (i + 1);
+                                [rawOptions[i], rawOptions[j]] = [rawOptions[j], rawOptions[i]];
+                            }
+                            p._shuffledOptions = rawOptions;
+                        }
+                    } else {
+                        if (result.status === 403 && result.error && result.error.indexOf('violation') !== -1) {
+                            isBlocked = true;
+                            document.getElementById('blockedOverlay').classList.remove('hidden');
+                        }
+                        // Don't overwrite a question a concurrent render already loaded.
+                        if (!p.title && !p.description) {
+                            document.getElementById('questionTitle').innerText =
+                                result.error || "Could not load this question. Please check your connection.";
+                            return;
+                        }
+                    }
+                } catch (err) {
+                    console.error(err);
+                    if (currentIndex === index) {
+                        document.getElementById('questionTitle').innerText = "Error loading question. Please check connection.";
+                    }
+                    return;
+                }
+            }
+
+            // Never render an empty heading; it looks identical to a broken page.
+            const questionText = p.title || p.description || '';
+            document.getElementById('questionTitle').innerText = questionText
+                || 'This question has no text saved against it. Tell your invigilator, and answer the other questions meanwhile.';
+            if (!questionText) {
+                console.error('[Quiz] Question has no title or description', p._uid, p);
+            }
+
+            const container = document.getElementById('answerContainer');
+            container.innerHTML = '';
+            const currentAnswer = answers[p._uid] || '';
+
+            const isDark = document.documentElement.classList.contains('dark');
+
+            if (p.type === 'MCQ') {
+                const options = p._shuffledOptions || [];
+                const optionLetters = ['A', 'B', 'C', 'D'];
+
+                options.forEach((opt, optIdx) => {
+                    const isSelected = currentAnswer === opt.key;
+                    const letter = optionLetters[optIdx] || opt.key;
+
+                    const card = document.createElement('div');
+                    let cardClass = "option-card flex items-center space-x-3.5 p-4 rounded-xl border transition shadow-2xs ";
+                    if (isLocked) {
+                        cardClass += isDark ? "opacity-60 cursor-not-allowed bg-slate-900 border-slate-800 text-slate-500" : "opacity-60 cursor-not-allowed bg-slate-50 border-slate-200 text-slate-500";
+                    } else if (isSelected) {
+                        cardClass += isDark ? "selected cursor-pointer border-blue-500 bg-blue-950/60 ring-1 ring-blue-500 text-blue-100" : "selected cursor-pointer border-blue-600 bg-blue-50/80 ring-1 ring-blue-600 text-blue-950";
+                    } else {
+                        cardClass += isDark ? "cursor-pointer border-slate-800 bg-slate-900/80 hover:border-slate-700 hover:bg-slate-800 text-slate-200" : "cursor-pointer border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50 text-slate-800";
+                    }
+                    card.className = cardClass;
+                    
+                    if (!isLocked) {
+                        card.onclick = () => selectOption(p._uid, opt.key);
+                    }
+
+                    const letterClass = isSelected
+                        ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
+                        : (isDark ? 'bg-slate-800 text-slate-300 border-slate-700' : 'bg-slate-100 text-slate-600 border-slate-200');
+
+                    const textClass = isDark ? (isSelected ? 'text-blue-100' : 'text-slate-200') : (isSelected ? 'text-blue-900 font-semibold' : 'text-slate-800');
+
+                    card.innerHTML = `
+                        <div class="w-7 h-7 rounded-lg border flex items-center justify-center font-bold text-xs flex-shrink-0 ${letterClass}">
+                            ${letter}
+                        </div>
+                        <div class="flex-1 ${textClass} text-sm font-medium leading-normal">
+                            ${opt.text}
+                        </div>
+                        <input type="radio" name="opt-${p._uid}" value="${opt.key}" ${isSelected ? 'checked' : ''} ${isLocked ? 'disabled' : ''} class="w-4 h-4 text-blue-600 focus:ring-blue-500 border-slate-400 dark:border-slate-600">
+                    `;
+                    container.appendChild(card);
+                });
+            } else {
+                // Programming Question
+                let savedLang = 'python';
+                let savedCode = '';
+                if (currentAnswer) {
+                    try {
+                        const parsed = JSON.parse(currentAnswer);
+                        savedLang = parsed.language || 'python';
+                        savedCode = parsed.code || '';
+                    } catch (e) {
+                        savedCode = currentAnswer;
+                    }
+                }
+
+                // Build problem info panel
+                let problemInfoHtml = '';
+                if (p.inputFormat || p.outputFormat || p.constraints) {
+                    problemInfoHtml += `<div class="mb-3 space-y-2">`;
+                    if (p.inputFormat) {
+                        problemInfoHtml += `<div class="text-xs ${isDark ? 'text-zinc-300' : 'text-slate-700'}"><span class="font-bold ${isDark ? 'text-blue-400' : 'text-blue-600'}">Input Format:</span> ${p.inputFormat}</div>`;
+                    }
+                    if (p.outputFormat) {
+                        problemInfoHtml += `<div class="text-xs ${isDark ? 'text-zinc-300' : 'text-slate-700'}"><span class="font-bold ${isDark ? 'text-emerald-400' : 'text-emerald-600'}">Output Format:</span> ${p.outputFormat}</div>`;
+                    }
+                    if (p.constraints) {
+                        problemInfoHtml += `<div class="text-xs ${isDark ? 'text-zinc-300' : 'text-slate-700'}"><span class="font-bold ${isDark ? 'text-amber-400' : 'text-amber-600'}">Constraints:</span> ${p.constraints}</div>`;
+                    }
+                    problemInfoHtml += `</div>`;
+                }
+
+                // Build sample test cases panel
+                let sampleTestCasesHtml = '';
+                if (p.sampleTestCases && p.sampleTestCases.length > 0) {
+                    sampleTestCasesHtml += `<div class="mb-3">
+                        <div class="text-[10px] font-bold ${isDark ? 'text-zinc-400' : 'text-slate-500'} uppercase tracking-wider mb-1.5">Sample Test Cases (${p.sampleTestCases.length} of ${p.totalTestCases || '?'})</div>`;
+                    p.sampleTestCases.forEach((tc, idx) => {
+                        sampleTestCasesHtml += `
+                        <div class="mb-2 rounded-lg border ${isDark ? 'border-slate-800 bg-slate-900/50' : 'border-slate-200 bg-slate-50'} p-3">
+                            <div class="flex items-center gap-2 mb-1.5">
+                                <span class="text-[10px] font-bold ${isDark ? 'text-blue-400' : 'text-blue-600'} uppercase">Sample ${idx + 1}</span>
+                                ${tc.explanation ? `<span class="text-[10px] ${isDark ? 'text-zinc-500' : 'text-slate-400'} italic">— ${tc.explanation}</span>` : ''}
+                            </div>
+                            <div class="grid grid-cols-2 gap-2">
+                                <div>
+                                    <div class="text-[9px] font-bold ${isDark ? 'text-zinc-500' : 'text-slate-400'} uppercase mb-0.5">Input</div>
+                                    <pre class="text-xs font-mono ${isDark ? 'bg-slate-950 text-zinc-200 border-slate-800' : 'bg-white text-slate-800 border-slate-200'} p-2 rounded border whitespace-pre-wrap">${(tc.input || '(none)').replace(/</g, '&lt;')}</pre>
+                                </div>
+                                <div>
+                                    <div class="text-[9px] font-bold ${isDark ? 'text-zinc-500' : 'text-slate-400'} uppercase mb-0.5">Expected Output</div>
+                                    <pre class="text-xs font-mono ${isDark ? 'bg-slate-950 text-emerald-300 border-slate-800' : 'bg-white text-emerald-700 border-slate-200'} p-2 rounded border whitespace-pre-wrap">${(tc.expectedOutput || '').replace(/</g, '&lt;')}</pre>
+                                </div>
+                            </div>
+                        </div>`;
+                    });
+                    sampleTestCasesHtml += `</div>`;
+                }
+
+                // Marks info
+                const qMarks = p.marks || 5;
+                const totalTC = p.totalTestCases || 10;
+
+                // Prefill the custom-input box with the first sample, so
+                // pressing Run works immediately instead of failing on stdin.
+                const firstSampleInput = (p.sampleTestCases && p.sampleTestCases.length > 0)
+                    ? (p.sampleTestCases[0].input || '')
+                    : '';
+
+                container.innerHTML = `
+                    ${problemInfoHtml}
+                    ${sampleTestCasesHtml}
+                    <div class="mb-2 flex items-center justify-between">
+                        <span class="text-[10px] font-bold ${isDark ? 'text-purple-400 bg-purple-950/40 border-purple-800' : 'text-purple-600 bg-purple-50 border-purple-200'} uppercase px-2 py-0.5 rounded border">${qMarks} Marks • ${totalTC} Test Cases • ${marksRatioLabel(totalTC, qMarks)}</span>
+                    </div>
+                    <div class="rounded-xl border ${isDark ? 'border-slate-800 bg-slate-950' : 'border-slate-300 bg-white'} overflow-hidden shadow-inner flex flex-col">
+                        <div class="bg-slate-800 text-slate-300 px-4 py-2 text-xs font-mono flex justify-between items-center border-b ${isDark ? 'border-slate-700' : 'border-slate-700'}">
+                            <span>💻 Virtual IDE (${isLocked ? 'Locked' : 'Active'})</span>
+                            <div class="flex items-center space-x-3">
+                                <select id="ideLang" ${isLocked ? 'disabled' : ''} onchange="updateIdeLang(this.value)" class="bg-slate-700 border border-slate-600 text-slate-200 rounded px-2 py-1 text-xs outline-none">
+                                    <option value="python" ${savedLang === 'python' ? 'selected' : ''}>Python 3</option>
+                                    <option value="java" ${savedLang === 'java' ? 'selected' : ''}>Java</option>
+                                    <option value="javascript" ${savedLang === 'javascript' ? 'selected' : ''}>JavaScript</option>
+                                </select>
+                                <button onclick="runVirtualIdeCode()" ${isLocked ? 'disabled' : ''} class="bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1 rounded font-bold transition flex items-center disabled:opacity-50 disabled:cursor-not-allowed">
+                                    ▶ Run
+                                </button>
+                                <button onclick="runTestCases()" ${isLocked ? 'disabled' : ''} class="bg-blue-600 hover:bg-blue-500 text-white px-3 py-1 rounded font-bold transition flex items-center disabled:opacity-50 disabled:cursor-not-allowed" title="Run against all ${totalTC} test cases">
+                                    🧪 Tests
+                                </button>
+                            </div>
+                        </div>
+                        <div class="flex-1 w-full relative min-h-[300px]">
+                            <textarea id="codeAnswer" style="display:none;">${savedCode.replace(/</g, '&lt;')}</textarea>
+                        </div>
+                        <div class="border-t border-slate-700 bg-slate-900">
+                            <div class="px-3 py-1 flex justify-between items-center text-[10px] text-slate-500 uppercase tracking-wider font-bold">
+                                <span>Custom Input (stdin)</span>
+                                <span class="text-[9px] normal-case tracking-normal text-slate-500">Used by ▶ Run only — 🧪 Tests uses the real test cases</span>
+                            </div>
+                            <textarea id="ideStdin" ${isLocked ? 'disabled' : ''} rows="3"
+                                placeholder="Type the input your program should read, e.g.&#10;5&#10;1 2 3 4 5"
+                                class="w-full bg-black text-slate-200 font-mono text-xs px-3 py-2 outline-none resize-y border-0 placeholder:text-slate-600">${(firstSampleInput || '').replace(/</g, '&lt;')}</textarea>
+                        </div>
+                        <div class="bg-black text-slate-300 border-t border-slate-700 font-mono text-xs flex flex-col h-40">
+                            <div class="bg-slate-900 px-3 py-1 flex justify-between text-[10px] text-slate-500 uppercase tracking-wider font-bold">
+                                <span>Output</span>
+                                <span id="ideStatus">Idle</span>
+                            </div>
+                            <div id="ideOutput" class="p-3 overflow-y-auto flex-1 whitespace-pre-wrap"></div>
+                        </div>
+                        <div id="testResultsPanel" class="hidden bg-slate-950 border-t border-slate-700 font-mono text-xs max-h-52 overflow-y-auto"></div>
+                    </div>
+                `;
+
+                // Initialize CodeMirror after rendering
+                setTimeout(() => {
+                    const modeMap = {
+                        'python': 'python',
+                        'java': 'text/x-java',
+                        'javascript': 'javascript'
+                    };
+                    
+                    window.ideEditor = CodeMirror.fromTextArea(document.getElementById('codeAnswer'), {
+                        lineNumbers: true,
+                        mode: modeMap[savedLang] || 'python',
+                        theme: 'dracula',
+                        readOnly: isLocked ? 'nocursor' : false,
+                        matchBrackets: true,
+                        autoCloseBrackets: true,
+                        styleActiveLine: true,
+                        smartIndent: true,
+                        electricChars: true,
+                        indentUnit: 4,
+                        tabSize: 4,
+                        indentWithTabs: false,
+                        extraKeys: {
+                            // Insert spaces rather than a tab character, and
+                            // indent/outdent whole selections.
+                            Tab: (cm) => {
+                                if (cm.somethingSelected()) {
+                                    cm.indentSelection('add');
+                                } else {
+                                    cm.replaceSelection(' '.repeat(cm.getOption('indentUnit')));
+                                }
+                            },
+                            'Shift-Tab': (cm) => cm.indentSelection('subtract'),
+                            'Cmd-/': (cm) => cm.toggleComment(),
+                            'Ctrl-/': (cm) => cm.toggleComment()
+                        }
+                    });
+                    
+                    window.ideEditor.setSize("100%", "300px");
+
+                    window.ideEditor.on('change', () => {
+                        const code = window.ideEditor.getValue();
+                        const lang = document.getElementById('ideLang').value;
+                        const jsonAns = JSON.stringify({ language: lang, code: code });
+                        saveCodeAnswer(jsonAns);
+                    });
+                }, 10);
+            }
+
+            // Update Action Buttons — Prev disabled at start of section
+            const isFirstInSection = currentIndex === 0 || (currentIndex > 0 && allProblems[currentIndex - 1].section !== p.section);
+            document.getElementById('prevBtn').disabled = isFirstInSection;
+            const isLastInSection = currentIndex === allProblems.length - 1 || allProblems[currentIndex + 1]?.section !== p.section;
+            const isLast = currentIndex === allProblems.length - 1;
+            document.getElementById('nextBtnLabel').innerText = isLocked ? (isLast || isLastInSection ? 'Finish Section' : 'Next') : (isLast || isLastInSection ? 'Save & Complete Section' : 'Save & Next');
+
+            document.getElementById('clearBtn').disabled = isLocked;
+            document.getElementById('clearBtn').className = `text-xs font-semibold px-3 py-2 rounded-lg border transition flex items-center space-x-1.5 ${
+                isLocked 
+                    ? (isDark ? 'opacity-40 cursor-not-allowed bg-slate-900 text-slate-600 border-slate-800' : 'opacity-40 cursor-not-allowed bg-slate-100 text-slate-400 border-slate-200')
+                    : (isDark ? 'text-slate-300 hover:text-red-400 border-slate-700 hover:border-red-800 bg-slate-800 hover:bg-red-950/40' : 'text-slate-600 hover:text-red-600 border-slate-300 hover:border-red-300 bg-white hover:bg-red-50')
+            }`;
+
+            renderPalette();
+            updateStatistics();
+            // Section cards carry the "answered/total Done" counter, so they
+            // have to refresh whenever an answer changes — not only when the
+            // student crosses into a different section.
+            updateSectionPillsUI();
+            updateTimerDisplay();
+        };
+
+        // 8. User Actions
+        const selectOption = (uid, key) => {
+            const p = allProblems[currentIndex];
+            if (lockedSections.has(p.section)) return;
+            answers[uid] = key;
+            questionStatus[uid] = 'answered';
+            renderQuestion(currentIndex);
+            // Persist to server immediately
+            saveAnswerToServer(uid, key, 'answered', currentIndex);
+        };
+
+        let codeAnswerDebounce = null;
+        const saveCodeAnswer = (text) => {
+            const p = allProblems[currentIndex];
+            if (lockedSections.has(p.section)) return;
+            const uid = p._uid;
+            
+            // For virtual IDE, text is a JSON string. We want to check if the code part is empty.
+            let isEmpty = false;
+            try {
+                const parsed = JSON.parse(text);
+                if (!parsed.code || parsed.code.trim().length === 0) isEmpty = true;
+            } catch(e) {
+                if (!text || text.trim().length === 0) isEmpty = true;
+            }
+
+            if (!isEmpty) {
+                answers[uid] = text;
+                questionStatus[uid] = 'answered';
+            } else {
+                delete answers[uid];
+                questionStatus[uid] = 'skipped';
+            }
+            renderPalette();
+            updateStatistics();
+            // Section cards carry the "answered/total Done" counter, so they
+            // have to refresh whenever an answer changes — not only when the
+            // student crosses into a different section.
+            updateSectionPillsUI();
+            // Debounced server save for code answers (avoid saving on every keystroke)
+            clearTimeout(codeAnswerDebounce);
+            codeAnswerDebounce = setTimeout(() => {
+                saveAnswerToServer(uid, answers[uid] || null, questionStatus[uid], currentIndex);
+            }, 1500);
+        };
+        
+        window.updateIdeLang = (lang) => {
+            const modeMap = { 'python': 'python', 'java': 'text/x-java', 'javascript': 'javascript' };
+            if (window.ideEditor) {
+                window.ideEditor.setOption("mode", modeMap[lang] || 'python');
+                const code = window.ideEditor.getValue();
+                const jsonAns = JSON.stringify({ language: lang, code: code });
+                saveCodeAnswer(jsonAns);
+            }
+        };
+
+        window.runVirtualIdeCode = async () => {
+            if (!window.ideEditor) return;
+            const code = window.ideEditor.getValue();
+            const lang = document.getElementById('ideLang').value;
+            const outputEl = document.getElementById('ideOutput');
+            const statusEl = document.getElementById('ideStatus');
+            const stdinEl = document.getElementById('ideStdin');
+            const stdinValue = stdinEl ? stdinEl.value : '';
+
+            outputEl.innerHTML = '<span class="text-slate-500">Running...</span>';
+            statusEl.innerText = 'Executing';
+            statusEl.className = 'text-yellow-500';
+            
+            try {
+                const res = await fetch('/api/execute', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + token
+                    },
+                    body: JSON.stringify({ language: lang, code: code, stdin: stdinValue })
+                });
+
+                if (res.status === 401 || res.status === 403) {
+                    throw new Error("Unauthorized! Token may have expired.");
+                }
+
+                const data = await res.json();
+                if (data.error) {
+                    outputEl.innerHTML = `<span class="text-red-400">${data.error}</span>`;
+                    statusEl.innerText = 'Error';
+                    statusEl.className = 'text-red-500';
+                } else {
+                    let outHtml = '';
+                    if (data.stdout) outHtml += `<span class="text-emerald-400">${data.stdout.replace(/</g, '&lt;')}</span>`;
+                    if (data.stderr) outHtml += `<span class="text-red-400">${data.stderr.replace(/</g, '&lt;')}</span>`;
+
+                    // Reading past the end of stdin is almost always "you gave
+                    // it no input", not a bug in the program — say so plainly.
+                    const starved = /NoSuchElementException|EOFError|EOF when reading a line/.test(data.stderr || '');
+                    if (starved) {
+                        outHtml += `<div class="mt-2 p-2 rounded border border-amber-700/60 bg-amber-950/30 text-amber-300">
+                            ⓘ Your program asked for input but the <strong>Custom Input</strong> box ${stdinValue ? 'ran out of values' : 'was empty'}.
+                            Put the input it should read in that box below the editor, then press Run again —
+                            or press <strong>🧪 Tests</strong>, which feeds each test case its own input automatically.
+                        </div>`;
+                    }
+
+                    outputEl.innerHTML = outHtml || '<span class="text-slate-500">Program finished with no output.</span>';
+                    statusEl.innerText = `Exited with ${data.exitCode}`;
+                    statusEl.className = data.exitCode === 0 ? 'text-emerald-500' : 'text-red-500';
+                }
+            } catch (err) {
+                outputEl.innerHTML = `<span class="text-red-400">Execution failed: ${err.message}</span>`;
+                statusEl.innerText = 'Failed';
+                statusEl.className = 'text-red-500';
+            }
+        };
+
+        window.runTestCases = async () => {
+            if (!window.ideEditor) return;
+            const code = window.ideEditor.getValue();
+            const lang = document.getElementById('ideLang').value;
+            const p = allProblems[currentIndex];
+            const panel = document.getElementById('testResultsPanel');
+            const statusEl = document.getElementById('ideStatus');
+            
+            if (!panel) return;
+            panel.classList.remove('hidden');
+            panel.innerHTML = '<div class="p-3 text-yellow-400 animate-pulse">🧪 Running test cases...</div>';
+            statusEl.innerText = 'Testing';
+            statusEl.className = 'text-yellow-500';
+
+            // Clear any output left over from a previous "Run" — test cases
+            // feed their own stdin, so a stale run error sitting next to a
+            // passing result is confusing and looks like a contradiction.
+            const staleOutput = document.getElementById('ideOutput');
+            if (staleOutput) {
+                staleOutput.innerHTML = '<span class="text-zinc-500">Running test cases — see results below.</span>';
+            }
+
+            try {
+                const res = await fetch('/api/execute/test-cases', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + token
+                    },
+                    body: JSON.stringify({ problemId: p._uid, language: lang, code: code })
+                });
+
+                if (res.status === 401 || res.status === 403) {
+                    throw new Error("Unauthorized! Token may have expired.");
+                }
+
+                const data = await res.json();
+                if (data.error) {
+                    panel.innerHTML = `<div class="p-3 text-red-400">${data.error}</div>`;
+                    statusEl.innerText = 'Error';
+                    statusEl.className = 'text-red-500';
+                    return;
+                }
+
+                let html = `<div class="p-3 border-b border-slate-800">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="font-bold text-sm ${data.passedTestCases === data.totalTestCases ? 'text-emerald-400' : 'text-amber-400'}">
+                            ${data.passedTestCases === data.totalTestCases ? '✅ All Passed!' : `🧪 ${data.passedTestCases}/${data.totalTestCases} Passed`}
+                        </span>
+                        <span class="text-xs font-mono ${data.score > 0 ? 'text-emerald-400' : 'text-zinc-400'}">
+                            Score: ${data.score}/${data.maxScore} Marks
+                        </span>
+                    </div>
+                    <div class="w-full bg-slate-800 rounded-full h-1.5">
+                        <div class="h-1.5 rounded-full ${data.passedTestCases === data.totalTestCases ? 'bg-emerald-500' : 'bg-amber-500'}" style="width: ${(data.passedTestCases / data.totalTestCases * 100)}%"></div>
+                    </div>
+                </div>`;
+
+                if (data.testResults) {
+                    data.testResults.forEach(tc => {
+                        const passIcon = tc.passed ? '✅' : '❌';
+                        const passClass = tc.passed ? 'border-emerald-900/40' : 'border-red-900/40';
+                        
+                        html += `<div class="p-2.5 border-b border-slate-800/50 ${passClass}">
+                            <div class="flex items-center gap-2">
+                                <span>${passIcon}</span>
+                                <span class="text-[10px] font-bold ${tc.passed ? 'text-emerald-400' : 'text-red-400'} uppercase">Test ${tc.testCaseIndex}</span>
+                                <span class="text-[10px] ${tc.sample ? 'text-blue-400' : 'text-zinc-600'}">${tc.sample ? '(Sample)' : '(Hidden)'}</span>
+                            </div>`;
+                        
+                        if (tc.sample && tc.input !== null) {
+                            html += `<div class="mt-1.5 grid grid-cols-3 gap-2 text-[10px]">
+                                <div><span class="text-zinc-500">Input:</span><pre class="text-zinc-300 mt-0.5">${(tc.input || '').replace(/</g, '&lt;')}</pre></div>
+                                <div><span class="text-zinc-500">Expected:</span><pre class="text-emerald-300 mt-0.5">${(tc.expectedOutput || '').replace(/</g, '&lt;')}</pre></div>
+                                <div><span class="text-zinc-500">Got:</span><pre class="${tc.passed ? 'text-emerald-300' : 'text-red-300'} mt-0.5">${(tc.actualOutput || '').replace(/</g, '&lt;')}</pre></div>
+                            </div>`;
+                        }
+                        
+                        if (tc.stderr) {
+                            html += `<div class="text-red-400 text-[10px] mt-1">Error: ${tc.stderr.replace(/</g, '&lt;').substring(0, 200)}</div>`;
+                        }
+                        
+                        html += `</div>`;
+                    });
+                }
+                
+                panel.innerHTML = html;
+                statusEl.innerText = `${data.passedTestCases}/${data.totalTestCases} Passed • ${data.score}/${data.maxScore} Marks`;
+                statusEl.className = data.passedTestCases === data.totalTestCases ? 'text-emerald-500' : 'text-amber-500';
+            } catch (err) {
+                panel.innerHTML = `<div class="p-3 text-red-400">Test execution failed: ${err.message}</div>`;
+                statusEl.innerText = 'Failed';
+                statusEl.className = 'text-red-500';
+            }
+        };
+
+        const clearCurrentResponse = () => {
+            const p = allProblems[currentIndex];
+            if (lockedSections.has(p.section)) return;
+            const uid = p._uid;
+            delete answers[uid];
+            questionStatus[uid] = 'skipped';
+            renderQuestion(currentIndex);
+        };
+
+        const toggleMarkForReview = () => {
+            const p = allProblems[currentIndex];
+            if (lockedSections.has(p.section)) return;
+            const uid = p._uid;
+            if (questionStatus[uid] === 'review') {
+                questionStatus[uid] = answers[uid] ? 'answered' : 'skipped';
+            } else {
+                questionStatus[uid] = 'review';
+            }
+            renderQuestion(currentIndex);
+        };
+
+        const markReviewAndNext = () => {
+            const p = allProblems[currentIndex];
+            if (!lockedSections.has(p.section)) {
+                questionStatus[p._uid] = 'review';
+                const nextIdx = currentIndex < allProblems.length - 1 ? currentIndex + 1 : currentIndex;
+                saveAnswerToServer(p._uid, answers[p._uid] || null, 'review', nextIdx);
+            }
+            if (currentIndex < allProblems.length - 1) {
+                renderQuestion(currentIndex + 1);
+            } else {
+                renderQuestion(currentIndex);
+            }
+        };
+
+        const updateReviewButtonUI = (isReview) => {
+            const btn = document.getElementById('reviewToggleBtn');
+            const text = document.getElementById('reviewBtnText');
+            const isDark = document.documentElement.classList.contains('dark');
+            if (isReview) {
+                btn.className = "flex items-center space-x-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg border border-purple-600 text-white bg-purple-600 shadow-sm transition";
+                text.innerText = "Marked for Review ✓";
+            } else {
+                btn.className = isDark
+                    ? "flex items-center space-x-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg border border-purple-800 text-purple-300 bg-purple-950/40 hover:bg-purple-900/50 transition cursor-pointer"
+                    : "flex items-center space-x-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg border border-purple-200 text-purple-700 bg-purple-50 hover:bg-purple-100 transition cursor-pointer";
+                text.innerText = "Mark for Review";
+            }
+        };
+
+        const goToPreviousQuestion = () => {
+            if (currentIndex > 0) {
+                const prevQ = allProblems[currentIndex - 1];
+                const currentQ = allProblems[currentIndex];
+                // Don't allow going back to a different section
+                if (prevQ.section !== currentQ.section) {
+                    return;
+                }
+                renderQuestion(currentIndex - 1);
+            }
+        };
+
+        // Locks the finished section on the server, which is what actually
+        // unlocks the next one. Server is authoritative — the local state is
+        // only updated once it confirms.
+        // Re-sync from server, re-push anything it lost, then go to the first empty question.
+        const resyncAnswersFromServer = async (section) => {
+            try {
+                const res = await fetch(`/api/student/session?year=${parseInt(year, 10)}&domain=${encodeURIComponent(domain)}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (!res.ok) return false;
+
+                const data = await res.json();
+                const serverAnswers = data.answers || {};
+                const sectionProblems = allProblems.filter(q => q.section === section);
+
+                const missing = sectionProblems.filter(q => {
+                    const saved = serverAnswers[q._uid];
+                    return saved == null || String(saved).trim() === '';
+                });
+
+                if (missing.length === 0) return false; // Genuine disagreement; let the caller report it.
+
+                // Push anything the page still has but the server lost.
+                const recoverable = missing.filter(q => answers[q._uid] && String(answers[q._uid]).trim() !== '');
+                for (const q of recoverable) {
+                    await saveAnswerToServer(q._uid, answers[q._uid], questionStatus[q._uid] || 'answered', currentIndex);
+                }
+
+                const stillMissing = missing.filter(q => !answers[q._uid] || String(answers[q._uid]).trim() === '');
+
+                if (stillMissing.length === 0) {
+                    showAlert('Your answers have been re-saved. Please press the button again to submit this section.',
+                              'Answers re-saved');
+                    return true;
+                }
+
+                stillMissing.forEach(q => { questionStatus[q._uid] = 'skipped'; });
+                renderPalette();
+                updateStatistics();
+
+                showAlert(`${stillMissing.length} question(s) in "${section}" have no answer saved. Taking you to the first one.`,
+                          'Section incomplete');
+                const idx = allProblems.findIndex(q => q._uid === stillMissing[0]._uid);
+                if (idx !== -1) renderQuestion(idx);
+                return true;
+            } catch (err) {
+                console.error('[Quiz] Could not re-sync answers', err);
+                return false;
+            }
+        };
+
+        const submitSectionToServer = async (section, nextSection) => {
+            try {
+                const res = await fetch('/api/student/session/submit-section', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify({ year: parseInt(year, 10), domain, section })
+                });
+                const data = await res.json().catch(() => ({}));
+
+                if (!res.ok) {
+                    // Server counts what it holds, so re-sync instead of dead-ending.
+                    if (data.unanswered > 0) {
+                        const recovered = await resyncAnswersFromServer(section);
+                        if (recovered) return;
+                    }
+                    showAlert(data.error || "Could not submit this section. Please try again.", "Could not submit section");
+                    return;
+                }
+
+                if (Array.isArray(data.lockedSections)) {
+                    data.lockedSections.forEach(s => lockedSections.add(s));
+                } else {
+                    lockedSections.add(section);
+                }
+                timeoutHandledSections.add(section);
+
+                const target = data.nextSection || nextSection;
+                if (target) {
+                    currentSectionFilter = target;
+                    activeSection = target;
+                    requestSectionTimerSync(target);
+                    showSectionAlert(`✅ Section "${section}" submitted! Moving to "${target}"...`, 'bg-emerald-600');
+
+                    updateSectionPillsUI();
+                    renderPalette();
+
+                    const nextIndex = allProblems.findIndex(q => q.section === target);
+                    renderQuestion(nextIndex !== -1 ? nextIndex : currentIndex);
+                } else {
+                    updateSectionPillsUI();
+                    renderPalette();
+                    openSubmitModal();
+                }
+            } catch (err) {
+                showAlert("Connection error — could not submit this section. Please check your connection and try again.", "Connection problem");
+            }
+        };
+
+        const saveAndNextQuestion = async () => {
+            const p = allProblems[currentIndex];
+            // Save current answer to server
+            if (p && !lockedSections.has(p.section)) {
+                const tentativeNext = currentIndex < allProblems.length - 1 ? currentIndex + 1 : currentIndex;
+                saveAnswerToServer(p._uid, answers[p._uid] || null, questionStatus[p._uid] || 'skipped', tentativeNext);
+            }
+
+            if (currentIndex < allProblems.length - 1) {
+                const nextQ = allProblems[currentIndex + 1];
+                // Check if next question is in a different section
+                if (nextQ.section !== p.section) {
+                    const progress = getCurrentSectionProgress(p.section);
+                    const remaining = progress.total - progress.answered;
+                    
+                    if (remaining > 0) {
+                        showAlert(`Please answer all ${remaining} remaining question(s) in "${p.section}" before moving to the next section.`,
+                                  'Section incomplete');
+                        // Same rule as the progress count, so this always finds a real gap.
+                        const firstUnanswered = allProblems.findIndex(q =>
+                            q.section === p.section
+                            && (answers[q._uid] == null || String(answers[q._uid]).trim() === ''));
+                        if (firstUnanswered !== -1) {
+                            renderQuestion(firstUnanswered);
+                        }
+                        return;
+                    }
+                    
+                    const ok = await showConfirm(
+                        `Submit the section "${p.section}"?\n\nOnce submitted you cannot change your answers in this section, and it cannot be reopened.`,
+                        'Submit section',
+                        'Submit section');
+                    if (!ok) return; // Stay on the current question if cancelled
+
+                    submitSectionToServer(p.section, nextQ.section);
+                    return;
+                }
+                renderQuestion(currentIndex + 1);
+            } else {
+                openSubmitModal();
+            }
+        };
+
+        const jumpToQuestion = (index) => {
+            const target = allProblems[index];
+            if (target && !isSectionAccessible(target.section) && !lockedSections.has(target.section)) {
+                return; // Block jumping to inaccessible section questions
+            }
+            renderQuestion(index);
+        };
+
+        const applyFilterAndRender = (index) => {
+            renderQuestion(index);
+        };
+
+        // 9. Real-Time WebSocket Section Timers & Auto-Submission Engine (Zero Polling)
+        const requestSectionTimerSync = (section) => {
+            if (!section) return;
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({
+                    type: 'section_start',
+                    section: section,
+                    username: username,
+                    year: year,
+                    domain: domain
+                }));
+            }
+        };
+
+        const updateTimerDisplay = () => {
+            const labelEl = document.getElementById('timerSectionLabel');
+            const timerEl = document.getElementById('countdownTimer');
+            const dotEl = document.getElementById('timerPulseDot');
+
+            if (!activeSection) {
+                timerEl.innerText = "--:--";
+                return;
+            }
+
+            labelEl.innerText = activeSection;
+
+            if (lockedSections.has(activeSection)) {
+                timerEl.innerText = "LOCKED";
+                timerEl.className = "font-bold text-sm tracking-wider text-slate-400";
+                dotEl.className = "w-2.5 h-2.5 rounded-full bg-slate-500";
+                return;
+            }
+
+            const timerObj = sectionTimers[activeSection];
+            if (!timerObj) {
+                timerEl.innerText = "--:--";
+                return;
+            }
+
+            const rem = Math.max(0, timerObj.remaining);
+            const mins = Math.floor(rem / 60);
+            const secs = rem % 60;
+            timerEl.innerText = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+
+            if (rem < 120) { // < 2 mins
+                timerEl.className = "font-bold text-base tracking-wider text-red-500 animate-pulse";
+                dotEl.className = "w-2.5 h-2.5 rounded-full bg-red-500 animate-ping";
+            } else if (rem < 300) { // < 5 mins
+                timerEl.className = "font-bold text-base tracking-wider text-amber-400";
+                dotEl.className = "w-2.5 h-2.5 rounded-full bg-amber-400";
+            } else {
+                timerEl.className = "font-bold text-base tracking-wider text-emerald-400";
+                dotEl.className = "w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse";
+            }
+        };
+
+        const startTimerTicker = () => {
+            if (tickerInterval) clearInterval(tickerInterval);
+
+            tickerInterval = setInterval(() => {
+                if (!activeSection) return;
+
+                if (!sectionTimers[activeSection]) {
+                    const total = SECTION_DURATIONS[activeSection] || (30 * 60);
+                    sectionTimers[activeSection] = { remaining: total, total: total };
+                    sectionExpiryTimestamps[activeSection] = Date.now() + (total * 1000);
+                    requestSectionTimerSync(activeSection);
+                }
+
+                if (lockedSections.has(activeSection)) {
+                    updateTimerDisplay();
+                    return;
+                }
+
+                if (sectionExpiryTimestamps[activeSection]) {
+                    const diffMs = sectionExpiryTimestamps[activeSection] - Date.now();
+                    const currentRem = Math.max(0, Math.ceil(diffMs / 1000));
+                    sectionTimers[activeSection].remaining = currentRem;
+
+                    updateTimerDisplay();
+
+                    if (currentRem <= 0) {
+                        handleSectionTimeout(activeSection);
+                    }
+                }
+            }, 1000);
+        };
+
+        const showSectionAlert = (text, bgClass = 'bg-red-600') => {
+            const el = document.getElementById('sectionLockAlert');
+            const textEl = document.getElementById('sectionLockAlertText');
+            el.className = `${bgClass} text-white px-6 py-2.5 text-xs font-semibold flex items-center justify-between z-20 shadow-md transition-all`;
+            textEl.innerText = text;
+            el.classList.remove('hidden');
+        };
+
+        let timeoutHandledSections = new Set();
+
+        const handleSectionTimeout = (section) => {
+            if (timeoutHandledSections.has(section)) return;
+            timeoutHandledSections.add(section);
+
+            lockedSections.add(section);
+
+            // Notify server over WebSocket (with persistent identity)
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({
+                    type: 'section_timeout',
+                    section: section,
+                    username: username,
+                    year: year,
+                    domain: domain
+                }));
+            }
+
+            showSectionAlert(`⏰ Time is up for "${section}"! This section has been auto-submitted and locked.`, 'bg-red-600');
+
+            updateSectionPillsUI();
+            renderPalette();
+
+            // Find next unlocked section
+            const allSections = Array.from(new Set(allProblems.map(p => p.section).filter(Boolean)));
+            const nextUnlockedSection = allSections.find(sec => !lockedSections.has(sec));
+
+            if (nextUnlockedSection) {
+                setTimeout(() => {
+                    filterSection(nextUnlockedSection);
+                    const nextQIndex = allProblems.findIndex(p => p.section === nextUnlockedSection);
+                    if (nextQIndex !== -1) {
+                        jumpToQuestion(nextQIndex);
+                    }
+                }, 1500);
+            } else {
+                setTimeout(() => {
+                    showAlert("All sections have been completed or timed out. Submitting your assessment.", "Assessment complete");
+                    finalizeSubmission();
+                }, 1500);
+            }
+        };
+
+        
+        const renderPalette = () => {
+            const grid = document.getElementById('paletteGrid');
+            grid.innerHTML = '';
+
+            let visibleCount = 0;
+
+            allProblems.forEach((p, idx) => {
+                if (currentSectionFilter !== 'ALL' && p.section !== currentSectionFilter) {
+                    return;
+                }
+                // In ALL mode, only show accessible sections
+                if (currentSectionFilter === 'ALL' && !isSectionAccessible(p.section) && !lockedSections.has(p.section)) {
+                    return;
+                }
+                visibleCount++;
+
+                const status = questionStatus[p._uid] || 'not_visited';
+                const isCurrent = idx === currentIndex;
+                const isLocked = lockedSections.has(p.section);
+
+                const btn = document.createElement('button');
+                btn.className = `palette-btn h-9 rounded-lg font-bold text-xs flex items-center justify-center border shadow-2xs relative ${getPaletteButtonClass(status, isCurrent, isLocked)}`;
+                btn.innerText = idx + 1;
+                btn.onclick = () => jumpToQuestion(idx);
+
+                grid.appendChild(btn);
+            });
+
+            document.getElementById('paletteCount').innerText = `${visibleCount} Questions`;
+
+            const paletteTitleEl = document.getElementById('paletteSectionTitle');
+            if (paletteTitleEl) {
+                if (currentSectionFilter === 'ALL') {
+                    paletteTitleEl.innerText = 'ALL QUESTIONS';
+                } else {
+                    const sections = Array.from(new Set(allProblems.map(p => p.section).filter(Boolean)));
+                    const secIdx = sections.indexOf(currentSectionFilter);
+                    const secNumPrefix = secIdx !== -1 ? `SEC ${secIdx + 1}: ` : '';
+                    paletteTitleEl.innerText = `${secNumPrefix}${currentSectionFilter.toUpperCase()}`;
+                }
+            }
+        };
+
+        const getPaletteButtonClass = (status, isCurrent, isLocked) => {
+            const isDark = document.documentElement.classList.contains('dark');
+            let base = "";
+            if (isLocked) {
+                base = isDark
+                    ? "bg-slate-800 text-slate-500 border-slate-700"
+                    : "bg-slate-200 text-slate-500 border-slate-300 hover:bg-slate-300";
+            } else {
+                switch (status) {
+                    case 'answered':
+                        base = "bg-emerald-600 text-white border-emerald-700 hover:bg-emerald-700";
+                        break;
+                    case 'review':
+                        base = "bg-purple-600 text-white border-purple-700 hover:bg-purple-700";
+                        break;
+                    case 'skipped':
+                        base = isDark
+                            ? "bg-amber-950/70 text-amber-300 border-amber-800 hover:bg-amber-900"
+                            : "bg-amber-100 text-amber-900 border-amber-300 hover:bg-amber-200";
+                        break;
+                    default: // not_visited
+                        base = isDark
+                            ? "bg-slate-800 text-slate-200 border-slate-750 hover:bg-slate-700"
+                            : "bg-white text-slate-700 border-slate-300 hover:bg-slate-100";
+                        break;
+                }
+            }
+
+            if (isCurrent) {
+                base += isDark
+                    ? " ring-2 ring-blue-400 ring-offset-2 ring-offset-slate-900 z-10 font-extrabold scale-105"
+                    : " ring-2 ring-blue-600 ring-offset-2 z-10 font-extrabold scale-105";
+            }
+            return base;
+        };
+
+        // 11. Update Real-Time Statistics Card
+        const updateStatistics = () => {
+            let answered = 0;
+            let skipped = 0;
+            let review = 0;
+            let notVisited = 0;
+
+            allProblems.forEach(p => {
+                const s = questionStatus[p._uid] || 'not_visited';
+                if (s === 'answered') answered++;
+                else if (s === 'review') review++;
+                else if (s === 'skipped') skipped++;
+                else notVisited++;
+            });
+
+            document.getElementById('statAnswered').innerText = answered;
+            document.getElementById('statSkipped').innerText = skipped;
+            document.getElementById('statReview').innerText = review;
+            document.getElementById('statNotVisited').innerText = notVisited;
+
+            document.getElementById('modalTotal').innerText = allProblems.length;
+            document.getElementById('modalAnswered').innerText = answered;
+            document.getElementById('modalSkipped').innerText = skipped;
+            document.getElementById('modalReview').innerText = review;
+        };
+
+        // 12. Modal Controls
+        const openSubmitModal = () => {
+            updateStatistics();
+            document.getElementById('submitModal').classList.remove('hidden');
+        };
+
+        const closeSubmitModal = () => {
+            document.getElementById('submitModal').classList.add('hidden');
+        };
+
+        const finalizeSubmission = async () => {
+            try {
+                await fetch('/api/student/session/submit', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        year: parseInt(year),
+                        domain: domain
+                    })
+                });
+            } catch (err) {
+                console.error("Failed to submit test:", err);
+            }
+            closeSubmitModal();
+            renderSubmittedScreen();
+        };
+
+        
+        let stream = null;
+        let pc = null;
+        let ws = null;
+        let snapshotInterval = null;
+        let snapshotCanvas = null;
+        let firstSnapshotTimer = null;
+        let connectSignaling = null;
+        let signalingRetries = 0;
+
+        // Returns whether a snapshot actually went out.
+        const captureSnapshot = () => {
+            if (!stream || !ws || ws.readyState !== WebSocket.OPEN) return false;
+
+            const video = document.getElementById('localVideo');
+            if (!video.videoWidth) return false; // Video not ready yet
+
+            if (!snapshotCanvas) {
+                snapshotCanvas = document.createElement('canvas');
+            }
+            // Low-res snapshot (160x120) to minimize bandwidth
+            snapshotCanvas.width = 160;
+            snapshotCanvas.height = 120;
+            const ctx = snapshotCanvas.getContext('2d');
+            ctx.drawImage(video, 0, 0, 160, 120);
+
+            const dataUrl = snapshotCanvas.toDataURL('image/jpeg', 0.4); // Low quality JPEG (~10-20KB)
+
+            ws.send(JSON.stringify({
+                type: 'snapshot',
+                studentId: username,
+                username: username,
+                snapshot: dataUrl,
+                timestamp: Date.now()
+            }));
+            return true;
+        };
+
+        // Poll until a frame actually sends; the camera needs seconds to warm up.
+        const startFirstSnapshotAttempts = () => {
+            if (firstSnapshotTimer) clearInterval(firstSnapshotTimer);
+            if (captureSnapshot()) return;
+            firstSnapshotTimer = setInterval(() => {
+                if (captureSnapshot()) {
+                    clearInterval(firstSnapshotTimer);
+                    firstSnapshotTimer = null;
+                }
+            }, 1000);
+        };
+
+        let systemCheckPassed = false;
+        let systemCheckFailures = 0;
+        let systemCheckInFlight = false;
+        let lastSystemCheckAt = 0;
+
+        // Explains a stalled check instead of leaving the page looking frozen.
+        const setSystemCheckNotice = (text) => {
+            const el = document.getElementById('questionTitle');
+            if (!el) return;
+            if (text) {
+                el.innerText = text;
+            }
+        };
+
+        // Reports hardware/proctoring state to the server so it can mark this
+        // session hardware-validated — required before any question's title
+        // or options will be served. Safe to call repeatedly; retried from
+        // several trigger points below since camera/mic/fullscreen readiness
+        // don't all land at the same moment.
+        const trySystemCheck = async () => {
+            if (systemCheckPassed || systemCheckInFlight) return;
+
+            // Throttle: a 1s watchdog times a whole cohort is load the server can't use.
+            const backoffMs = Math.min(1000 * Math.pow(2, Math.max(0, systemCheckFailures - 1)), 15000);
+            if (systemCheckFailures > 0 && Date.now() - lastSystemCheckAt < backoffMs) return;
+
+            const videoTracks = stream ? stream.getVideoTracks() : [];
+            const audioTracks = stream ? stream.getAudioTracks() : [];
+            const cameraLive = videoTracks.length > 0 && videoTracks[0].readyState === 'live';
+            const micLive = audioTracks.length > 0 && audioTracks[0].readyState === 'live';
+            const isFullScreen = !!(document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement);
+            const monitors = ('isExtended' in window.screen && window.screen.isExtended) ? 2 : 1;
+
+            if (!cameraLive || !micLive || !isFullScreen) return;
+
+            systemCheckInFlight = true;
+            lastSystemCheckAt = Date.now();
+
+            try {
+                const res = await fetch('/api/student/session/system-check', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify({
+                    year: parseInt(year, 10), domain, cameraLive, micLive,
+                    fullscreen: isFullScreen, monitors,
+                    screenWidth: screenWidthPx(),
+                    screenHeight: screenHeightPx(),
+                    touchPrimary: isTouchPrimary()
+                })
+                });
+                if (res.ok) {
+                    systemCheckPassed = true;
+                    systemCheckFailures = 0;
+                    setSystemCheckNotice('');
+                    if (typeof currentIndex === 'number' && allProblems[currentIndex]) {
+                        renderQuestion(currentIndex);
+                    }
+                } else {
+                    systemCheckFailures++;
+                    const err = await res.json().catch(() => ({}));
+                    // Stay quiet at first; early failures are just the webcam warming up.
+                    if (systemCheckFailures >= 4) {
+                        setSystemCheckNotice(err.error
+                            || 'Still preparing your test. Keep this tab in fullscreen with the camera on.');
+                    }
+                }
+            } catch (err) {
+                systemCheckFailures++;
+                console.error("System check failed:", err);
+            } finally {
+                systemCheckInFlight = false;
+            }
+        };
+
+        const startMedia = async () => {
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+                document.getElementById('localVideo').srcObject = stream;
+                
+                const violationVideo = document.getElementById('violationVideo');
+                if (violationVideo) {
+                    violationVideo.srcObject = stream;
+                }
+
+                connectSignaling = () => {
+                    if (ws && (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING)) return;
+
+                    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+                    ws = new WebSocket(`${protocol}//${window.location.host}/ws-signaling?token=${encodeURIComponent(token)}`);
+
+                ws.onopen = () => {
+                    console.log("[Signaling] Connected as", username);
+                    signalingRetries = 0;
+                    ws.send(JSON.stringify({ type: 'join', role: 'student', year, domain, username, studentId: username }));
+
+                    if (activeSection) {
+                        requestSectionTimerSync(activeSection);
+                    }
+
+                    // Start sending snapshots every 30 seconds (instead of live video)
+                    if (snapshotInterval) clearInterval(snapshotInterval);
+                    snapshotInterval = setInterval(captureSnapshot, 30000);
+                    // Keep trying until one lands; the camera may still be warming up.
+                    startFirstSnapshotAttempts();
+                    setTimeout(trySystemCheck, 3500);
+                };
+
+                ws.onmessage = async (event) => {
+                    const data = JSON.parse(event.data);
+
+                    // Handle Real-Time WebSocket Timer Events (Zero Polling, Server-Authoritative)
+                    if (data.type === 'timer_sync') {
+                        sectionExpiryTimestamps[data.section] = Date.now() + (data.remainingSeconds * 1000);
+                        sectionTimers[data.section] = {
+                            remaining: data.remainingSeconds,
+                            total: data.totalSeconds
+                        };
+                        if (data.isLocked) {
+                            lockedSections.add(data.section);
+                        }
+                        if (data.lockedSections) {
+                            data.lockedSections.forEach(s => lockedSections.add(s));
+                        }
+                        updateTimerDisplay();
+                        updateSectionPillsUI();
+                        renderPalette();
+                    }
+
+                    if (data.type === 'section_locked_ack') {
+                        if (data.lockedSections) {
+                            data.lockedSections.forEach(s => lockedSections.add(s));
+                        }
+                        updateSectionPillsUI();
+                        renderPalette();
+                    }
+
+                    // Send snapshot immediately when an admin connects (e.g. on refresh)
+                    if (data.type === 'join' && data.role === 'admin') {
+                        captureSnapshot();
+                    }
+
+                    // On-demand live video: Admin requests to watch this specific student
+                    if (data.type === 'request_live' && data.target === username) {
+                        console.log("[Live] Admin requested live video stream");
+                        if (pc) { pc.close(); pc = null; }
+
+                        pc = new RTCPeerConnection({ iceServers });
+                        stream.getTracks().forEach(track => pc.addTrack(track, stream));
+
+                        pc.onicecandidate = (event) => {
+                            if (event.candidate) {
+                                ws.send(JSON.stringify({ type: 'ice-candidate', candidate: event.candidate, studentId: username }));
+                            }
+                        };
+
+                        pc.ontrack = (event) => {
+                            console.log("[Audio Intercom] Received admin audio track!");
+                            const audioEl = document.getElementById('adminAudio');
+                            if (event.streams && event.streams[0]) {
+                                audioEl.srcObject = event.streams[0];
+                            } else {
+                                audioEl.srcObject = new MediaStream([event.track]);
+                            }
+                            // Force play to bypass some browser auto-play policies if interaction occurred
+                            audioEl.play().catch(err => console.warn("Audio play blocked:", err));
+                        };
+
+                        const offer = await pc.createOffer({ offerToReceiveAudio: true });
+                        await pc.setLocalDescription(offer);
+                        ws.send(JSON.stringify({ type: 'offer', offer, studentId: username }));
+                    }
+
+                    // On-demand: admin says stop live
+                    if (data.type === 'stop_live' && data.target === username) {
+                        console.log("[Live] Admin stopped live video");
+                        if (pc) { pc.close(); pc = null; }
+                    }
+
+                    // WebRTC signaling (answer/ICE from admin for on-demand live)
+                    if (data.target === username) {
+                        if (data.type === 'answer' && pc) {
+                            await pc.setRemoteDescription(new RTCSessionDescription(data.answer));
+                        } else if (data.type === 'ice-candidate' && pc) {
+                            await pc.addIceCandidate(new RTCIceCandidate(data.candidate));
+                        }
+                    }
+
+                    // Admin Warning
+                    if (data.type === 'admin_warning' && data.target === username) {
+                        const alertBox = document.getElementById('adminWarningAlert');
+                        const alertText = document.getElementById('adminWarningText');
+                        alertText.innerText = data.message;
+                        alertBox.classList.remove('hidden');
+
+                        setTimeout(() => {
+                            alertBox.classList.add('hidden');
+                        }, 10000);
+
+                        // Play a sound to alert the student
+                        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                        const osc = audioCtx.createOscillator();
+                        osc.type = 'triangle';
+                        osc.frequency.setValueAtTime(440, audioCtx.currentTime);
+                        osc.connect(audioCtx.destination);
+                        osc.start();
+                        osc.stop(audioCtx.currentTime + 0.5);
+                    }
+
+                    // Unblock responses from admin
+                    if (data.type === 'unblock_approved' && data.target === username) {
+                        isBlocked = false;
+                        tabSwitches = 0;
+                        document.getElementById('tabSwitchCount').innerText = `Tab Switches: 0`;
+                        document.getElementById('blockedOverlay').classList.add('hidden');
+                        const btn = document.getElementById('requestUnblockBtn');
+                        btn.disabled = false;
+                        btn.classList.remove('opacity-50', 'cursor-not-allowed');
+                        document.getElementById('unblockStatus').classList.add('hidden');
+                        showAlert("The proctor has approved your unblock request. You may resume the test.", "Unblocked");
+                    }
+                    
+                    if (data.type === 'unblock_rejected' && data.target === username) {
+                        document.getElementById('unblockStatus').innerText = "Request rejected by proctor. You remain blocked.";
+                        document.getElementById('unblockStatus').classList.add('text-red-400');
+                        setTimeout(() => {
+                            const btn = document.getElementById('requestUnblockBtn');
+                            btn.disabled = false;
+                            btn.classList.remove('opacity-50', 'cursor-not-allowed');
+                            document.getElementById('unblockStatus').innerText = "Request sent. Waiting for admin approval...";
+                            document.getElementById('unblockStatus').classList.remove('text-red-400');
+                            document.getElementById('unblockStatus').classList.add('hidden');
+                        }, 5000);
+                    }
+                };
+
+                // Must reconnect: snapshots unlock the questions, so a drop strands the student.
+                ws.onclose = (event) => {
+                    console.warn("[Signaling] Disconnected", event.code, event.reason);
+                    if (snapshotInterval) { clearInterval(snapshotInterval); snapshotInterval = null; }
+                    if (firstSnapshotTimer) { clearInterval(firstSnapshotTimer); firstSnapshotTimer = null; }
+
+                    const submittedScreen = document.getElementById('submittedScreen');
+                    const isSubmitted = submittedScreen && !submittedScreen.classList.contains('hidden');
+                    if (isSubmitted) return;
+
+                    const delay = Math.min(1000 * Math.pow(2, signalingRetries), 15000);
+                    signalingRetries++;
+                    setTimeout(() => connectSignaling && connectSignaling(), delay);
+                };
+
+                ws.onerror = () => {
+                    // Browsers fire error then close; reconnect is handled above.
+                    console.warn("[Signaling] Socket error");
+                };
+                };
+
+                connectSignaling();
+
+            } catch (err) {
+                console.error("Error accessing media devices.", err);
+                showAlert("Camera and microphone access is required for this proctored test. Allow both in your browser, then reload this page.",
+                          "Camera access required");
+            }
+        };
+
+        window.requestHelp = () => {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({ type: 'help_request', studentId: username }));
+                const btn = document.getElementById('helpBtn');
+                btn.innerHTML = '<span>✅ Help Requested</span>';
+                btn.className = 'flex items-center space-x-1.5 px-3 py-1.5 rounded-lg border border-emerald-300 bg-emerald-50 text-emerald-700 text-xs font-semibold shadow-2xs transition hover:bg-emerald-100 cursor-pointer';
+                setTimeout(() => {
+                    btn.innerHTML = '<span id="helpBtnIcon">✋</span><span id="helpBtnText">Request Help</span>';
+                    btn.className = 'flex items-center space-x-1.5 px-3 py-1.5 rounded-lg border border-red-300 bg-red-50 text-red-700 text-xs font-semibold shadow-2xs transition hover:bg-red-100 cursor-pointer';
+                }, 10000); // Reset after 10s
+            } else {
+                showAlert("Connection to the server is closed, so your help request could not be sent.", "Could not request help");
+            }
+        };
+
+        // Initialize — load/restore persistent session
+        if (year && domain) {
+            initSession();
+            startMedia();
+        }
+
+        window.onbeforeunload = () => {
+            if (tickerInterval) clearInterval(tickerInterval);
+            if (snapshotInterval) clearInterval(snapshotInterval);
+            if (identityCheckInterval) clearInterval(identityCheckInterval);
+            if (stream) stream.getTracks().forEach(track => track.stop());
+            if (pc) pc.close();
+            if (ws) ws.close();
+        };
+
+        // ============================================
+        // MEDIAPIPE FACE DETECTION — PROCTORING GUARD
+        // Timer keeps running, test content is blocked
+        // ============================================
+        let faceViolationCount = 0;
+        let isTestPaused = false;
+        let faceCheckInterval = null;
+        let consecutiveMisses = 0;
+        const MISS_THRESHOLD = 6; // 6 consecutive misses before pausing (~3s) to allow looking down at keyboard
+
+        const initFaceProctoring = () => {
+            const localVid = document.getElementById('localVideo');
+            if (!localVid) return;
+
+            const proctorFaceDetection = new FaceDetection({
+                locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_detection/${file}`
+            });
+            proctorFaceDetection.setOptions({ model: 'short', minDetectionConfidence: 0.5 });
+
+            proctorFaceDetection.onResults((results) => {
+                if (results.detections.length > 0) {
+                    const det = results.detections[0];
+                    const bb = det.boundingBox;
+                    const faceH = bb.height;
+                    const centerX = bb.xCenter;
+                    const centerY = bb.yCenter;
+
+                    // Constraints: allow looking down, but enforce distance so shoulders are visible
+                    const isCentered = centerX > 0.15 && centerX < 0.85 && centerY > 0.05 && centerY < 0.65;
+                    const isLargeEnough = faceH > 0.10;
+                    const isNotTooLarge = faceH < 0.55;
+
+                    if (isCentered && isLargeEnough && isNotTooLarge) {
+                        consecutiveMisses = 0;
+                        if (isTestPaused) {
+                            resumeTest();
+                        }
+                    } else {
+                        consecutiveMisses++;
+                        if (consecutiveMisses >= MISS_THRESHOLD && !isTestPaused) {
+                            pauseTest();
+                        }
+                    }
+                } else {
+                    consecutiveMisses++;
+                    if (consecutiveMisses >= MISS_THRESHOLD && !isTestPaused) {
+                        pauseTest();
+                    }
+                }
+            });
+
+            // Check face every ~500ms using interval
+            faceCheckInterval = setInterval(async () => {
+                if (localVid.readyState >= 2 && localVid.videoWidth > 0) {
+                    try {
+                        await proctorFaceDetection.send({ image: localVid });
+                    } catch (e) {
+                        // Ignore transient errors
+                    }
+                }
+            }, 500);
+        };
+
+        const pauseTest = () => {
+            isTestPaused = true;
+            faceViolationCount++;
+            document.getElementById('faceViolationOverlay').classList.remove('hidden');
+            document.getElementById('violationCount').innerText = faceViolationCount;
+
+            // Send violation to admin via WebSocket
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({
+                    type: 'face_violation',
+                    studentId: username,
+                    username: username,
+                    violationCount: faceViolationCount,
+                    timestamp: Date.now()
+                }));
+            }
+        };
+
+        const resumeTest = () => {
+            isTestPaused = false;
+            document.getElementById('faceViolationOverlay').classList.add('hidden');
+        };
+
+        // Start face proctoring 5 seconds after page load (let camera initialize)
+        setTimeout(initFaceProctoring, 5000);
+
+        // ============================================
+        // SERVER-VERIFIED IDENTITY — periodic re-check
+        // Distinct from the MediaPipe loop above (which only checks whether
+        // *a* face is visible/centered, entirely client-side). This asks
+        // the identity-verification service whether the face currently in
+        // frame is still the same person who enrolled, and flags more than
+        // one person in frame — both compared against the face embedding
+        // captured at enrollment. Detection and anomaly logging both happen
+        // server-side, so this can't be silenced by tampering with this page.
+        // ============================================
+        let identityCheckInterval = null;
+        let identityCheckCanvas = null;
+
+        const checkLiveIdentity = async () => {
+            if (!stream) return;
+            const video = document.getElementById('localVideo');
+            if (!video.videoWidth) return;
+
+            if (!identityCheckCanvas) {
+                identityCheckCanvas = document.createElement('canvas');
+            }
+            identityCheckCanvas.width = 320;
+            identityCheckCanvas.height = 240;
+            identityCheckCanvas.getContext('2d').drawImage(video, 0, 0, 320, 240);
+            const dataUrl = identityCheckCanvas.toDataURL('image/jpeg', 0.7);
+
+            try {
+                const res = await fetch('/api/identity/verify-live', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify({ image: dataUrl, year: parseInt(year, 10), domain })
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.warning) {
+                        showFaceIntegrityWarning(data.message);
+                    }
+                    // A repeated face mismatch stops the test outright. The
+                    // server decides; this just reflects it, and the overlay
+                    // carries the "request unblock" route to a proctor.
+                    if (data.isBlocked && !isBlocked) {
+                        isBlocked = true;
+                        const reason = document.getElementById('blockedReason');
+                        if (reason && data.type === 'FACE_MISMATCH') {
+                            reason.innerText =
+                                `Your test has been blocked because a different person was detected on camera `
+                                + `${data.faceMismatchCount || 2} times. The timer is still running. `
+                                + `If this was a mistake, contact your proctor to review and release it.`;
+                        }
+                        document.getElementById('blockedOverlay').classList.remove('hidden');
+                    }
+                }
+            } catch (e) {
+                // A dropped check is not fatal; the next tick retries.
+            }
+        };
+
+        const showFaceIntegrityWarning = (message) => {
+            const el = document.getElementById('faceIntegrityAlert');
+            const textEl = document.getElementById('faceIntegrityAlertText');
+            if (!el || !textEl) return;
+            textEl.innerText = message || 'Face verification issue detected and reported to your proctor.';
+            el.classList.remove('hidden');
+            clearTimeout(showFaceIntegrityWarning._t);
+            showFaceIntegrityWarning._t = setTimeout(() => el.classList.add('hidden'), 8000);
+        };
+
+        // Staggered away from the other periodic jobs above (snapshot at 2s,
+        // system-check at 3.5s, face proctoring at 5s) so they don't all
+        // fire in the same tick; repeats every 25s afterward.
+        setTimeout(() => {
+            checkLiveIdentity();
+            identityCheckInterval = setInterval(checkLiveIdentity, 25000);
+        }, 8000);
+    </script>
+</body>
+</html>

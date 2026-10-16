@@ -1,0 +1,20 @@
+.git
+.github
+.idea
+.vscode
+target/
+*.iml
+
+# Secrets never enter the build context — they are mounted at runtime.
+.env
+.env.local
+
+# Rebuilt inside the image for the correct architecture.
+python-services/identity-verification/.venv/
+python-services/identity-verification/__pycache__/
+python-services/identity-verification/models/
+python-services/identity-verification/uvicorn.log
+
+logs/
+*.log
+.DS_Store

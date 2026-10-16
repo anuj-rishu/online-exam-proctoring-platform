@@ -1,0 +1,1174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>Identity Verification | SRM INSIDER LAB</title>
+    <link rel="icon" type="image/x-icon" href="/icons/favicon.ico">
+    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192x192.png">
+    <link rel="apple-touch-icon" href="/icons/icon-192x192.png">
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="description" content="Verify your identity with a live selfie and ID card scan before starting your proctored test.">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = { darkMode: 'class' };
+        const savedTheme = localStorage.getItem('app_theme') || 'dark';
+        if (savedTheme === 'dark') document.documentElement.classList.add('dark');
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    
+
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        
+        /* Dark Theme */
+        html.dark body { background-color: #000000 !important; color: #ffffff !important; }
+        html.dark header { background-color: #0a0a0a !important; border-color: #1a1a1a !important; }
+
+        /* Shoulder frame overlay - rectangular with rounded corners */
+        .shoulder-frame {
+            position: absolute;
+            top: 8%; left: 15%; width: 70%; height: 84%;
+            border: 3px dashed rgba(255,255,255,0.45);
+            border-radius: 16px;
+            pointer-events: none;
+            transition: all 0.4s ease;
+        }
+        .shoulder-frame.detected {
+            border-color: #10b981;
+            border-style: solid;
+            box-shadow: 0 0 20px rgba(16,185,129,0.35), inset 0 0 20px rgba(16,185,129,0.08);
+        }
+        .shoulder-frame.not-detected {
+            border-color: #ef4444;
+            border-style: dashed;
+            box-shadow: 0 0 12px rgba(239,68,68,0.25);
+        }
+
+        /* ID card frame (Vertical orientation) */
+        .id-frame {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            height: 84%;
+            aspect-ratio: 54 / 85.6;
+            width: auto;
+            max-width: 44%;
+            border: 3px dashed rgba(255,255,255,0.75);
+            border-radius: 14px;
+            pointer-events: none;
+            transition: all 0.3s ease;
+            box-shadow: 0 0 20px rgba(99, 102, 241, 0.25);
+        }
+
+        /* Corner markers for frames */
+        .corner-mark { position: absolute; width: 20px; height: 20px; pointer-events: none; }
+        .corner-mark.tl { top: -2px; left: -2px; border-top: 3px solid; border-left: 3px solid; border-radius: 4px 0 0 0; }
+        .corner-mark.tr { top: -2px; right: -2px; border-top: 3px solid; border-right: 3px solid; border-radius: 0 4px 0 0; }
+        .corner-mark.bl { bottom: -2px; left: -2px; border-bottom: 3px solid; border-left: 3px solid; border-radius: 0 0 0 4px; }
+        .corner-mark.br { bottom: -2px; right: -2px; border-bottom: 3px solid; border-right: 3px solid; border-radius: 0 0 4px 0; }
+        .shoulder-frame .corner-mark { border-color: rgba(255,255,255,0.5); transition: border-color 0.4s; }
+        .shoulder-frame.detected .corner-mark { border-color: #10b981; }
+        .shoulder-frame.not-detected .corner-mark { border-color: #ef4444; }
+        .id-frame .corner-mark { border-color: #818cf8; }
+        .id-frame.detected {
+            border-color: #10b981;
+            border-style: solid;
+            box-shadow: 0 0 20px rgba(16,185,129,0.35), inset 0 0 20px rgba(16,185,129,0.08);
+        }
+        .id-frame.not-detected {
+            border-color: #ef4444;
+            border-style: dashed;
+            box-shadow: 0 0 12px rgba(239,68,68,0.25);
+        }
+        .id-frame.detected .corner-mark { border-color: #10b981; }
+        .id-frame.not-detected .corner-mark { border-color: #ef4444; }
+
+        /* Liveness guide — a head that demonstrates the turn being asked for.
+           Rotation plus a horizontal squash imitates the face foreshortening
+           as it turns away, and the pupils/nose shift with it, which reads as
+           a turn rather than a flat spin. */
+        /* Perspective on the parent is what makes rotateY read as a head
+           turning away rather than a flat horizontal squash. */
+        #livenessOverlay { perspective: 600px; }
+        #headGuide {
+            transform-origin: 50% 50%;
+            transform-style: preserve-3d;
+            transition: transform 0.4s ease;
+        }
+        #guideEyeL, #guideEyeR, #guideNose {
+            transition: transform 0.4s ease;
+        }
+
+        @keyframes turnLeft {
+            0%, 15%   { transform: rotateY(0deg) scaleX(1); }
+            55%, 80%  { transform: rotateY(-38deg) scaleX(0.78) translateX(-6px); }
+            100%      { transform: rotateY(0deg) scaleX(1); }
+        }
+        @keyframes turnRight {
+            0%, 15%   { transform: rotateY(0deg) scaleX(1); }
+            55%, 80%  { transform: rotateY(38deg) scaleX(0.78) translateX(6px); }
+            100%      { transform: rotateY(0deg) scaleX(1); }
+        }
+        @keyframes faceForward {
+            0%, 100% { transform: scale(1); }
+            50%      { transform: scale(1.06); }
+        }
+        .turn-left   { animation: turnLeft 2.4s ease-in-out infinite; }
+        .turn-right  { animation: turnRight 2.4s ease-in-out infinite; }
+        .face-center { animation: faceForward 1.8s ease-in-out infinite; }
+
+        /* Features slide opposite the turn, the way they do on a real face. */
+        @keyframes featuresLeft {
+            0%, 15%  { transform: translateX(0); }
+            55%, 80% { transform: translateX(-7px); }
+            100%     { transform: translateX(0); }
+        }
+        @keyframes featuresRight {
+            0%, 15%  { transform: translateX(0); }
+            55%, 80% { transform: translateX(7px); }
+            100%     { transform: translateX(0); }
+        }
+        .features-left  { animation: featuresLeft 2.4s ease-in-out infinite; }
+        .features-right { animation: featuresRight 2.4s ease-in-out infinite; }
+
+        @keyframes arrowNudgeLeft {
+            0%, 15%  { opacity: 0; transform: translateX(6px); }
+            55%, 80% { opacity: 1; transform: translateX(-4px); }
+            100%     { opacity: 0; transform: translateX(6px); }
+        }
+        @keyframes arrowNudgeRight {
+            0%, 15%  { opacity: 0; transform: translateX(-6px); }
+            55%, 80% { opacity: 1; transform: translateX(4px); }
+            100%     { opacity: 0; transform: translateX(-6px); }
+        }
+        .arrow-left-active  { animation: arrowNudgeLeft 2.4s ease-in-out infinite; }
+        .arrow-right-active { animation: arrowNudgeRight 2.4s ease-in-out infinite; }
+
+        @media (prefers-reduced-motion: reduce) {
+            .turn-left, .turn-right, .face-center,
+            .features-left, .features-right,
+            .arrow-left-active, .arrow-right-active {
+                animation: none;
+            }
+            .arrow-left-active, .arrow-right-active { opacity: 1; }
+        }
+
+        /* Step progress (Horizontal Stepper) */
+        .step-circle {
+            width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            font-weight: 700; font-size: 14px; flex-shrink: 0; transition: all 0.3s ease;
+        }
+        .step-circle.pending { background: #f1f5f9; color: #94a3b8; border: 2px solid #cbd5e1; }
+        html.dark .step-circle.pending { background: #1e293b; color: #475569; border: 2px solid #334155; }
+        .step-circle.active { background: #2563eb; color: #fff; border: 2px solid #3b82f6; box-shadow: 0 0 12px rgba(37,99,235,0.4); }
+        .step-circle.done { background: #059669; color: #fff; border: 2px solid #10b981; box-shadow: 0 0 10px rgba(16,185,129,0.3); }
+        
+        .step-connector {
+            height: 4px;
+            width: 100%;
+            border-radius: 999px;
+            background: #cbd5e1;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        html.dark .step-connector { background: #334155; }
+        .step-connector.pending { background: #cbd5e1; }
+        html.dark .step-connector.pending { background: #334155; }
+        .step-connector.done { background: #10b981 !important; box-shadow: 0 0 10px rgba(16, 185, 129, 0.5); }
+
+        /* Status pill */
+        .status-pill {
+            display: inline-flex; align-items: center; gap: 6px; padding: 6px 16px;
+            border-radius: 999px; font-size: 13px; font-weight: 600; transition: all 0.3s;
+        }
+        .status-pill .dot { width: 8px; height: 8px; border-radius: 50%; }
+        .status-pill.scanning { background: #1e293b; color: #94a3b8; border: 1px solid #334155; }
+        .status-pill.scanning .dot { background: #f59e0b; animation: blink 1.2s infinite; }
+        .status-pill.detected { background: #052e16; color: #4ade80; border: 1px solid #166534; }
+        .status-pill.detected .dot { background: #22c55e; }
+        .status-pill.error { background: #2a0a0a; color: #fca5a5; border: 1px solid #7f1d1d; }
+        .status-pill.error .dot { background: #ef4444; animation: blink 0.8s infinite; }
+
+        @keyframes blink { 0%,100% { opacity:1 } 50% { opacity:0.3 } }
+        
+        /* Demo image card */
+        .demo-card {
+            background: #0f172a; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden;
+            transition: transform 0.2s;
+        }
+        .demo-card:hover { transform: scale(1.02); }
+        .demo-card img { width: 100%; display: block; }
+        .demo-card .label { padding: 8px 12px; font-size: 11px; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; }
+    </style>
+</head>
+<body class="bg-slate-50 dark:bg-black text-slate-900 dark:text-white min-h-screen flex flex-col select-none">
+
+    <div id="desktopOnlyGate" class="hidden fixed inset-0 z-[200] bg-slate-950 text-white flex items-center justify-center p-6">
+        <div class="max-w-md w-full text-center">
+            <div class="text-6xl mb-5">🖥️</div>
+            <h1 class="text-2xl font-extrabold tracking-tight mb-3">Use a desktop to start the test</h1>
+            <p id="desktopOnlyReason" class="text-sm text-slate-300 leading-relaxed mb-6">
+                This test can only be taken on a desktop or laptop computer.
+            </p>
+            <div class="rounded-xl border border-slate-700 bg-slate-900/70 p-4 text-left space-y-2.5 text-xs text-slate-300">
+                <div class="flex items-start gap-2.5">
+                    <span class="text-emerald-400 font-bold mt-0.5">✓</span>
+                    <span>Open this link on a desktop or laptop</span>
+                </div>
+                <div class="flex items-start gap-2.5">
+                    <span class="text-emerald-400 font-bold mt-0.5">✓</span>
+                    <span>Use a screen at least 1024&times;600 and maximise the browser window</span>
+                </div>
+                <div class="flex items-start gap-2.5">
+                    <span class="text-emerald-400 font-bold mt-0.5">✓</span>
+                    <span>Make sure a working webcam and microphone are connected</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <header class="bg-white dark:bg-[#0a0a0a] border-b border-slate-200 dark:border-[#1a1a1a] px-6 py-3 flex justify-between items-center z-20 flex-shrink-0">
+        <div class="flex items-center space-x-3">
+            <img src="/icons/icon-192x192.png" alt="Logo" class="w-8 h-8 rounded-lg object-contain" onerror="this.style.display='none'">
+            <div>
+                <h1 class="font-bold text-slate-800 dark:text-white text-base leading-tight">SRM INSIDER LAB</h1>
+                <p id="testSubTitle" class="text-xs text-slate-500 dark:text-slate-400 font-medium">Identity Verification</p>
+            </div>
+        <div class="flex items-center gap-3">
+            <div id="candidateNavbarPill" class="flex items-center space-x-2 px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-[#181818] border border-slate-200 dark:border-[#2a2a2a] text-slate-800 dark:text-slate-200 shadow-2xs">
+                <div id="candidateAvatar" class="w-6 h-6 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 text-white font-bold text-[10px] flex items-center justify-center shadow-xs">ST</div>
+                <div class="flex flex-col text-left">
+                    <span id="candidateBadge" class="text-xs font-bold leading-tight truncate max-w-[150px]">Student Name</span>
+                    <span id="candidateMeta" class="text-[9px] text-slate-500 dark:text-slate-400 font-mono leading-none mt-0.5">student@srm.edu.in</span>
+                </div>
+            </div>
+            <button onclick="toggleTheme()" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-300 dark:border-[#333] bg-slate-100 dark:bg-[#181818] text-slate-700 dark:text-slate-300 text-xs font-semibold hover:bg-slate-200 dark:hover:bg-[#222] transition cursor-pointer">
+                <span id="themeToggleIcon">🌙</span>
+                <span id="themeToggleText">Dark</span>
+            </button>
+        </div>
+    </header>
+
+    
+    <main class="flex-1 flex items-stretch overflow-hidden">
+        
+        
+        <aside id="leftPanel" class="w-[340px] flex-shrink-0 bg-white dark:bg-[#080808] border-r border-slate-200 dark:border-[#1a1a1a] p-5 flex flex-col overflow-y-auto">
+            
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-base font-extrabold text-slate-900 dark:text-white tracking-tight">Verification Steps</h2>
+                <span id="stepBadge" class="text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20">Step 1 of 2</span>
+            </div>
+
+            
+            <div class="bg-slate-50 dark:bg-[#0f0f0f] border border-slate-200 dark:border-[#1e1e1e] rounded-xl p-3.5 mb-5 shadow-xs">
+                
+                <div class="flex items-center px-1">
+                    <div id="step1Dot" class="step-circle active">1</div>
+                    <div class="flex-1 mx-2 flex items-center">
+                        <div id="step1Connector" class="step-connector pending"></div>
+                    </div>
+                    <div id="step2Dot" class="step-circle pending">2</div>
+                    <div class="flex-1 mx-2 flex items-center">
+                        <div id="step2Connector" class="step-connector pending"></div>
+                    </div>
+                    <div id="step3Dot" class="step-circle pending">3</div>
+                    <div class="flex-1 mx-2 flex items-center">
+                        <div id="step3Connector" class="step-connector pending"></div>
+                    </div>
+                    <div id="step4Dot" class="step-circle pending">4</div>
+                </div>
+                
+                <div class="flex justify-between items-center mt-2.5 px-0.5">
+                    <span id="step1Label" class="text-[10px] font-bold text-blue-600 dark:text-blue-400">Photo</span>
+                    <span id="step2Label" class="text-[10px] font-bold text-slate-400 dark:text-slate-500">ID</span>
+                    <span id="step3Label" class="text-[10px] font-bold text-slate-400 dark:text-slate-500">Check</span>
+                    <span id="step4Label" class="text-[10px] font-bold text-slate-400 dark:text-slate-500">Review</span>
+                </div>
+            </div>
+
+            
+            <div id="step1Content" class="space-y-3 transition-all duration-300">
+                <div class="flex items-center justify-between">
+                    <h3 class="font-bold text-sm text-slate-800 dark:text-white flex items-center gap-1.5">
+                        <span>📸</span> Face + Shoulder Photo
+                    </h3>
+                    <span class="text-[10px] bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-semibold px-2 py-0.5 rounded">AI Active</span>
+                </div>
+                <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">Position yourself so your face and shoulders are clearly visible inside the green frame.</p>
+
+                <div id="livenessBanner" class="hidden rounded-lg border border-blue-500/30 bg-blue-500/10 p-3 space-y-2">
+                    <div class="flex items-center gap-2.5">
+                        <span id="livenessIcon" class="text-2xl leading-none">🔄</span>
+                        <div class="min-w-0">
+                            <div class="text-[10px] font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400">
+                                Liveness check — prove you're really here
+                            </div>
+                            <div id="livenessText" class="text-xs font-semibold text-slate-700 dark:text-slate-200 mt-0.5">Starting…</div>
+                        </div>
+                    </div>
+                    <div id="livenessProgress" class="flex items-center gap-1.5"></div>
+                    <p class="text-[10px] text-slate-500 dark:text-slate-400 leading-relaxed">
+                        Move slowly and keep your whole face visible. A photo held up to the camera cannot pass this.
+                    </p>
+                </div>
+
+                <div class="demo-card" id="faceDemo">
+                    <img src="/icons/face-capture-demo.jpg" alt="Face capture demo">
+                    <div class="label">📸 How to position</div>
+                </div>
+
+                <div class="bg-slate-50 dark:bg-[#0c0c0c] border border-slate-200 dark:border-[#1c1c1c] rounded-lg p-3 text-[11px] space-y-1.5 text-slate-600 dark:text-slate-400">
+                    <div class="flex items-center gap-2">
+                        <span class="text-emerald-500 font-bold">✓</span>
+                        <span>Sit upright facing camera directly</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="text-emerald-500 font-bold">✓</span>
+                        <span>Ensure both shoulders fit in frame</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="text-emerald-500 font-bold">✓</span>
+                        <span>Good lighting, avoid backlighting</span>
+                    </div>
+                </div>
+            </div>
+
+            
+            <div id="step2Content" class="hidden space-y-3 transition-all duration-300">
+                <div class="flex items-center justify-between">
+                    <h3 class="font-bold text-sm text-slate-800 dark:text-white flex items-center gap-1.5">
+                        <span>🪪</span> College ID Card
+                    </h3>
+                    <span class="text-[10px] bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 font-semibold px-2 py-0.5 rounded">Step 2</span>
+                </div>
+                <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">Hold your college ID card clearly in front of the camera so all text and photo are readable.</p>
+                
+                <div class="demo-card" id="idDemo">
+                    <img src="/icons/id-card-capture-demo.jpg" alt="ID card capture demo">
+                    <div class="label">🪪 How to hold ID card</div>
+                </div>
+
+                <div class="bg-slate-50 dark:bg-[#0c0c0c] border border-slate-200 dark:border-[#1c1c1c] rounded-lg p-3 text-[11px] space-y-1.5 text-slate-600 dark:text-slate-400">
+                    <div class="flex items-center gap-2">
+                        <span class="text-indigo-500 font-bold">✓</span>
+                        <span>Hold ID vertically inside guide box</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="text-indigo-500 font-bold">✓</span>
+                        <span>Ensure text & photo are sharp</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="text-indigo-500 font-bold">✓</span>
+                        <span>Do not cover details with fingers</span>
+                    </div>
+                </div>
+            </div>
+
+            
+            <div id="step3Content" class="hidden space-y-3 transition-all duration-300">
+                <div class="flex items-center justify-between">
+                    <h3 class="font-bold text-sm text-slate-800 dark:text-white flex items-center gap-1.5">
+                        <span>⚙️</span> System Check
+                    </h3>
+                    <span class="text-[10px] bg-amber-500/10 text-amber-600 dark:text-amber-400 font-semibold px-2 py-0.5 rounded">Step 3</span>
+                </div>
+                <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">We need to verify your hardware before starting the test.</p>
+                
+                <div class="bg-slate-50 dark:bg-[#0c0c0c] border border-slate-200 dark:border-[#1c1c1c] rounded-xl p-4 text-xs space-y-3 text-slate-600 dark:text-slate-300">
+                    <div class="flex items-center justify-between">
+                        <span class="font-semibold">📷 Camera</span>
+                        <span id="checkCam" class="text-slate-400">⏳ Pending</span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="font-semibold">🎤 Microphone</span>
+                        <span id="checkMic" class="text-slate-400">⏳ Pending</span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="font-semibold">🖥️ Display</span>
+                        <span id="checkDisp" class="text-slate-400">⏳ Pending</span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="font-semibold">📱 Fullscreen</span>
+                        <span id="checkFull" class="text-slate-400">⏳ Pending</span>
+                    </div>
+                </div>
+            </div>
+
+            
+            <div id="step4Content" class="hidden space-y-3 transition-all duration-300">
+                <div class="flex items-center justify-between">
+                    <h3 class="font-bold text-sm text-slate-800 dark:text-white flex items-center gap-1.5">
+                        <span>✅</span> Review & Confirm
+                    </h3>
+                    <span class="text-[10px] bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-semibold px-2 py-0.5 rounded">Completed</span>
+                </div>
+                <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">Both identity documents captured. Verify they are clearly readable before proceeding to the test.</p>
+                
+                <div class="bg-slate-50 dark:bg-[#0c0c0c] border border-slate-200 dark:border-[#1c1c1c] rounded-xl p-4 text-xs space-y-2 text-slate-600 dark:text-slate-300">
+                    <div class="flex items-center gap-2 text-emerald-500 font-semibold">
+                        <span>✓</span> Face & shoulders captured
+                    </div>
+                    <div class="flex items-center gap-2 text-emerald-500 font-semibold">
+                        <span>✓</span> College ID card captured
+                    </div>
+                    <p class="text-[11px] text-slate-400 mt-2">Click "Verify & Start Test" when ready, or "Retake" if you need a clearer capture.</p>
+                </div>
+            </div>
+
+            
+            <div class="mt-auto pt-5 border-t border-slate-200 dark:border-[#1a1a1a]">
+                <button onclick="window.location.href='/student/student.html'" class="text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white transition font-medium text-xs flex items-center gap-1.5">
+                    &larr; Back to Dashboard
+                </button>
+            </div>
+        </aside>
+
+        
+        <section class="flex-1 flex flex-col items-center justify-center p-6 md:p-10 bg-slate-50 dark:bg-black relative">
+            
+            
+            <div id="statusPill" class="status-pill scanning mb-5">
+                <span class="dot"></span>
+                <span id="statusText">Scanning for face...</span>
+            </div>
+
+            
+            <div id="cameraContainer" class="relative w-full max-w-[560px] aspect-video bg-black rounded-2xl overflow-hidden shadow-2xl border border-slate-300 dark:border-[#222]">
+                <video id="webcam" autoplay playsinline class="w-full h-full object-cover transform scale-x-[-1]"></video>
+                
+                
+                <div id="shoulderFrame" class="shoulder-frame">
+                    <div class="corner-mark tl"></div>
+                    <div class="corner-mark tr"></div>
+                    <div class="corner-mark bl"></div>
+                    <div class="corner-mark br"></div>
+                </div>
+
+
+                <div id="livenessOverlay" class="hidden absolute inset-0 pointer-events-none flex flex-col items-center justify-center">
+                    <div class="absolute inset-0 bg-black/35 backdrop-blur-[1px]"></div>
+
+                    <div class="relative flex items-center gap-5">
+
+                        <svg id="arrowLeft" class="w-9 h-9 text-blue-300 opacity-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M19 12H5M5 12l6 6M5 12l6-6"/>
+                        </svg>
+
+
+                        <svg id="headGuide" class="w-28 h-28 text-white drop-shadow-lg" viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                            <ellipse cx="50" cy="44" rx="24" ry="30"/>
+                            <path d="M26 84c4-11 13-17 24-17s20 6 24 17"/>
+                            <circle id="guideEyeL" cx="40" cy="40" r="3.2" fill="currentColor" stroke="none"/>
+                            <circle id="guideEyeR" cx="60" cy="40" r="3.2" fill="currentColor" stroke="none"/>
+                            <path id="guideNose" d="M50 44v9"/>
+                            <path d="M42 62c3 2.5 13 2.5 16 0"/>
+                        </svg>
+
+                        <svg id="arrowRight" class="w-9 h-9 text-blue-300 opacity-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M5 12h14M19 12l-6 6M19 12l-6-6"/>
+                        </svg>
+                    </div>
+
+                    <div id="livenessOverlayText" class="relative mt-4 px-4 py-1.5 rounded-full bg-black/70 border border-white/15 text-white text-xs font-bold tracking-wide">
+                        Turn your head
+                    </div>
+                </div>
+
+                
+                <div id="idFrame" class="id-frame hidden">
+                    <div class="corner-mark tl" style="border-color:#818cf8"></div>
+                    <div class="corner-mark tr" style="border-color:#818cf8"></div>
+                    <div class="corner-mark bl" style="border-color:#818cf8"></div>
+                    <div class="corner-mark br" style="border-color:#818cf8"></div>
+                    <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none opacity-40">
+                        <span class="text-3xl mb-1">🪪</span>
+                        <span class="text-[10px] font-bold tracking-widest uppercase text-white">Vertical ID Card</span>
+                    </div>
+                </div>
+            </div>
+
+            
+            <div id="systemCheckContainer" class="hidden w-full max-w-[560px] bg-white dark:bg-[#0a0a0a] rounded-2xl border border-slate-200 dark:border-[#222] shadow-xl p-8 flex flex-col items-center text-center">
+                <div class="text-5xl mb-4">⚙️</div>
+                <h3 class="text-xl font-bold text-slate-800 dark:text-white mb-2">Hardware Validation</h3>
+                <p class="text-sm text-slate-500 dark:text-slate-400 mb-8 max-w-sm">We need to ensure your camera and microphone are working, and that no external displays are connected.</p>
+                <div id="systemCheckError" class="hidden w-full bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 text-xs p-3 rounded-lg border border-red-200 dark:border-red-900 mb-4 font-medium"></div>
+            </div>
+
+            
+            <div id="previewContainer" class="hidden w-full max-w-[560px] grid grid-cols-2 gap-4">
+                <div class="relative aspect-video rounded-2xl overflow-hidden border border-[#222] shadow-lg bg-black">
+                    <img id="facePreviewImg" class="w-full h-full object-cover transform scale-x-[-1]" />
+                    <div class="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/80 to-transparent text-white text-xs text-center py-2 font-semibold">Face + Shoulders</div>
+                </div>
+                <div class="relative aspect-video rounded-2xl overflow-hidden border border-[#222] shadow-lg bg-[#0a0a0a]">
+                    <img id="idPreviewImg" class="w-full h-full object-contain" />
+                    <div class="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/80 to-transparent text-white text-xs text-center py-2 font-semibold">College ID Card</div>
+                </div>
+            </div>
+
+            
+            <div class="w-full max-w-[560px] mt-6 flex justify-center gap-4">
+                <button id="captureFaceBtn" onclick="captureFace()" disabled class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-6 rounded-lg shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition transform hover:scale-[1.02] active:scale-95 flex items-center gap-2">
+                    <span>📸</span> Capture Photo
+                </button>
+                <button id="captureIdBtn" onclick="captureId()" disabled class="hidden bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 px-6 rounded-lg shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition transform hover:scale-[1.02] active:scale-95 flex items-center gap-2">
+                    <span>🪪</span> Capture ID
+                </button>
+                <button id="runCheckBtn" onclick="runSystemCheck()" class="hidden bg-amber-600 hover:bg-amber-700 text-white font-bold py-2.5 px-6 rounded-lg shadow-lg transition transform hover:scale-[1.02] active:scale-95 flex items-center gap-2">
+                    <span>⚙️</span> Run System Check
+                </button>
+                <button id="retakeBtn" onclick="retake()" class="hidden bg-slate-200 dark:bg-[#1a1a1a] hover:bg-slate-300 dark:hover:bg-[#222] text-slate-800 dark:text-white font-bold py-2.5 px-6 rounded-lg transition">
+                    Retake
+                </button>
+                <button id="uploadBtn" onclick="uploadAndProceed()" class="hidden bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 px-6 rounded-lg shadow-lg shadow-emerald-500/20 transition transform hover:scale-[1.02] active:scale-95 flex items-center gap-2">
+                    <span>✅</span> Verify & Start Test →
+                    <svg id="uploadSpinner" class="hidden animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                </button>
+            </div>
+        </section>
+    </main>
+
+    <canvas id="canvas" class="hidden"></canvas>
+
+    <script>
+        // === Theme ===
+        let currentTheme = localStorage.getItem('app_theme') || 'dark';
+        const applyTheme = (theme) => {
+            currentTheme = theme;
+            localStorage.setItem('app_theme', theme);
+            if (theme === 'dark') {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        };
+        applyTheme(currentTheme);
+
+        // === Auth ===
+        // === Desktop-only gate ==========================================
+        // Stop a phone or tablet here, at the entry to the exam flow, rather
+        // than letting a student enrol and only discover the problem once
+        // they reach the questions. /system-check enforces the same rule
+        // server-side.
+        // Physical screen, not viewport: browser chrome made 1366x768 laptops fail.
+        const MIN_DESKTOP_WIDTH = 800;
+        const MIN_DESKTOP_HEIGHT = 500;
+
+        const isTouchPrimary = () =>
+            window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
+
+        const screenWidthPx = () => (window.screen && window.screen.width) || window.innerWidth;
+        const screenHeightPx = () => (window.screen && window.screen.height) || window.innerHeight;
+
+        const enforceDesktopOnly = () => {
+            const gate = document.getElementById('desktopOnlyGate');
+            if (!gate) return;
+
+            const tooSmall = screenWidthPx() < MIN_DESKTOP_WIDTH || screenHeightPx() < MIN_DESKTOP_HEIGHT;
+            const touch = isTouchPrimary();
+
+            if (tooSmall || touch) {
+                const reason = document.getElementById('desktopOnlyReason');
+                if (reason) {
+                    reason.innerText = touch
+                        ? 'This looks like a phone or tablet. The test can only be taken on a desktop or laptop computer.'
+                        : `Your screen is ${screenWidthPx()}×${screenHeightPx()}. The test needs at least ${MIN_DESKTOP_WIDTH}×${MIN_DESKTOP_HEIGHT} — please use a desktop or laptop.`;
+                }
+                gate.classList.remove('hidden');
+                document.body.style.overflow = 'hidden';
+            } else {
+                gate.classList.add('hidden');
+                document.body.style.overflow = '';
+            }
+        };
+
+        window.addEventListener('resize', enforceDesktopOnly);
+        window.addEventListener('orientationchange', enforceDesktopOnly);
+        enforceDesktopOnly();
+
+        const token = localStorage.getItem('token');
+        if (!token) window.location.href = '/index.html';
+
+        let username = localStorage.getItem('username') || 'STUDENT';
+        let studentName = localStorage.getItem('name') || '';
+        let studentEmail = localStorage.getItem('email') || (username.includes('@') ? username : '');
+
+        const updateCandidateNavbar = () => {
+            const displayName = studentName || username;
+            const badgeEl = document.getElementById('candidateBadge');
+            if (badgeEl) badgeEl.innerText = displayName;
+
+            const metaEl = document.getElementById('candidateMeta');
+            if (metaEl) metaEl.innerText = studentEmail || (username.includes('@') ? username : `ID: ${username}`);
+
+            const avatarEl = document.getElementById('candidateAvatar');
+            if (avatarEl) {
+                const words = displayName.trim().split(/\s+/);
+                const initials = words.length > 1 
+                    ? (words[0][0] + words[words.length - 1][0]).toUpperCase()
+                    : (displayName.substring(0, 2).toUpperCase() || 'ST');
+                avatarEl.innerText = initials;
+            }
+        };
+
+        updateCandidateNavbar();
+
+        if (token) {
+            fetch('/api/auth/me', { headers: { 'Authorization': `Bearer ${token}` } })
+                .then(res => res.ok ? res.json() : null)
+                .then(data => {
+                    if (data && data.name) {
+                        studentName = data.name;
+                        localStorage.setItem('name', data.name);
+                        if (data.email) {
+                            studentEmail = data.email;
+                            localStorage.setItem('email', data.email);
+                        }
+                        updateCandidateNavbar();
+                    }
+                })
+                .catch(() => {});
+        }
+
+        // === State ===
+        const videoElement = document.getElementById('webcam');
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        // === State Variables ===
+        let faceDataUrl = null;
+        let idDataUrl = null;
+        let currentStep = 1;
+        let isFaceDetected = false;
+        let isIdCardReady = false;
+        let localStream = null;
+        
+        let sysCam = false;
+        let sysMic = false;
+        let sysFull = false;
+        let sysMonitors = 1;
+
+        // === Camera Start ===
+        async function startCamera() {
+            localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+            videoElement.srcObject = localStream;
+        }
+        startCamera();
+
+        // === Capture ===
+        function captureImage(mirror) {
+            canvas.width = videoElement.videoWidth;
+            canvas.height = videoElement.videoHeight;
+            if (mirror) { ctx.translate(canvas.width, 0); ctx.scale(-1, 1); }
+            ctx.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
+            ctx.setTransform(1, 0, 0, 1, 0, 0);
+            return canvas.toDataURL('image/jpeg', 0.85);
+        }
+
+        // Small, fast copy of the current frame for the live check round-trip
+        // (kept separate from captureImage(), which grabs full resolution for the
+        // final stored photo).
+        const checkCanvas = document.createElement('canvas');
+        const checkCtx = checkCanvas.getContext('2d');
+        function captureCheckFrame(mirror) {
+            const targetWidth = 400;
+            const scale = targetWidth / videoElement.videoWidth;
+            checkCanvas.width = targetWidth;
+            checkCanvas.height = Math.round(videoElement.videoHeight * scale);
+            if (mirror) { checkCtx.translate(checkCanvas.width, 0); checkCtx.scale(-1, 1); }
+            checkCtx.drawImage(videoElement, 0, 0, checkCanvas.width, checkCanvas.height);
+            checkCtx.setTransform(1, 0, 0, 1, 0, 0);
+            return checkCanvas.toDataURL('image/jpeg', 0.6);
+        }
+
+        // === Live position/ID-card checks — server-side, via the local Python
+        // verification service (no CDN, no in-browser ML). ===
+        let checkInFlight = false;
+
+        // === Liveness gate =================================================
+        // Face matching alone can be satisfied by holding up a printed photo,
+        // so before the face capture unlocks, the student has to turn their
+        // head a way the server picks at random. The server tracks the
+        // sequence and refuses enrollment without it — this flag only drives
+        // what the page shows.
+        let livenessPassed = false;
+        let livenessSteps = [];
+        let livenessStepIndex = 0;
+
+        const LIVENESS_ICONS = { LEFT: '⬅️', RIGHT: '➡️', CENTER: '🎯' };
+
+        async function startLiveness() {
+            try {
+                const res = await fetch('/api/identity/liveness/start', {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (!res.ok) return;
+                const data = await res.json();
+                livenessPassed = false;
+                livenessSteps = data.steps || [];
+                livenessStepIndex = 0;
+                setLivenessPrompt(data.message || 'Follow the on-screen instruction', data.expected);
+            } catch (e) {
+                // The interval retries; the capture button stays locked meanwhile.
+            }
+        }
+
+        // Demonstrates the requested turn on a head drawn over the video, so
+        // the student can copy the motion instead of parsing a sentence.
+        function showLivenessAnimation(expected) {
+            const overlay = document.getElementById('livenessOverlay');
+            const head = document.getElementById('headGuide');
+            const arrowLeft = document.getElementById('arrowLeft');
+            const arrowRight = document.getElementById('arrowRight');
+            const caption = document.getElementById('livenessOverlayText');
+            const features = ['guideEyeL', 'guideEyeR', 'guideNose'].map(id => document.getElementById(id));
+            if (!overlay || !head) return;
+
+            overlay.classList.remove('hidden');
+            head.classList.remove('turn-left', 'turn-right', 'face-center');
+            arrowLeft.classList.remove('arrow-left-active');
+            arrowRight.classList.remove('arrow-right-active');
+            features.forEach(el => el && el.classList.remove('features-left', 'features-right'));
+
+            if (expected === 'LEFT') {
+                head.classList.add('turn-left');
+                arrowLeft.classList.add('arrow-left-active');
+                features.forEach(el => el && el.classList.add('features-left'));
+                caption.innerText = 'Slowly turn your head LEFT';
+            } else if (expected === 'RIGHT') {
+                head.classList.add('turn-right');
+                arrowRight.classList.add('arrow-right-active');
+                features.forEach(el => el && el.classList.add('features-right'));
+                caption.innerText = 'Slowly turn your head RIGHT';
+            } else if (expected === 'CENTER') {
+                head.classList.add('face-center');
+                caption.innerText = 'Now face the camera straight on';
+            }
+        }
+
+        function hideLivenessAnimation() {
+            const overlay = document.getElementById('livenessOverlay');
+            if (overlay) overlay.classList.add('hidden');
+        }
+
+        function setLivenessPrompt(message, expected) {
+            const banner = document.getElementById('livenessBanner');
+            const text = document.getElementById('livenessText');
+            const icon = document.getElementById('livenessIcon');
+            const progress = document.getElementById('livenessProgress');
+
+            if (banner) banner.classList.remove('hidden');
+            if (text) text.innerText = message;
+            if (icon && expected) icon.innerText = LIVENESS_ICONS[expected] || '🔄';
+            if (expected) showLivenessAnimation(expected);
+
+            if (progress && livenessSteps.length) {
+                progress.innerHTML = livenessSteps.map((step, i) => {
+                    const done = i < livenessStepIndex;
+                    const active = i === livenessStepIndex;
+                    const cls = done
+                        ? 'bg-emerald-500'
+                        : (active ? 'bg-blue-500 animate-pulse' : 'bg-slate-300 dark:bg-slate-700');
+                    return `<span class="h-1.5 flex-1 rounded-full ${cls}"></span>`;
+                }).join('');
+            }
+
+            document.getElementById('statusPill').className = 'status-pill scanning mb-5';
+            document.getElementById('statusText').innerText = message;
+        }
+
+        function applyLivenessResult(data) {
+            if (currentStep !== 1 || livenessPassed) return;
+
+            const btn = document.getElementById('captureFaceBtn');
+            btn.disabled = true;
+
+            if (data.expired) {
+                startLiveness();
+                return;
+            }
+
+            if (data.ok && data.complete) {
+                livenessPassed = true;
+                livenessStepIndex = livenessSteps.length;
+                hideLivenessAnimation();
+                const banner = document.getElementById('livenessBanner');
+                if (banner) banner.classList.add('hidden');
+                document.getElementById('statusPill').className = 'status-pill detected mb-5';
+                document.getElementById('statusText').innerText =
+                    'Liveness check passed — now frame your face and shoulders';
+                return;
+            }
+
+            if (typeof data.currentStep === 'number') {
+                livenessStepIndex = data.currentStep;
+            }
+            setLivenessPrompt(data.message || 'Follow the on-screen instruction', data.expected);
+        }
+
+        async function runLiveCheck() {
+            if (checkInFlight || !videoElement.videoWidth) return;
+            if (currentStep !== 1 && currentStep !== 2) return;
+            checkInFlight = true;
+
+            try {
+                if (currentStep === 1 && !livenessPassed) {
+                    const res = await fetch('/api/identity/liveness/verify', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                        body: JSON.stringify({ image: captureCheckFrame(true) })
+                    });
+                    const data = await res.json();
+                    applyLivenessResult(data);
+                } else if (currentStep === 1) {
+                    const res = await fetch('/api/identity/position-check', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                        body: JSON.stringify({ image: captureCheckFrame(true) })
+                    });
+                    const data = await res.json();
+                    applyPositionResult(data);
+                } else if (currentStep === 2) {
+                    const res = await fetch('/api/identity/id-card-check', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                        body: JSON.stringify({ image: captureCheckFrame(false) })
+                    });
+                    const data = await res.json();
+                    applyIdCardResult(data);
+                }
+            } catch (e) {
+                // Transient network hiccup — next interval tick will retry.
+            } finally {
+                checkInFlight = false;
+            }
+        }
+        setInterval(runLiveCheck, 600);
+        startLiveness();
+
+        function applyPositionResult(data) {
+            if (currentStep !== 1) return;
+            const frame = document.getElementById('shoulderFrame');
+            const btn = document.getElementById('captureFaceBtn');
+            const pill = document.getElementById('statusPill');
+            const text = document.getElementById('statusText');
+
+            isFaceDetected = !!data.ready;
+            btn.disabled = !isFaceDetected;
+
+            if (isFaceDetected) {
+                frame.classList.add('detected');
+                frame.classList.remove('not-detected');
+                pill.className = 'status-pill detected mb-5';
+            } else {
+                frame.classList.remove('detected');
+                frame.classList.add('not-detected');
+                pill.className = 'status-pill error mb-5';
+            }
+            text.innerText = data.message || 'Scanning for face...';
+        }
+
+        function applyIdCardResult(data) {
+            if (currentStep !== 2) return;
+            const frame = document.getElementById('idFrame');
+            const btn = document.getElementById('captureIdBtn');
+            const pill = document.getElementById('statusPill');
+            const text = document.getElementById('statusText');
+
+            const ready = !!data.ready;
+            isIdCardReady = ready;
+            btn.disabled = !ready;
+
+            if (ready) {
+                frame.classList.add('detected');
+                frame.classList.remove('not-detected');
+                pill.className = 'status-pill detected mb-5';
+            } else {
+                frame.classList.remove('detected');
+                frame.classList.add('not-detected');
+                pill.className = 'status-pill error mb-5';
+            }
+            text.innerText = data.message || 'Hold your ID card in the frame';
+        }
+
+        function captureFace() {
+            if (!isFaceDetected) return;
+            faceDataUrl = captureImage(true);
+            document.getElementById('facePreviewImg').src = faceDataUrl;
+
+            currentStep = 2;
+            document.getElementById('step1Dot').className = 'step-circle done';
+            document.getElementById('step1Dot').innerHTML = '✓';
+            document.getElementById('step1Connector').className = 'step-connector active bg-blue-500';
+            document.getElementById('step2Dot').className = 'step-circle active';
+
+            document.getElementById('step1Content').classList.add('hidden');
+            document.getElementById('step2Content').classList.remove('hidden');
+
+            document.getElementById('shoulderFrame').classList.add('hidden');
+            document.getElementById('idFrame').classList.remove('hidden');
+
+            document.getElementById('captureFaceBtn').classList.add('hidden');
+            document.getElementById('captureIdBtn').classList.remove('hidden');
+            document.getElementById('retakeBtn').classList.remove('hidden');
+
+            document.getElementById('statusPill').className = 'status-pill scanning mb-5';
+            document.getElementById('statusText').innerText = 'Hold your ID card in the frame';
+        }
+
+        function captureId() {
+            if (!isIdCardReady) return;
+            idDataUrl = captureImage(false);
+            document.getElementById('idPreviewImg').src = idDataUrl;
+
+            currentStep = 3;
+            document.getElementById('step2Dot').className = 'step-circle done';
+            document.getElementById('step2Dot').innerHTML = '✓';
+            document.getElementById('step2Connector').className = 'step-connector active bg-blue-500';
+            document.getElementById('step3Dot').className = 'step-circle active';
+
+            const step2Lbl = document.getElementById('step2Label');
+            if (step2Lbl) step2Lbl.className = 'text-[10px] font-bold text-emerald-600 dark:text-emerald-400';
+            const step3Lbl = document.getElementById('step3Label');
+            if (step3Lbl) step3Lbl.className = 'text-[10px] font-bold text-blue-600 dark:text-blue-400';
+            const badge = document.getElementById('stepBadge');
+            if (badge) {
+                badge.innerText = 'System Check';
+                badge.className = 'text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20';
+            }
+
+            document.getElementById('step1Content').classList.add('hidden');
+            document.getElementById('step2Content').classList.add('hidden');
+            document.getElementById('step3Content').classList.remove('hidden');
+
+            document.getElementById('cameraContainer').classList.add('hidden');
+            document.getElementById('systemCheckContainer').classList.remove('hidden');
+
+            document.getElementById('captureIdBtn').classList.add('hidden');
+            document.getElementById('retakeBtn').classList.add('hidden');
+            document.getElementById('runCheckBtn').classList.remove('hidden');
+
+            document.getElementById('statusPill').className = 'status-pill mb-5 border-amber-500 text-amber-500';
+            document.getElementById('statusText').innerText = 'Hardware validation required';
+        }
+
+        // === Step 3: System Check Logic ===
+        async function runSystemCheck() {
+            const btn = document.getElementById('runCheckBtn');
+            btn.disabled = true;
+            btn.innerHTML = '⏳ Checking...';
+            
+            const errDiv = document.getElementById('systemCheckError');
+            errDiv.classList.add('hidden');
+            errDiv.innerText = '';
+            
+            let passedAll = true;
+            let errMsg = '';
+            
+            const setStatus = (id, pass, msg) => {
+                const el = document.getElementById(id);
+                if (pass) {
+                    el.className = 'text-emerald-500 font-bold';
+                    el.innerText = '✓ Passed';
+                } else {
+                    el.className = 'text-red-500 font-bold';
+                    el.innerText = '❌ Failed';
+                    passedAll = false;
+                    errMsg += msg + '\n';
+                }
+            };
+
+            const videoTracks = localStream ? localStream.getVideoTracks() : [];
+            sysCam = videoTracks.length > 0 && videoTracks[0].readyState === 'live';
+            setStatus('checkCam', sysCam, 'Camera is not active.');
+
+            try {
+                const audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                sysMic = true;
+                setStatus('checkMic', true, '');
+                audioStream.getTracks().forEach(t => t.stop());
+            } catch (e) {
+                sysMic = false;
+                setStatus('checkMic', false, 'Microphone permission denied.');
+            }
+
+            if ('isExtended' in window.screen) {
+                sysMonitors = window.screen.isExtended ? 2 : 1;
+                setStatus('checkDisp', !window.screen.isExtended, 'External display detected.');
+            } else {
+                sysMonitors = 1;
+                setStatus('checkDisp', true, '');
+            }
+
+            try {
+                if (!document.fullscreenElement) await document.documentElement.requestFullscreen();
+                sysFull = !!document.fullscreenElement;
+                setStatus('checkFull', sysFull, 'Must be in fullscreen.');
+            } catch(e) {
+                sysFull = false;
+                setStatus('checkFull', false, 'Fullscreen failed.');
+            }
+
+            if (passedAll) {
+                moveToReviewStep();
+            } else {
+                errDiv.innerText = errMsg;
+                errDiv.classList.remove('hidden');
+                btn.disabled = false;
+                btn.innerHTML = '<span>⚙️</span> Retry System Check';
+                document.getElementById('statusPill').className = 'status-pill error mb-5';
+            }
+        }
+
+        function moveToReviewStep() {
+            currentStep = 4;
+            document.getElementById('step3Dot').className = 'step-circle done';
+            document.getElementById('step3Dot').innerHTML = '✓';
+            document.getElementById('step3Connector').className = 'step-connector active bg-blue-500';
+            document.getElementById('step4Dot').className = 'step-circle active';
+
+            document.getElementById('step3Content').classList.add('hidden');
+            document.getElementById('step4Content').classList.remove('hidden');
+
+            document.getElementById('systemCheckContainer').classList.add('hidden');
+            document.getElementById('previewContainer').classList.remove('hidden');
+
+            document.getElementById('runCheckBtn').classList.add('hidden');
+            document.getElementById('retakeBtn').classList.remove('hidden');
+            document.getElementById('uploadBtn').classList.remove('hidden');
+            
+            document.getElementById('statusPill').className = 'status-pill success mb-5';
+            document.getElementById('statusText').innerText = 'Ready to begin test';
+        }
+
+        // === Retake Logic ===
+        function retake() {
+            currentStep = 1;
+            faceDataUrl = null;
+            idDataUrl = null;
+
+            document.getElementById('cameraContainer').classList.remove('hidden');
+            document.getElementById('previewContainer').classList.add('hidden');
+            document.getElementById('systemCheckContainer').classList.add('hidden');
+
+            document.getElementById('step1Dot').className = 'step-circle active';
+            document.getElementById('step1Dot').innerHTML = '1';
+            document.getElementById('step1Connector').className = 'step-connector pending';
+            document.getElementById('step2Dot').className = 'step-circle pending';
+            document.getElementById('step2Dot').innerHTML = '2';
+            document.getElementById('step2Connector').className = 'step-connector pending';
+            document.getElementById('step3Dot').className = 'step-circle pending';
+            document.getElementById('step3Dot').innerHTML = '3';
+            document.getElementById('step3Connector').className = 'step-connector pending';
+            document.getElementById('step4Dot').className = 'step-circle pending';
+            document.getElementById('step4Dot').innerHTML = '4';
+
+            const step1Lbl = document.getElementById('step1Label');
+            if (step1Lbl) step1Lbl.className = 'text-[10px] font-bold text-blue-600 dark:text-blue-400';
+            const step2Lbl = document.getElementById('step2Label');
+            if (step2Lbl) step2Lbl.className = 'text-[10px] font-bold text-slate-400 dark:text-slate-500';
+            const step3Lbl = document.getElementById('step3Label');
+            if (step3Lbl) step3Lbl.className = 'text-[10px] font-bold text-slate-400 dark:text-slate-500';
+            const step4Lbl = document.getElementById('step4Label');
+            if (step4Lbl) step4Lbl.className = 'text-[10px] font-bold text-slate-400 dark:text-slate-500';
+            
+            const badge = document.getElementById('stepBadge');
+            if (badge) {
+                badge.innerText = 'Step 1 of 4';
+                badge.className = 'text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20';
+            }
+
+            document.getElementById('step1Content').classList.remove('hidden');
+            document.getElementById('step2Content').classList.add('hidden');
+            document.getElementById('step3Content').classList.add('hidden');
+            document.getElementById('step4Content').classList.add('hidden');
+
+            document.getElementById('shoulderFrame').classList.remove('hidden');
+            document.getElementById('shoulderFrame').classList.remove('detected', 'not-detected');
+            document.getElementById('idFrame').classList.add('hidden');
+            document.getElementById('idFrame').classList.remove('detected', 'not-detected');
+
+            document.getElementById('captureFaceBtn').classList.remove('hidden');
+            document.getElementById('captureFaceBtn').disabled = true;
+            document.getElementById('captureIdBtn').classList.add('hidden');
+            document.getElementById('captureIdBtn').disabled = true;
+            document.getElementById('runCheckBtn').classList.add('hidden');
+            document.getElementById('uploadBtn').classList.add('hidden');
+            document.getElementById('retakeBtn').classList.add('hidden');
+
+            isFaceDetected = false;
+            isIdCardReady = false;
+
+            document.getElementById('statusPill').className = 'status-pill scanning mb-5';
+            document.getElementById('statusText').innerText = 'Scanning for face...';
+        }
+
+        // === Upload ===
+        async function uploadAndProceed() {
+            const btn = document.getElementById('uploadBtn');
+            const retake = document.getElementById('retakeBtn');
+            btn.disabled = true;
+            retake.disabled = true;
+            document.getElementById('uploadSpinner').classList.remove('hidden');
+            document.getElementById('statusPill').className = 'status-pill scanning mb-5';
+            document.getElementById('statusText').innerText = 'Uploading identity documents...';
+
+            try {
+                const res = await fetch('/api/identity/upload', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ 
+                        facePhoto: faceDataUrl, 
+                        idCardPhoto: idDataUrl,
+                        cameraLive: sysCam,
+                        micLive: sysMic,
+                        fullscreen: sysFull,
+                        monitors: sysMonitors
+                    })
+                });
+
+                if (res.ok) {
+                    videoElement.srcObject?.getTracks().forEach(t => t.stop());
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const year = urlParams.get('year') || '1';
+                    const domain = urlParams.get('domain') || 'Web Dev';
+                    window.location.href = `/student/quiz.html?year=${year}&domain=${encodeURIComponent(domain)}`;
+                } else {
+                    let errMsg = 'Upload failed';
+                    try {
+                        const err = await res.json();
+                        errMsg = err.error || err.message || ('Server error ' + res.status);
+                    } catch (parseErr) {
+                        const text = await res.text().catch(() => '');
+                        errMsg = text ? (text.slice(0, 100)) : `Server responded with status ${res.status} (${res.statusText})`;
+                    }
+                    document.getElementById('statusPill').className = 'status-pill error mb-5';
+                    document.getElementById('statusText').innerText = errMsg;
+                    btn.disabled = false;
+                    retake.disabled = false;
+                    document.getElementById('uploadSpinner').classList.add('hidden');
+                }
+            } catch (error) {
+                document.getElementById('statusPill').className = 'status-pill error mb-5';
+                document.getElementById('statusText').innerText = 'Network error: ' + error.message;
+                btn.disabled = false;
+                retake.disabled = false;
+                document.getElementById('uploadSpinner').classList.add('hidden');
+            }
+        }
+    </script>
+</body>
+</html>

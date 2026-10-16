@@ -1,0 +1,1139 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>Admin Dashboard | SRM Insider Labs</title>
+    <link rel="icon" type="image/x-icon" href="/icons/favicon.ico">
+    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192x192.png">
+    <link rel="apple-touch-icon" href="/icons/icon-192x192.png">
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="description" content="Manage the SRM Insider Labs question bank and review platform activity.">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        dark: {
+                            bg: '#000000',
+                            card: '#0f0f13',
+                            sidebar: '#0a0a0e',
+                            header: '#0a0a0d',
+                            border: '#1f1f28',
+                            hover: '#16161e',
+                            input: '#14141a',
+                            inputBorder: '#272733'
+                        }
+                    }
+                }
+            }
+        };
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { 
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
+            background-color: #000000;
+            color: #ffffff;
+        }
+        .font-mono { font-family: 'JetBrains Mono', monospace; }
+
+        /* Custom scrollbars */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #08080a; }
+        ::-webkit-scrollbar-thumb { background: #22222c; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #3b3b4d; }
+
+        .premium-card {
+            background-color: #0f0f13;
+            border: 1px solid #1f1f28;
+            box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.6);
+        }
+        .premium-card:hover {
+            border-color: rgba(59, 130, 246, 0.25);
+        }
+
+        .premium-input {
+            background-color: #14141a !important;
+            border-color: #272733 !important;
+            color: #ffffff !important;
+        }
+        .premium-input:focus {
+            border-color: #3b82f6 !important;
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+        }
+
+        .nav-item {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .nav-item.active {
+            background: linear-gradient(90deg, rgba(59, 130, 246, 0.15) 0%, rgba(59, 130, 246, 0.05) 100%);
+            color: #60a5fa;
+            border-left: 3px solid #3b82f6;
+            font-weight: 600;
+        }
+        .nav-item:not(.active):hover {
+            background-color: #16161e;
+            color: #f4f4f5;
+        }
+
+        /* Subtle pulse for live student indicator */
+        @keyframes livePulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.4; transform: scale(1.15); }
+        }
+        .live-dot {
+            animation: livePulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        /* Ensure view has identical top gap */
+        #viewProblems {
+            margin-top: 0 !important;
+        }
+    </style>
+    <script src="/js/safe-dom.js"></script>
+</head>
+<body class="min-h-screen flex bg-black text-white antialiased overflow-x-hidden">
+
+    
+    <div id="toastContainer" class="fixed top-5 right-5 z-50 flex flex-col space-y-3 pointer-events-none max-w-sm w-full px-4 sm:px-0"></div>
+
+    
+    <div id="sidebarBackdrop" onclick="toggleMobileSidebar()" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-40 hidden lg:hidden transition-opacity duration-300"></div>
+
+    
+    
+    
+    <aside id="adminSidebar" class="fixed inset-y-0 left-0 z-50 w-72 bg-dark-sidebar border-r border-dark-border flex flex-col transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out shadow-2xl">
+        
+        
+        <div class="h-20 px-6 border-b border-dark-border flex items-center justify-between">
+            <div class="flex items-center space-x-3.5">
+                <div class="relative">
+                    <img src="/icons/icon-192x192.png" 
+                         alt="Logo" class="w-10 h-10 rounded-xl object-contain shadow-lg ring-1 ring-white/10">
+                    <span class="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-emerald-500 border-2 border-[#0a0a0e] rounded-full"></span>
+                </div>
+                <div>
+                    <h1 class="font-extrabold text-white text-base tracking-tight leading-none">SRM INSIDER</h1>
+                    <div class="flex items-center space-x-1.5 mt-1">
+                        <span id="roleBadge" class="px-1.5 py-0.5 rounded text-[9px] font-extrabold tracking-wider bg-blue-500/10 text-blue-400 border border-blue-500/20 uppercase">
+                            ADMIN
+                        </span>
+                    </div>
+                </div>
+            </div>
+            
+            <button onclick="toggleMobileSidebar()" class="lg:hidden p-1.5 text-zinc-400 hover:text-white rounded-lg hover:bg-zinc-800/50">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+        </div>
+
+        
+        <nav class="flex-1 px-4 py-6 space-y-1.5 overflow-y-auto">
+            
+            <div class="px-3 pb-2 text-[10px] font-extrabold uppercase tracking-wider text-zinc-500">
+                Main Menu
+            </div>
+
+            
+            <a href="/admin/admin.html" class="nav-item active w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium transition cursor-pointer">
+                <div class="flex items-center space-x-3">
+                    <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
+                    <span>Problems Library</span>
+                </div>
+                <span id="sidebarProblemCount" class="text-[11px] px-2 py-0.5 rounded-md bg-blue-900/30 text-blue-400 font-mono font-semibold">0</span>
+            </a>
+
+            
+            <a href="/admin/admin-add-problem.html" class="nav-item w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium text-zinc-400 transition hover:text-white">
+                <div class="flex items-center space-x-3">
+                    <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    <span>Add Question</span>
+                </div>
+                <span class="text-[10px] px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20 font-bold">NEW</span>
+            </a>
+
+            
+            <a href="/admin/admin-submissions.html" class="nav-item w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium text-zinc-400 transition hover:text-white">
+                <div class="flex items-center space-x-3">
+                    <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                    <span>Submissions</span>
+                </div>
+                <svg class="w-3.5 h-3.5 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+            </a>
+
+            
+            <a href="/admin/admin-live.html" class="nav-item w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium text-zinc-400 transition hover:text-white">
+                <div class="flex items-center space-x-3">
+                    <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                    <span>Live Students</span>
+                </div>
+                <div class="flex items-center space-x-1.5 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500 live-dot"></span>
+                    <span class="text-[10px] font-bold text-emerald-400 uppercase tracking-wider">Live</span>
+                </div>
+            </a>
+
+            
+            <a href="/admin/admin-blocked.html" class="nav-item w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium text-zinc-400 transition hover:text-white">
+                <div class="flex items-center space-x-3">
+                    <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"></path></svg>
+                    <span>Blocked Students</span>
+                </div>
+            </a>
+
+            
+            <div id="navManageAdminsWrapper" class="hidden pt-4">
+                <div class="px-3 pb-2 text-[10px] font-extrabold uppercase tracking-wider text-purple-400/80 flex items-center justify-between">
+                    <span>Administration</span>
+                    <span class="px-1 rounded bg-purple-500/20 text-purple-300 text-[9px] font-bold">SUPER</span>
+                </div>
+                <a href="/admin/admin-plagiarism.html" class="nav-item w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium text-zinc-400 transition hover:text-white">
+                    <div class="flex items-center space-x-3">
+                        <svg class="w-4 h-4 text-amber-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                        <span>Similarity Report</span>
+                    </div>
+                </a>
+                <a href="/admin/admin-admins.html" class="nav-item w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium text-zinc-400 transition hover:text-white">
+                    <div class="flex items-center space-x-3">
+                        <svg class="w-4 h-4 text-purple-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                        <span>Manage Admins</span>
+                    </div>
+                    <span class="text-[10px] px-1.5 py-0.5 rounded bg-purple-950/40 text-purple-300 border border-purple-800/40 font-bold">Access</span>
+                </a>
+                <a href="/admin/admin-students.html" class="nav-item w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium text-zinc-400 transition hover:text-white mt-1">
+                    <div class="flex items-center space-x-3">
+                        <svg class="w-4 h-4 text-emerald-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                        <span>Invite Students</span>
+                    </div>
+                </a>
+            </div>
+
+        </nav>
+
+        
+        <div class="p-4 border-t border-dark-border bg-[#07070a]">
+            <div class="bg-[#121218] border border-[#20202a] rounded-xl p-3 mb-2 flex items-center justify-between">
+                <div class="flex items-center space-x-2.5 overflow-hidden">
+                    <div id="userAvatar" class="w-8 h-8 rounded-lg bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center text-xs font-black text-white flex-shrink-0 shadow-md">
+                        AD
+                    </div>
+                    <div class="truncate">
+                        <div id="sidebarUserEmail" class="text-xs font-semibold text-zinc-200 truncate">Admin User</div>
+                        <div id="sidebarUserRole" class="text-[10px] text-zinc-400 font-mono">ROLE: ADMIN</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2">
+                
+                <button id="resetPasswordBtn" onclick="openResetPasswordModal()" class="w-full hidden items-center justify-center space-x-1.5 py-2 px-2.5 rounded-lg border border-blue-900/40 bg-blue-950/20 text-blue-400 text-xs font-semibold transition hover:bg-blue-900/40 cursor-pointer">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path></svg>
+                    <span>Password</span>
+                </button>
+
+                
+                <button onclick="logout()" class="w-full col-span-2 col-start-1 flex items-center justify-center space-x-1.5 py-2 px-2.5 rounded-lg border border-red-900/40 bg-red-950/20 text-red-400 text-xs font-semibold transition hover:bg-red-900/40 cursor-pointer">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                    <span>Logout</span>
+                </button>
+            </div>
+        </div>
+
+    </aside>
+
+    
+    
+    
+    <div class="flex-1 lg:pl-72 flex flex-col min-w-0 min-h-screen bg-black">
+        
+        
+        <header class="h-16 px-6 lg:px-8 bg-dark-header/80 backdrop-blur-md border-b border-dark-border flex items-center justify-between sticky top-0 z-30 flex-shrink-0">
+            <div class="flex items-center space-x-3">
+                
+                <button onclick="toggleMobileSidebar()" class="lg:hidden p-2 rounded-lg bg-[#14141a] border border-[#272733] text-zinc-300 hover:text-white focus:outline-none">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+                </button>
+                
+                <div>
+                    <span class="text-xs text-zinc-500 font-medium">Dashboard /</span>
+                    <span id="breadcrumbTitle" class="text-sm font-bold text-white ml-1">Problems Library</span>
+                </div>
+            </div>
+
+            
+            <div class="flex items-center space-x-3">
+                <a href="/admin/admin-submissions.html" class="hidden sm:flex items-center space-x-1.5 px-3 py-1.5 rounded-lg border border-[#272733] bg-[#14141a] text-zinc-300 text-xs font-semibold hover:bg-[#1f1f28] transition">
+                    <svg class="w-3.5 h-3.5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                    <span>Submissions</span>
+                </a>
+
+                <a href="/admin/admin-live.html" class="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg border border-emerald-900/40 bg-emerald-950/20 text-emerald-300 text-xs font-semibold hover:bg-emerald-900/30 transition">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500 live-dot"></span>
+                    <span class="hidden sm:inline">Live Students</span>
+                </a>
+            </div>
+        </header>
+
+        
+        <main class="flex-1 py-8 px-6 lg:px-8 max-w-7xl w-full mx-auto pb-16">
+
+            
+            
+            
+            <section id="viewProblems" class="space-y-6 !mt-0">
+                
+                
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gradient-to-r from-[#121218] via-[#0f0f15] to-[#0a0a0f] p-6 rounded-2xl border border-[#1f1f28]">
+                    <div>
+                        <h2 class="text-2xl font-extrabold text-white tracking-tight">Problems & Question Bank</h2>
+                        <p class="text-xs text-zinc-400 mt-1">Manage test questions, domain sections, correct options, and test configurations.</p>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <button onclick="downloadTemplate()" class="flex items-center space-x-1.5 py-2 px-3.5 rounded-xl border border-blue-900/50 bg-blue-950/20 text-blue-400 font-semibold text-xs hover:bg-blue-900/40 transition">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                            <span>Download CSV Format</span>
+                        </button>
+                        <a href="/admin/admin-add-problem.html" class="bg-blue-600 hover:bg-blue-500 active:scale-[0.98] text-white font-bold py-2 px-4 rounded-xl shadow-lg shadow-blue-900/25 transition flex items-center space-x-2 text-xs">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+                            <span>Add Question</span>
+                        </a>
+                    </div>
+                </div>
+
+                
+                <div class="premium-card rounded-2xl overflow-hidden flex flex-col w-full">
+                    
+                    
+                    <div class="p-4 border-b border-[#1f1f28] bg-[#0c0c10] flex flex-col md:flex-row items-center justify-between gap-3">
+                        <div class="flex flex-wrap items-center gap-2.5 w-full md:w-auto">
+                            <select id="filterDomain" class="px-3 py-2 rounded-xl text-xs font-semibold premium-input transition cursor-pointer">
+                                <option value="">All Domains</option>
+                                <option value="Web Dev">Web Dev</option>
+                                <option value="AIML">AIML</option>
+                                <option value="Cloud">Cloud</option>
+                                <option value="App Dev">App Dev</option>
+                            </select>
+                            <select id="filterYear" class="px-3 py-2 rounded-xl text-xs font-semibold premium-input transition cursor-pointer">
+                                <option value="">All Academic Years</option>
+                                <option value="1">Year 1</option>
+                                <option value="2">Year 2</option>
+                                <option value="3">Year 3</option>
+                                <option value="4">Year 4</option>
+                            </select>
+                            <select id="filterSection" class="px-3 py-2 rounded-xl text-xs font-semibold premium-input transition cursor-pointer">
+                                <option value="">All Section Types</option>
+                                <option value="Aptitude MCQ">Aptitude MCQ</option>
+                                <option value="Programming MCQ">Programming MCQ</option>
+                                <option value="Academics">Academics</option>
+                                <option value="Programming Question">Programming Question</option>
+                            </select>
+                        </div>
+                        
+                        <div class="flex items-center gap-2.5 w-full md:w-auto justify-between md:justify-end flex-wrap">
+                            
+                            <button id="deleteSelectedBtn" onclick="deleteSelectedProblems()" class="hidden items-center space-x-1.5 py-1.5 px-3 rounded-xl border border-red-900/60 bg-red-950/40 text-red-300 font-bold text-xs hover:bg-red-900/60 transition cursor-pointer shadow-sm active:scale-[0.98]">
+                                <svg class="w-3.5 h-3.5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                <span>Delete Selected (<span id="selectedCount">0</span>)</span>
+                            </button>
+
+                            
+                            <button id="deleteFilteredBtn" onclick="deleteFilteredProblems()" class="flex items-center space-x-1.5 py-1.5 px-3 rounded-xl border border-red-900/40 bg-red-950/20 text-red-400 font-semibold text-xs hover:bg-red-900/50 hover:text-red-300 transition cursor-pointer active:scale-[0.98]">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                <span id="deleteFilteredBtnText">Delete All Questions</span>
+                            </button>
+
+                            <div class="text-xs font-mono text-blue-400 bg-blue-900/20 px-3 py-1.5 rounded-xl border border-blue-800/30 whitespace-nowrap">
+                                Total: <span id="problemCount" class="font-bold">0</span>
+                            </div>
+                        </div>
+                    </div>
+                            
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead class="bg-[#121218] text-xs uppercase tracking-wider text-zinc-400 font-bold border-b border-[#1f1f28]">
+                                <tr>
+                                    <th class="px-4 py-4 w-12 text-center">
+                                        <input type="checkbox" id="selectAllCheckbox" onchange="toggleSelectAll(this)" title="Select all on this page" class="w-4 h-4 rounded accent-blue-600 bg-[#181822] border border-[#272733] cursor-pointer">
+                                    </th>
+                                    <th class="px-6 py-4">Question Title / Text</th>
+                                    <th class="px-6 py-4">Domain</th>
+                                    <th class="px-6 py-4">Academic Year</th>
+                                    <th class="px-6 py-4">Section Type</th>
+                                    <th class="px-6 py-4 text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="problemsList" class="text-sm font-medium text-zinc-300 divide-y divide-[#181822]">
+                                
+                                <tr>
+                                    <td colspan="6" class="px-6 py-12 text-center text-zinc-500 font-mono text-xs">
+                                        Loading questions...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    
+                    <div class="p-4 border-t border-[#1f1f28] bg-[#0c0c10] flex flex-col sm:flex-row justify-between items-center space-y-3 sm:space-y-0">
+                        <div class="text-xs text-zinc-400 font-mono">
+                            Showing <span id="pageStart" class="text-white font-bold">0</span> to <span id="pageEnd" class="text-white font-bold">0</span> of <span id="pageTotal" class="text-white font-bold">0</span> entries
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <button id="prevPageBtn" onclick="changePage(-1)" class="px-3.5 py-1.5 rounded-lg border border-[#272733] bg-[#14141a] text-zinc-300 text-xs font-semibold hover:bg-[#1f1f28] disabled:opacity-40 disabled:cursor-not-allowed transition">
+                                &larr; Previous
+                            </button>
+                            <span id="pageIndicator" class="text-xs text-zinc-400 font-mono px-2">Page 1 of 1</span>
+                            <button id="nextPageBtn" onclick="changePage(1)" class="px-3.5 py-1.5 rounded-lg border border-[#272733] bg-[#14141a] text-zinc-300 text-xs font-semibold hover:bg-[#1f1f28] disabled:opacity-40 disabled:cursor-not-allowed transition">
+                                Next &rarr;
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+
+            </section>
+
+
+        </main>
+
+
+
+    </div>
+
+    
+    
+    
+    <div id="resetPasswordModal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+        <div class="premium-card rounded-2xl w-full max-w-md overflow-hidden transform scale-95 opacity-0 transition-all duration-300" id="resetPasswordContent">
+            <div class="p-6 border-b border-[#1f1f28]">
+                <h3 class="text-lg font-bold text-white">Reset Your Password</h3>
+                <p class="text-xs text-zinc-400 mt-1">Change your current auto-generated password to a custom secure password.</p>
+            </div>
+            <div class="p-6 space-y-4">
+                <div class="space-y-1.5">
+                    <label class="block text-xs font-bold uppercase tracking-wider text-zinc-400">New Password</label>
+                    <input type="password" id="newPassword" class="w-full px-4 py-2.5 rounded-xl text-sm font-medium premium-input transition" placeholder="At least 8 characters">
+                </div>
+                <div class="space-y-1.5">
+                    <label class="block text-xs font-bold uppercase tracking-wider text-zinc-400">Confirm New Password</label>
+                    <input type="password" id="confirmPassword" class="w-full px-4 py-2.5 rounded-xl text-sm font-medium premium-input transition" placeholder="Confirm your new password">
+                </div>
+            </div>
+            <div class="p-4 border-t border-[#1f1f28] bg-[#0c0c10] flex justify-end space-x-3">
+                <button onclick="closeResetPasswordModal()" class="px-4 py-2 rounded-xl border border-[#272733] bg-[#14141a] text-zinc-300 text-xs font-semibold hover:bg-[#1f1f28] transition">Cancel</button>
+                <button onclick="submitResetPassword()" class="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold shadow-lg shadow-blue-900/20 transition">Update Password</button>
+            </div>
+        </div>
+    </div>
+
+    
+    
+    
+    <div id="deleteConfirmModal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-black/80 backdrop-blur-md transition-opacity duration-200">
+        <div id="deleteConfirmContent" class="premium-card rounded-2xl w-full max-w-md overflow-hidden transform scale-95 opacity-0 transition-all duration-200 border border-red-950/50 shadow-2xl shadow-red-950/20">
+            
+            <div class="p-6 border-b border-[#1f1f28] flex items-start space-x-4">
+                <div class="w-10 h-10 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center justify-center text-red-400 flex-shrink-0 mt-0.5">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                    </svg>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <div class="flex items-center space-x-2 mb-1">
+                        <h3 id="deleteModalTitle" class="text-base font-extrabold text-white tracking-tight truncate">Confirm Deletion</h3>
+                        <span id="deleteModalBadge" class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-red-500/20 text-red-300 border border-red-500/30">DANGER</span>
+                    </div>
+                    <p id="deleteModalMessage" class="text-xs text-zinc-400 leading-relaxed">Are you sure you want to proceed? This action cannot be undone.</p>
+                </div>
+            </div>
+
+            
+            <div id="deleteModalHighlightContainer" class="px-6 pt-4 hidden">
+                <div class="p-3 rounded-xl bg-[#14141d] border border-[#272738] text-xs font-mono text-zinc-300 break-all flex items-center space-x-2.5">
+                    <span class="w-1.5 h-1.5 rounded-full bg-amber-400 flex-shrink-0"></span>
+                    <span id="deleteModalHighlightText" class="truncate"></span>
+                </div>
+            </div>
+
+            
+            <div id="deleteModalInputContainer" class="px-6 pt-4 space-y-2 hidden">
+                <label class="block text-xs font-bold text-zinc-400">
+                    Type <span class="font-mono text-red-400 font-bold bg-red-950/40 px-1.5 py-0.5 rounded border border-red-900/40">DELETE</span> to confirm:
+                </label>
+                <input type="text" id="deleteModalInput" autocomplete="off" placeholder="Type DELETE here..." class="w-full px-4 py-2.5 rounded-xl text-sm font-medium premium-input border-red-900/30 focus:border-red-500 transition">
+                <p id="deleteModalInputError" class="text-[11px] text-red-400 hidden font-medium">Please type DELETE exactly to proceed.</p>
+            </div>
+
+            
+            <div class="p-4 mt-2 border-t border-[#1f1f28] bg-[#0c0c10] flex justify-end space-x-3">
+                <button type="button" id="deleteModalCancelBtn" class="px-4 py-2 rounded-xl border border-[#272733] bg-[#14141a] text-zinc-300 text-xs font-semibold hover:bg-[#1f1f28] transition active:scale-[0.98]">
+                    Cancel
+                </button>
+                <button type="button" id="deleteModalConfirmBtn" class="px-4 py-2 rounded-xl bg-red-600 hover:bg-red-500 active:scale-[0.98] text-white text-xs font-bold shadow-lg shadow-red-900/30 transition flex items-center space-x-1.5">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                    </svg>
+                    <span id="deleteModalConfirmBtnText">Confirm Delete</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    
+    
+    
+    <script>
+        // Auth check
+        const token = localStorage.getItem('token');
+        const role = localStorage.getItem('role');
+        if (!token || (role !== 'ADMIN' && role !== 'SUPER_ADMIN')) {
+            window.location.href = '/admin/adminlogin.html';
+        }
+
+        const logout = () => {
+            localStorage.clear();
+            window.location.href = '/admin/adminlogin.html';
+        };
+
+        // Mobile Sidebar Toggle
+        const toggleMobileSidebar = () => {
+            const sidebar = document.getElementById('adminSidebar');
+            const backdrop = document.getElementById('sidebarBackdrop');
+            if (sidebar.classList.contains('-translate-x-full')) {
+                sidebar.classList.remove('-translate-x-full');
+                backdrop.classList.remove('hidden');
+            } else {
+                sidebar.classList.add('-translate-x-full');
+                backdrop.classList.add('hidden');
+            }
+        };
+
+        // URL hash redirection fallback for older bookmarks or links
+        const checkHashRedirect = () => {
+            const hash = window.location.hash;
+            if (hash === '#add-problem') {
+                window.location.replace('/admin/admin-add-problem.html');
+                return true;
+            } else if (hash === '#admins') {
+                window.location.replace('/admin/admin-admins.html');
+                return true;
+            } else if (hash === '#students') {
+                window.location.replace('/admin/admin-students.html');
+                return true;
+            }
+            return false;
+        };
+        checkHashRedirect();
+        window.addEventListener('hashchange', checkHashRedirect);
+
+        const switchView = (viewName) => {
+            if (viewName === 'add-problem') window.location.href = '/admin/admin-add-problem.html';
+            else if (viewName === 'admins') window.location.href = '/admin/admin-admins.html';
+            else if (viewName === 'students') window.location.href = '/admin/admin-students.html';
+            else window.location.href = '/admin/admin.html';
+        };
+        window.switchView = switchView;
+
+        // Toaster Notification System
+        const showToast = (message, type = 'success') => {
+            const container = document.getElementById('toastContainer');
+            if (!container) return;
+            const toast = document.createElement('div');
+            toast.className = `pointer-events-auto flex items-center space-x-3 p-4 rounded-xl shadow-2xl border transition-all duration-300 transform translate-y-[-12px] opacity-0 ${
+                type === 'error'
+                    ? 'bg-[#1a0a0a] border-red-800/90 text-red-200'
+                    : 'bg-[#0a1a0f] border-emerald-800/90 text-emerald-200'
+            }`;
+            const icon = type === 'error'
+                ? `<div class="w-8 h-8 rounded-lg bg-red-950/80 border border-red-800/70 flex items-center justify-center flex-shrink-0 text-red-400 font-bold text-sm">⚠️</div>`
+                : `<div class="w-8 h-8 rounded-lg bg-emerald-950/80 border border-emerald-800/70 flex items-center justify-center flex-shrink-0 text-emerald-400 font-bold text-sm">✓</div>`;
+
+            toast.innerHTML = `
+                ${icon}
+                <div class="flex-1 text-xs font-semibold leading-relaxed">${message}</div>
+                <button onclick="this.parentElement.remove()" class="text-zinc-400 hover:text-white transition p-1 cursor-pointer">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            `;
+            container.appendChild(toast);
+            requestAnimationFrame(() => {
+                toast.classList.remove('translate-y-[-12px]', 'opacity-0');
+                toast.classList.add('translate-y-0', 'opacity-100');
+            });
+            setTimeout(() => {
+                toast.classList.remove('translate-y-0', 'opacity-100');
+                toast.classList.add('translate-y-[-12px]', 'opacity-0');
+                setTimeout(() => toast.remove(), 350);
+            }, 4500);
+        };
+
+        // Fetch Problems (Server-side Pagination & Filtering)
+        let currentPage = 0;
+        let totalPages = 1;
+        const pageSize = 20;
+
+        const fetchProblems = async () => {
+            const domain = document.getElementById('filterDomain').value;
+            const year = document.getElementById('filterYear').value;
+            const section = document.getElementById('filterSection').value;
+            
+            let url = `/api/admin/problems?page=${currentPage}&size=${pageSize}`;
+            if (domain) url += `&domain=${encodeURIComponent(domain)}`;
+            if (year) url += `&year=${year}`;
+            if (section) url += `&section=${encodeURIComponent(section)}`;
+
+            try {
+                const res = await fetch(url, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (res.ok) {
+                    const pageData = await res.json();
+                    if (pageData.content.length === 0 && currentPage > 0 && pageData.totalElements > 0) {
+                        currentPage = Math.max(0, pageData.totalPages - 1);
+                        fetchProblems();
+                        return;
+                    }
+                    renderProblems(pageData.content);
+                    updatePaginationUI(pageData);
+                } else {
+                    showToast("Failed to fetch problems.", "error");
+                }
+            } catch (err) {
+                showToast("Connection error.", "error");
+            }
+        };
+
+        const applyFilters = () => {
+            currentPage = 0;
+            localStorage.setItem('admin_prob_domain', document.getElementById('filterDomain').value);
+            localStorage.setItem('admin_prob_year', document.getElementById('filterYear').value);
+            localStorage.setItem('admin_prob_section', document.getElementById('filterSection').value);
+            fetchProblems();
+        };
+
+        const changePage = (delta) => {
+            const newPage = currentPage + delta;
+            if (newPage >= 0 && newPage < totalPages) {
+                currentPage = newPage;
+                fetchProblems();
+            }
+        };
+
+        const updatePaginationUI = (pageData) => {
+            totalPages = pageData.totalPages;
+            const totalElements = pageData.totalElements;
+            document.getElementById('problemCount').innerText = totalElements;
+            document.getElementById('sidebarProblemCount').innerText = totalElements;
+            if (typeof updateDeleteFilteredBtnText === 'function') {
+                updateDeleteFilteredBtnText(totalElements);
+            }
+            
+            if (totalElements === 0) {
+                document.getElementById('pageStart').innerText = 0;
+                document.getElementById('pageEnd').innerText = 0;
+            } else {
+                document.getElementById('pageStart').innerText = (pageData.number * pageData.size) + 1;
+                document.getElementById('pageEnd').innerText = (pageData.number * pageData.size) + pageData.numberOfElements;
+            }
+            document.getElementById('pageTotal').innerText = totalElements;
+            
+            document.getElementById('pageIndicator').innerText = `Page ${pageData.number + 1} of ${Math.max(1, totalPages)}`;
+            
+            document.getElementById('prevPageBtn').disabled = pageData.first;
+            document.getElementById('nextPageBtn').disabled = pageData.last;
+        };
+
+        // Event Listeners for filters
+        document.getElementById('filterDomain').addEventListener('change', applyFilters);
+        document.getElementById('filterYear').addEventListener('change', applyFilters);
+        document.getElementById('filterSection').addEventListener('change', applyFilters);
+
+        // Role setup and view restoration on load
+        document.addEventListener('DOMContentLoaded', () => {
+            const currentRole = localStorage.getItem('role') || 'ADMIN';
+            let userEmail = localStorage.getItem('admin_email');
+            if (!userEmail || userEmail === 'superadmin@srminsider.in') {
+                userEmail = (currentRole === 'SUPER_ADMIN' ? 'admin@srminsider.in' : (localStorage.getItem('username') || 'admin@srminsider.in'));
+                localStorage.setItem('admin_email', userEmail);
+            }
+            
+            document.getElementById('sidebarUserEmail').innerText = userEmail;
+            document.getElementById('sidebarUserRole').innerText = `ROLE: ${currentRole}`;
+
+            // Fetch verified admin email from backend
+            fetch('/api/admin/me', {
+                headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+            })
+            .then(res => res.ok ? res.json() : null)
+            .then(data => {
+                if (data && data.email) {
+                    localStorage.setItem('admin_email', data.email);
+                    const emailEl = document.getElementById('sidebarUserEmail');
+                    if (emailEl) emailEl.innerText = data.email;
+                }
+            })
+            .catch(() => {});
+            
+            if (currentRole === 'SUPER_ADMIN') {
+                document.getElementById('roleBadge').innerText = 'SUPER ADMIN';
+                document.getElementById('roleBadge').className = 'px-1.5 py-0.5 rounded text-[9px] font-extrabold tracking-wider bg-purple-500/10 text-purple-400 border border-purple-500/20 uppercase';
+                document.getElementById('userAvatar').className = 'w-8 h-8 rounded-lg bg-gradient-to-tr from-purple-600 to-indigo-600 flex items-center justify-center text-xs font-black text-white flex-shrink-0 shadow-md';
+                document.getElementById('userAvatar').innerText = 'SA';
+                document.getElementById('navManageAdminsWrapper').classList.remove('hidden');
+            } else {
+                document.getElementById('roleBadge').innerText = 'ADMIN';
+                document.getElementById('userAvatar').innerText = 'AD';
+                // Show reset password for normal admin
+                const resetBtn = document.getElementById('resetPasswordBtn');
+                if (resetBtn) {
+                    resetBtn.classList.remove('hidden');
+                    resetBtn.classList.add('flex');
+                }
+            }
+
+            // Restore saved problem filters if any
+            const savedDomain = localStorage.getItem('admin_prob_domain');
+            if (savedDomain !== null) document.getElementById('filterDomain').value = savedDomain;
+            const savedYear = localStorage.getItem('admin_prob_year');
+            if (savedYear !== null) document.getElementById('filterYear').value = savedYear;
+            const savedSection = localStorage.getItem('admin_prob_section');
+            if (savedSection !== null) document.getElementById('filterSection').value = savedSection;
+
+            fetchProblems();
+        });
+
+        // Custom HTML Delete/Confirm Modal Helper (Promise-based)
+        let activeDeleteModalResolver = null;
+
+        const showDeleteModal = ({
+            title = "Confirm Deletion",
+            badge = "DANGER",
+            message = "Are you sure you want to proceed? This action cannot be undone.",
+            highlight = null,
+            requireMatch = null,
+            confirmText = "Confirm Delete"
+        }) => {
+            return new Promise((resolve) => {
+                activeDeleteModalResolver = resolve;
+
+                const modal = document.getElementById('deleteConfirmModal');
+                const content = document.getElementById('deleteConfirmContent');
+                const titleEl = document.getElementById('deleteModalTitle');
+                const badgeEl = document.getElementById('deleteModalBadge');
+                const msgEl = document.getElementById('deleteModalMessage');
+                const highlightContainer = document.getElementById('deleteModalHighlightContainer');
+                const highlightText = document.getElementById('deleteModalHighlightText');
+                const inputContainer = document.getElementById('deleteModalInputContainer');
+                const inputEl = document.getElementById('deleteModalInput');
+                const inputError = document.getElementById('deleteModalInputError');
+                const confirmBtnText = document.getElementById('deleteModalConfirmBtnText');
+
+                titleEl.innerText = title;
+                badgeEl.innerText = badge;
+                msgEl.innerText = message;
+                confirmBtnText.innerText = confirmText;
+
+                if (highlight) {
+                    highlightText.innerText = highlight;
+                    highlightContainer.classList.remove('hidden');
+                } else {
+                    highlightContainer.classList.add('hidden');
+                }
+
+                if (requireMatch) {
+                    inputContainer.classList.remove('hidden');
+                    inputEl.value = '';
+                    inputError.classList.add('hidden');
+                    inputEl.classList.remove('border-red-500');
+                    inputEl.placeholder = `Type ${requireMatch} to confirm...`;
+                } else {
+                    inputContainer.classList.add('hidden');
+                    inputEl.value = '';
+                }
+
+                modal.classList.remove('hidden');
+                setTimeout(() => {
+                    content.classList.remove('scale-95', 'opacity-0');
+                    content.classList.add('scale-100', 'opacity-100');
+                    if (requireMatch) {
+                        inputEl.focus();
+                    }
+                }, 20);
+
+                const closeModal = (result) => {
+                    content.classList.remove('scale-100', 'opacity-100');
+                    content.classList.add('scale-95', 'opacity-0');
+                    setTimeout(() => {
+                        modal.classList.add('hidden');
+                        if (activeDeleteModalResolver) {
+                            activeDeleteModalResolver(result);
+                            activeDeleteModalResolver = null;
+                        }
+                    }, 200);
+                };
+
+                document.getElementById('deleteModalCancelBtn').onclick = () => closeModal(false);
+
+                document.getElementById('deleteModalConfirmBtn').onclick = () => {
+                    if (requireMatch) {
+                        if (inputEl.value.trim() !== requireMatch) {
+                            inputError.classList.remove('hidden');
+                            inputEl.classList.add('border-red-500');
+                            inputEl.focus();
+                            return;
+                        }
+                    }
+                    closeModal(true);
+                };
+
+                inputEl.oninput = () => {
+                    if (inputEl.value.trim() === requireMatch) {
+                        inputError.classList.add('hidden');
+                        inputEl.classList.remove('border-red-500');
+                    }
+                };
+
+                inputEl.onkeydown = (e) => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        document.getElementById('deleteModalConfirmBtn').click();
+                    } else if (e.key === 'Escape') {
+                        closeModal(false);
+                    }
+                };
+            });
+        };
+
+        // Reset Password Functions
+        const openResetPasswordModal = () => {
+            const modal = document.getElementById('resetPasswordModal');
+            const content = document.getElementById('resetPasswordContent');
+            modal.classList.remove('hidden');
+            document.getElementById('newPassword').value = '';
+            document.getElementById('confirmPassword').value = '';
+            setTimeout(() => {
+                content.classList.remove('scale-95', 'opacity-0');
+                content.classList.add('scale-100', 'opacity-100');
+            }, 10);
+        };
+
+        const closeResetPasswordModal = () => {
+            const content = document.getElementById('resetPasswordContent');
+            content.classList.remove('scale-100', 'opacity-100');
+            content.classList.add('scale-95', 'opacity-0');
+            setTimeout(() => {
+                document.getElementById('resetPasswordModal').classList.add('hidden');
+            }, 300);
+        };
+
+        const submitResetPassword = async () => {
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+
+            if (newPassword.length < 8) {
+                showToast("Password must be at least 8 characters long", "error");
+                return;
+            }
+            if (newPassword !== confirmPassword) {
+                showToast("Passwords do not match", "error");
+                return;
+            }
+
+            try {
+                const res = await fetch('/api/admin/reset-password', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('token')}` 
+                    },
+                    body: JSON.stringify({ newPassword })
+                });
+                
+                const data = await res.json();
+                if (res.ok) {
+                    showToast("Password updated successfully!", "success");
+                    closeResetPasswordModal();
+                } else {
+                    showToast(data.error || "Failed to update password", "error");
+                }
+            } catch (err) {
+                showToast("Connection error", "error");
+            }
+        };
+
+        // Selection state for questions
+        let selectedProblemIds = new Set();
+
+        const toggleSelectAll = (headerCheckbox) => {
+            const checkboxes = document.querySelectorAll('.problem-checkbox');
+            checkboxes.forEach(cb => {
+                cb.checked = headerCheckbox.checked;
+                if (headerCheckbox.checked) {
+                    selectedProblemIds.add(cb.value);
+                } else {
+                    selectedProblemIds.delete(cb.value);
+                }
+            });
+            updateSelectionUI();
+        };
+
+        const handleRowCheckboxChange = () => {
+            selectedProblemIds.clear();
+            const checkboxes = document.querySelectorAll('.problem-checkbox');
+            let allChecked = checkboxes.length > 0;
+            checkboxes.forEach(cb => {
+                if (cb.checked) {
+                    selectedProblemIds.add(cb.value);
+                } else {
+                    allChecked = false;
+                }
+            });
+            const selectAll = document.getElementById('selectAllCheckbox');
+            if (selectAll) selectAll.checked = allChecked;
+            updateSelectionUI();
+        };
+
+        const updateSelectionUI = () => {
+            const count = selectedProblemIds.size;
+            const btn = document.getElementById('deleteSelectedBtn');
+            const countSpan = document.getElementById('selectedCount');
+            if (countSpan) countSpan.innerText = count;
+            if (btn) {
+                if (count > 0) {
+                    btn.classList.remove('hidden');
+                    btn.classList.add('flex');
+                } else {
+                    btn.classList.add('hidden');
+                    btn.classList.remove('flex');
+                }
+            }
+        };
+
+        const deleteSelectedProblems = async () => {
+            const ids = Array.from(selectedProblemIds);
+            if (ids.length === 0) return;
+
+            const confirmed = await showDeleteModal({
+                title: `Delete ${ids.length} Selected Question${ids.length > 1 ? 's' : ''}`,
+                badge: "BATCH DELETE",
+                message: `You have selected ${ids.length} question(s) for permanent deletion. Once deleted, they cannot be recovered.`,
+                highlight: `Selected Questions: ${ids.length} item(s)`,
+                confirmText: `Delete ${ids.length} Questions`
+            });
+            if (!confirmed) return;
+
+            try {
+                const res = await fetch('/api/admin/problems/delete-batch', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(ids)
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    showToast(data.message || `Deleted ${ids.length} questions successfully.`, "success");
+                    selectedProblemIds.clear();
+                    updateSelectionUI();
+                    fetchProblems();
+                } else {
+                    const data = await res.json().catch(() => ({}));
+                    showToast(data.error || "Failed to delete selected questions.", "error");
+                }
+            } catch (err) {
+                showToast("Connection error while deleting.", "error");
+            }
+        };
+
+        const updateDeleteFilteredBtnText = (totalCount) => {
+            const domain = document.getElementById('filterDomain')?.value;
+            const year = document.getElementById('filterYear')?.value;
+            const section = document.getElementById('filterSection')?.value;
+            const btnText = document.getElementById('deleteFilteredBtnText');
+            if (!btnText) return;
+
+            const hasFilter = domain || year || section;
+            if (hasFilter) {
+                btnText.innerText = `Delete Filtered (${totalCount})`;
+            } else {
+                btnText.innerText = `Delete All Questions (${totalCount})`;
+            }
+        };
+
+        const deleteFilteredProblems = async () => {
+            const domain = document.getElementById('filterDomain')?.value || '';
+            const year = document.getElementById('filterYear')?.value || '';
+            const section = document.getElementById('filterSection')?.value || '';
+            const totalCount = parseInt(document.getElementById('problemCount')?.innerText || '0', 10);
+
+            if (totalCount === 0) {
+                showToast("No questions available to delete.", "info");
+                return;
+            }
+
+            const hasFilter = domain || year || section;
+            let filterDescription = [];
+            if (domain) filterDescription.push(`Domain: "${domain}"`);
+            if (year) filterDescription.push(`Year: ${year}`);
+            if (section) filterDescription.push(`Section: "${section}"`);
+
+            const confirmed = await showDeleteModal({
+                title: hasFilter ? `Delete ${totalCount} Filtered Questions` : `Delete ALL ${totalCount} Questions`,
+                badge: hasFilter ? "FILTER DELETE" : "CRITICAL WARNING",
+                message: hasFilter
+                    ? `You are about to permanently delete all ${totalCount} question(s) matching your active filter criteria.`
+                    : `CRITICAL WARNING: You are about to permanently delete ALL ${totalCount} questions in the entire database!`,
+                highlight: hasFilter ? filterDescription.join(" • ") : `All ${totalCount} Questions in Question Bank`,
+                requireMatch: "DELETE",
+                confirmText: hasFilter ? `Delete ${totalCount} Filtered` : "Delete Entire Database"
+            });
+            if (!confirmed) return;
+
+            let url = `/api/admin/problems/delete-by-filter?`;
+            const params = new URLSearchParams();
+            if (domain) params.append('domain', domain);
+            if (year) params.append('year', year);
+            if (section) params.append('section', section);
+            url += params.toString();
+
+            try {
+                const res = await fetch(url, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    showToast(data.message || "Questions deleted successfully.", "success");
+                    selectedProblemIds.clear();
+                    updateSelectionUI();
+                    currentPage = 0;
+                    fetchProblems();
+                } else {
+                    const data = await res.json().catch(() => ({}));
+                    showToast(data.error || "Failed to delete questions.", "error");
+                }
+            } catch (err) {
+                showToast("Connection error while deleting.", "error");
+            }
+        };
+
+        // Render Problems Table
+        const renderProblems = (problems) => {
+            const tbody = document.getElementById('problemsList');
+            tbody.innerHTML = '';
+            
+            const selectAll = document.getElementById('selectAllCheckbox');
+            if (selectAll) selectAll.checked = false;
+            selectedProblemIds.clear();
+            updateSelectionUI();
+            
+            if (problems.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="px-6 py-12 text-center text-zinc-500 font-mono text-xs">No questions found matching your filter.</td></tr>`;
+                return;
+            }
+
+            problems.forEach(p => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-[#12121a] transition-colors border-b border-[#181822]";
+                
+                // Truncate long titles
+                const shortTitle = p.title.length > 60 ? p.title.substring(0, 60) + '...' : p.title;
+                
+                tr.innerHTML = `
+                    <td class="px-4 py-4 text-center">
+                        <input type="checkbox" value="${escapeHtml(p.id)}" onchange="handleRowCheckboxChange()" class="problem-checkbox w-4 h-4 rounded accent-blue-600 bg-[#181822] border border-[#272733] cursor-pointer">
+                    </td>
+                    <td class="px-6 py-4 text-white font-medium" title="${escapeHtml(p.title)}">
+                        <div class="flex items-center space-x-2.5">
+                            <span class="w-1.5 h-1.5 rounded-full bg-blue-500 flex-shrink-0"></span>
+                            <span class="truncate max-w-md">${escapeHtml(shortTitle)}</span>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4">
+                        <span class="px-2.5 py-1 rounded-lg bg-[#14141e] border border-[#272733] text-xs font-semibold text-blue-300">${escapeHtml(p.domain)}</span>
+                    </td>
+                    <td class="px-6 py-4 text-zinc-400 font-mono text-xs">
+                        Year ${p.year}
+                    </td>
+                    <td class="px-6 py-4">
+                        <span class="px-2.5 py-0.5 rounded-md text-xs font-medium ${
+                            p.section.includes('Programming Question') 
+                                ? 'bg-amber-950/30 text-amber-300 border border-amber-900/30' 
+                                : 'bg-zinc-800/50 text-zinc-300 border border-zinc-700/50'
+                        }">
+                            ${p.section}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 text-right">
+                        <button onclick="deleteProblem('${p.id}')" class="p-2 rounded-lg bg-red-950/30 text-red-400 hover:bg-red-900/50 hover:text-red-300 border border-red-900/30 transition cursor-pointer" title="Delete Question">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        };
+
+        // Download Problems Template
+        window.downloadTemplate = async () => {
+            try {
+                const res = await fetch('/api/admin/problems/template', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (res.ok) {
+                    const blob = await res.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'mcq_template.csv';
+                    document.body.appendChild(a);
+                    a.click();
+                    a.remove();
+                    window.URL.revokeObjectURL(url);
+                    showToast("Questions template downloaded.", "success");
+                } else {
+                    showToast("Failed to download template.", "error");
+                }
+            } catch(err) {
+                showToast("Connection error.", "error");
+            }
+        };
+
+        // Delete Problem
+        window.deleteProblem = async (id) => {
+            const confirmed = await showDeleteModal({
+                title: "Delete Question",
+                badge: "DELETE",
+                message: "Are you sure you want to delete this question? It will be permanently removed from the question bank.",
+                confirmText: "Delete Question"
+            });
+            if (!confirmed) return;
+
+            try {
+                const res = await fetch(`/api/admin/problems/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (res.ok) {
+                    showToast("Question deleted successfully.", "success");
+                    fetchProblems();
+                } else {
+                    showToast("Failed to delete question.", "error");
+                }
+            } catch(err) {
+                showToast("Connection error.", "error");
+            }
+        };
+    </script>
+</body>
+</html>

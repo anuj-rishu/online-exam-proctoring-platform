@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>Manage Admins | SRM Insider Labs</title>
+    <link rel="icon" type="image/x-icon" href="/icons/favicon.ico">
+    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192x192.png">
+    <link rel="apple-touch-icon" href="/icons/icon-192x192.png">
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="description" content="Manage admin accounts and permissions for SRM Insider Labs.">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        dark: {
+                            bg: '#000000',
+                            card: '#0f0f13',
+                            sidebar: '#0a0a0e',
+                            header: '#0a0a0d',
+                            border: '#1f1f28',
+                            hover: '#16161e',
+                            input: '#14141a',
+                            inputBorder: '#272733'
+                        }
+                    }
+                }
+            }
+        };
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { 
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
+            background-color: #000000;
+            color: #ffffff;
+        }
+        .font-mono { font-family: 'JetBrains Mono', monospace; }
+
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #08080a; }
+        ::-webkit-scrollbar-thumb { background: #22222c; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #3b3b4d; }
+
+        .premium-card {
+            background-color: #0f0f13;
+            border: 1px solid #1f1f28;
+            box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.6);
+        }
+        .premium-card:hover {
+            border-color: rgba(168, 85, 247, 0.25);
+        }
+
+        .premium-input {
+            background-color: #14141a !important;
+            border-color: #272733 !important;
+            color: #ffffff !important;
+        }
+        .premium-input:focus {
+            border-color: #a855f7 !important;
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(168, 85, 247, 0.2);
+        }
+
+        .nav-item {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .nav-item.active {
+            background: linear-gradient(90deg, rgba(168, 85, 247, 0.15) 0%, rgba(168, 85, 247, 0.05) 100%);
+            color: #c084fc;
+            border-left: 3px solid #a855f7;
+            font-weight: 600;
+        }
+        .nav-item:not(.active):hover {
+            background-color: #16161e;
+            color: #f4f4f5;
+        }
+
+        @keyframes livePulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.4; transform: scale(1.15); }
+        }
+        .live-dot {
+            animation: livePulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+    </style>
+    <script src="/js/safe-dom.js"></script>
+</head>
+<body class="min-h-screen flex bg-black text-white antialiased overflow-x-hidden">
+
+    
+    <div id="toastContainer" class="fixed top-5 right-5 z-50 flex flex-col space-y-3 pointer-events-none max-w-sm w-full px-4 sm:px-0"></div>
+
+    
+    <div id="sidebarBackdrop" onclick="toggleMobileSidebar()" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-40 hidden lg:hidden transition-opacity duration-300"></div>
+
+    
+    
+    
+    <aside id="adminSidebar" class="fixed inset-y-0 left-0 z-50 w-72 bg-dark-sidebar border-r border-dark-border flex flex-col transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out shadow-2xl">
+        
+        
+        <div class="h-20 px-6 border-b border-dark-border flex items-center justify-between">
+            <div class="flex items-center space-x-3.5">
+                <div class="relative">
+                    <img src="/icons/icon-192x192.png" 
+                         alt="Logo" class="w-10 h-10 rounded-xl object-contain shadow-lg ring-1 ring-white/10">
+                    <span class="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-purple-500 border-2 border-[#0a0a0e] rounded-full"></span>
+                </div>
+                <div>
+                    <h1 class="font-extrabold text-white text-base tracking-tight leading-none">SRM INSIDER</h1>
+                    <div class="flex items-center space-x-1.5 mt-1">
+                        <span id="roleBadge" class="px-1.5 py-0.5 rounded text-[9px] font-extrabold tracking-wider bg-purple-500/10 text-purple-400 border border-purple-500/20 uppercase">
+                            SUPER ADMIN
+                        </span>
+                    </div>
+                </div>
+            </div>
+            
+            <button onclick="toggleMobileSidebar()" class="lg:hidden p-1.5 text-zinc-400 hover:text-white rounded-lg hover:bg-zinc-800/50">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+        </div>
+
+        
+        <nav class="flex-1 px-4 py-6 space-y-1.5 overflow-y-auto">
+            
+            <div class="px-3 pb-2 text-[10px] font-extrabold uppercase tracking-wider text-zinc-500">
+                Main Menu
+            </div>
+
+            
+            <a href="/admin/admin.html" class="nav-item w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium text-zinc-400 transition hover:text-white">
+                <div class="flex items-center space-x-3">
+                    <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
+                    <span>Problems Library</span>
+                </div>
+            </a>
+
+            
+            <a href="/admin/admin-add-problem.html" class="nav-item w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium text-zinc-400 transition hover:text-white">
+                <div class="flex items-center space-x-3">
+                    <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    <span>Add Question</span>
+                </div>
+            </a>
+
+            
+            <a href="/admin/admin-submissions.html" class="nav-item w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium text-zinc-400 transition hover:text-white">
+                <div class="flex items-center space-x-3">
+                    <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                    <span>Submissions</span>
+                </div>
+                <svg class="w-3.5 h-3.5 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+            </a>
+
+            
+            <a href="/admin/admin-live.html" class="nav-item w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium text-zinc-400 transition hover:text-white">
+                <div class="flex items-center space-x-3">
+                    <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                    <span>Live Students</span>
+                </div>
+                <div class="flex items-center space-x-1.5 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500 live-dot"></span>
+                    <span class="text-[10px] font-bold text-emerald-400 uppercase tracking-wider">Live</span>
+                </div>
+            </a>
+
+            
+            <a href="/admin/admin-blocked.html" class="nav-item w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium text-zinc-400 transition hover:text-white">
+                <div class="flex items-center space-x-3">
+                    <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"></path></svg>
+                    <span>Blocked Students</span>
+                </div>
+            </a>
+
+            
+            <div id="navManageAdminsWrapper" class="pt-4">
+                <div class="px-3 pb-2 text-[10px] font-extrabold uppercase tracking-wider text-purple-400/80 flex items-center justify-between">
+                    <span>Administration</span>
+                    <span class="px-1 rounded bg-purple-500/20 text-purple-300 text-[9px] font-bold">SUPER</span>
+                </div>
+                <a href="/admin/admin-plagiarism.html" class="nav-item w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium text-zinc-400 transition hover:text-white">
+                    <div class="flex items-center space-x-3">
+                        <svg class="w-4 h-4 text-amber-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                        <span>Similarity Report</span>
+                    </div>
+                </a>
+                <a href="/admin/admin-admins.html" class="nav-item active w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium transition cursor-pointer">
+                    <div class="flex items-center space-x-3">
+                        <svg class="w-4 h-4 text-purple-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                        <span>Manage Admins</span>
+                    </div>
+                    <span class="text-[10px] px-1.5 py-0.5 rounded bg-purple-950/40 text-purple-300 border border-purple-800/40 font-bold">ACTIVE</span>
+                </a>
+                <a href="/admin/admin-students.html" class="nav-item w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium text-zinc-400 transition hover:text-white mt-1">
+                    <div class="flex items-center space-x-3">
+                        <svg class="w-4 h-4 text-emerald-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                        <span>Invite Students</span>
+                    </div>
+                </a>
+            </div>
+
+        </nav>
+
+        
+        <div class="p-4 border-t border-dark-border bg-[#07070a]">
+            <div class="bg-[#121218] border border-[#20202a] rounded-xl p-3 mb-2 flex items-center justify-between">
+                <div class="flex items-center space-x-2.5 overflow-hidden">
+                    <div id="userAvatar" class="w-8 h-8 rounded-lg bg-gradient-to-tr from-purple-600 to-indigo-600 flex items-center justify-center text-xs font-black text-white flex-shrink-0 shadow-md">
+                        SA
+                    </div>
+                    <div class="truncate">
+                        <div id="sidebarUserEmail" class="text-xs font-semibold text-zinc-200 truncate">admin@srminsider.in</div>
+                        <div id="sidebarUserRole" class="text-[10px] text-zinc-400 font-mono">ROLE: SUPER_ADMIN</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2">
+                
+                <button onclick="logout()" class="w-full col-span-2 flex items-center justify-center space-x-1.5 py-2 px-2.5 rounded-lg border border-red-900/40 bg-red-950/20 text-red-400 text-xs font-semibold transition hover:bg-red-900/40 cursor-pointer">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                    <span>Logout</span>
+                </button>
+            </div>
+        </div>
+
+    </aside>
+
+    
+    
+    
+    <div class="flex-1 lg:pl-72 flex flex-col min-w-0 min-h-screen bg-black">
+        
+        
+        <header class="h-16 px-6 lg:px-8 bg-dark-header/80 backdrop-blur-md border-b border-dark-border flex items-center justify-between sticky top-0 z-30 flex-shrink-0">
+            <div class="flex items-center space-x-3">
+                
+                <button onclick="toggleMobileSidebar()" class="lg:hidden p-2 rounded-lg bg-[#14141a] border border-[#272733] text-zinc-300 hover:text-white focus:outline-none">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+                </button>
+                
+                <div>
+                    <span class="text-xs text-zinc-500 font-medium">Dashboard /</span>
+                    <span class="text-sm font-bold text-white ml-1">Manage Admins</span>
+                </div>
+            </div>
+
+            
+            <div class="flex items-center space-x-3">
+                <a href="/admin/admin-students.html" class="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg border border-emerald-900/50 bg-emerald-950/20 text-emerald-400 text-xs font-semibold hover:bg-emerald-900/40 transition">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                    <span>Invite Students</span>
+                </a>
+            </div>
+        </header>
+
+        
+        <main class="flex-1 py-8 px-6 lg:px-8 max-w-7xl w-full mx-auto pb-16">
+            <section class="space-y-6">
+                
+                
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gradient-to-r from-[#121218] via-[#0f0f15] to-[#0a0a0f] p-6 rounded-2xl border border-[#1f1f28]">
+                    <div>
+                        <div class="flex items-center space-x-2">
+                            <h2 class="text-2xl font-extrabold text-white tracking-tight">System Administrators</h2>
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-purple-500/20 text-purple-300 border border-purple-500/30">SUPER ADMIN</span>
+                        </div>
+                        <p class="text-xs text-zinc-400 mt-1">Manage portal access, invite new domain coordinators, or revoke administrator privileges.</p>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <button onclick="downloadAdminTemplate()" class="flex items-center space-x-1.5 py-2 px-3.5 rounded-xl border border-purple-900/50 bg-purple-950/20 text-purple-400 font-semibold text-xs hover:bg-purple-900/40 transition cursor-pointer">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                            <span>Download Admin Template</span>
+                        </button>
+                    </div>
+                </div>
+
+                
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    
+                    
+                    <div class="premium-card rounded-2xl p-6 flex flex-col justify-between">
+                        <div>
+                            <div class="flex items-center space-x-2.5 mb-4">
+                                <div class="w-8 h-8 rounded-lg bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path></svg>
+                                </div>
+                                <h3 class="font-bold text-white text-sm">Invite Single Administrator</h3>
+                            </div>
+                            <p class="text-xs text-zinc-400 mb-4">An auto-generated secure temporary password will be immediately dispatched to their email address via Brevo.</p>
+                            <form id="singleAdminForm" onsubmit="addSingleAdmin(event)" class="space-y-4">
+                                <div>
+                                    <label class="block text-xs font-bold uppercase tracking-wider text-zinc-400 mb-1.5">Email Address</label>
+                                    <input type="email" id="singleAdminEmail" required placeholder="admin.coordinator@srm.edu.in" class="w-full px-4 py-2.5 rounded-xl text-sm font-medium premium-input transition">
+                                </div>
+                                <button type="submit" id="singleAdminBtn" class="w-full bg-purple-600 hover:bg-purple-500 active:scale-[0.98] text-white font-bold py-2.5 px-4 rounded-xl shadow-md shadow-purple-900/30 transition flex items-center justify-center space-x-2 text-xs cursor-pointer">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                                    <span>Send Credentials & Invite</span>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+
+                    
+                    <div class="premium-card rounded-2xl p-6 flex flex-col justify-between">
+                        <div>
+                            <div class="flex items-center space-x-2.5 mb-4">
+                                <div class="w-8 h-8 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                                </div>
+                                <h3 class="font-bold text-white text-sm">Bulk Admin Upload via CSV</h3>
+                            </div>
+                            <p class="text-xs text-zinc-400 mb-4">Upload a CSV file containing an <span class="font-mono text-purple-400">email</span> column to invite multiple coordinators at once.</p>
+                            <form id="uploadAdminsForm" onsubmit="uploadAdmins(event)" class="space-y-4">
+                                <div>
+                                    <label class="block text-xs font-bold uppercase tracking-wider text-zinc-400 mb-1.5">Upload CSV File</label>
+                                    <input type="file" id="adminCsvFile" accept=".csv" required class="block w-full text-xs text-zinc-400 file:mr-4 file:py-2 file:px-3.5 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-purple-900/30 file:text-purple-400 hover:file:bg-purple-900/50 file:cursor-pointer file:transition cursor-pointer bg-[#14141a] border border-[#272733] rounded-xl p-2">
+                                </div>
+                                <button type="submit" id="uploadAdminsBtn" class="w-full bg-blue-600 hover:bg-blue-500 active:scale-[0.98] text-white font-bold py-2.5 px-4 rounded-xl shadow-md shadow-blue-900/30 transition flex items-center justify-center space-x-2 text-xs cursor-pointer">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
+                                    <span>Upload & Invite All</span>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+
+                </div>
+
+                
+                <div class="premium-card rounded-2xl overflow-hidden">
+                    <div class="p-6 border-b border-[#1f1f28] flex justify-between items-center bg-[#101016]">
+                        <div>
+                            <h3 class="text-sm font-bold text-white">Active Administrators</h3>
+                            <p class="text-xs text-zinc-500 mt-0.5">Assign the domains each proctor watches and how many students they handle at once. A student is only ever shown to one proctor.</p>
+                            <p class="text-[11px] text-zinc-500 mt-1.5">
+                                Live students waiting for a proctor:
+                                <span id="unassignedStudents" class="font-mono font-bold text-amber-400">0</span>
+                            </p>
+                        </div>
+                        <button onclick="fetchAdmins()" class="p-2 rounded-lg bg-[#181822] hover:bg-[#20202e] border border-[#2a2a3c] text-zinc-300 hover:text-white transition cursor-pointer" title="Refresh list">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                        </button>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs">
+                            <thead class="bg-[#0b0b0e] text-zinc-400 font-extrabold uppercase tracking-wider border-b border-[#1f1f28]">
+                                <tr>
+                                    <th class="px-6 py-3.5">Administrator Email</th>
+                                    <th class="px-6 py-3.5">Proctoring Domains</th>
+                                    <th class="px-6 py-3.5">Capacity</th>
+                                    <th class="px-6 py-3.5">Live Load</th>
+                                    <th class="px-6 py-3.5 text-right">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="adminsTableBody" class="divide-y divide-[#181822]">
+                                <tr>
+                                    <td colspan="3" class="px-6 py-8 text-center text-xs text-zinc-500 font-mono">Loading administrators...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </section>
+        </main>
+    </div>
+
+    
+    <div id="deleteConfirmModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md hidden transition-all duration-200">
+        <div id="deleteModalContent" class="bg-[#0f0f13] border border-red-900/50 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4 transform scale-95 opacity-0 transition-all duration-200">
+            <div class="flex items-center space-x-3 pb-3 border-b border-[#1f1f28]">
+                <div class="w-9 h-9 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center justify-center text-red-400 flex-shrink-0">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                </div>
+                <div>
+                    <h3 id="deleteModalTitle" class="text-base font-extrabold text-white">Revoke Administrator Access</h3>
+                    <span id="deleteModalBadge" class="text-[9px] px-1.5 py-0.2 rounded font-extrabold uppercase bg-red-950/60 text-red-400 border border-red-800/60">REVOKE ACCESS</span>
+                </div>
+            </div>
+            <p id="deleteModalMessage" class="text-xs text-zinc-300 leading-relaxed">Are you sure you want to proceed?</p>
+            <div id="deleteModalHighlightContainer" class="p-3 bg-black/50 border border-[#272733] rounded-xl text-xs font-mono text-zinc-300 break-all hidden">
+                <span id="deleteModalHighlightText"></span>
+            </div>
+            <div id="deleteModalInputContainer" class="space-y-1.5 hidden">
+                <label id="deleteModalInputLabel" class="block text-[11px] font-bold text-zinc-400">Type confirmation phrase to proceed:</label>
+                <input type="text" id="deleteModalInput" class="w-full px-3.5 py-2 rounded-xl text-xs font-mono premium-input transition" placeholder="">
+                <p id="deleteModalInputError" class="text-[10px] text-red-400 hidden">Confirmation phrase does not match.</p>
+            </div>
+            <div class="flex justify-end space-x-3 pt-2">
+                <button type="button" id="deleteModalCancelBtn" class="px-4 py-2 rounded-xl border border-[#272733] bg-[#14141a] text-zinc-300 text-xs font-semibold hover:bg-[#1f1f28] transition cursor-pointer">Cancel</button>
+                <button type="button" id="deleteModalConfirmBtn" class="px-5 py-2 rounded-xl bg-red-600 hover:bg-red-500 text-white text-xs font-bold transition shadow-lg shadow-red-900/30 cursor-pointer flex items-center space-x-1.5">
+                    <span id="deleteModalConfirmBtnText">Revoke Access</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const token = localStorage.getItem('token');
+        const role = localStorage.getItem('role');
+
+        if (!token || (role !== 'SUPER_ADMIN' && role !== 'ROLE_SUPER_ADMIN')) {
+            window.location.href = '/admin/admin.html';
+        }
+
+        const toggleMobileSidebar = () => {
+            const sidebar = document.getElementById('adminSidebar');
+            const backdrop = document.getElementById('sidebarBackdrop');
+            if (!sidebar || !backdrop) return;
+            if (sidebar.classList.contains('-translate-x-full')) {
+                sidebar.classList.remove('-translate-x-full');
+                backdrop.classList.remove('hidden');
+            } else {
+                sidebar.classList.add('-translate-x-full');
+                backdrop.classList.add('hidden');
+            }
+        };
+
+        const showToast = (message, type = 'success') => {
+            const container = document.getElementById('toastContainer');
+            if (!container) return;
+            const toast = document.createElement('div');
+            toast.className = `pointer-events-auto flex items-center space-x-3 p-4 rounded-xl shadow-2xl border transition-all duration-300 transform translate-y-[-12px] opacity-0 ${
+                type === 'error'
+                    ? 'bg-[#1a0a0a] border-red-800/90 text-red-200'
+                    : 'bg-[#0a1a0f] border-emerald-800/90 text-emerald-200'
+            }`;
+            const icon = type === 'error'
+                ? `<div class="w-8 h-8 rounded-lg bg-red-950/80 border border-red-800/70 flex items-center justify-center flex-shrink-0 text-red-400 font-bold text-sm">⚠️</div>`
+                : `<div class="w-8 h-8 rounded-lg bg-emerald-950/80 border border-emerald-800/70 flex items-center justify-center flex-shrink-0 text-emerald-400 font-bold text-sm">✓</div>`;
+
+            toast.innerHTML = `
+                ${icon}
+                <div class="flex-1 text-xs font-semibold leading-relaxed">${message}</div>
+                <button onclick="this.parentElement.remove()" class="text-zinc-400 hover:text-white transition p-1 cursor-pointer">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            `;
+            container.appendChild(toast);
+            requestAnimationFrame(() => {
+                toast.classList.remove('translate-y-[-12px]', 'opacity-0');
+                toast.classList.add('translate-y-0', 'opacity-100');
+            });
+            setTimeout(() => {
+                toast.classList.remove('translate-y-0', 'opacity-100');
+                toast.classList.add('translate-y-[-12px]', 'opacity-0');
+                setTimeout(() => toast.remove(), 350);
+            }, 4500);
+        };
+
+        // Custom HTML Delete/Confirm Modal Helper
+        let activeDeleteModalResolver = null;
+        const showDeleteModal = ({
+            title = "Confirm Action",
+            badge = "REVOKE",
+            message = "Are you sure you want to proceed?",
+            highlight = null,
+            requireMatch = null,
+            confirmText = "Confirm"
+        }) => {
+            return new Promise((resolve) => {
+                activeDeleteModalResolver = resolve;
+                const modal = document.getElementById('deleteConfirmModal');
+                const content = document.getElementById('deleteModalContent');
+                const titleEl = document.getElementById('deleteModalTitle');
+                const badgeEl = document.getElementById('deleteModalBadge');
+                const msgEl = document.getElementById('deleteModalMessage');
+                const highlightContainer = document.getElementById('deleteModalHighlightContainer');
+                const highlightText = document.getElementById('deleteModalHighlightText');
+                const inputContainer = document.getElementById('deleteModalInputContainer');
+                const inputEl = document.getElementById('deleteModalInput');
+                const inputError = document.getElementById('deleteModalInputError');
+                const confirmBtnText = document.getElementById('deleteModalConfirmBtnText');
+
+                titleEl.innerText = title;
+                badgeEl.innerText = badge;
+                msgEl.innerText = message;
+                confirmBtnText.innerText = confirmText;
+
+                if (highlight) {
+                    highlightText.innerText = highlight;
+                    highlightContainer.classList.remove('hidden');
+                } else {
+                    highlightContainer.classList.add('hidden');
+                }
+
+                if (requireMatch) {
+                    inputContainer.classList.remove('hidden');
+                    inputEl.value = '';
+                    inputError.classList.add('hidden');
+                    inputEl.classList.remove('border-red-500');
+                    inputEl.placeholder = `Type ${requireMatch} to confirm...`;
+                } else {
+                    inputContainer.classList.add('hidden');
+                    inputEl.value = '';
+                }
+
+                modal.classList.remove('hidden');
+                setTimeout(() => {
+                    content.classList.remove('scale-95', 'opacity-0');
+                    content.classList.add('scale-100', 'opacity-100');
+                    if (requireMatch) inputEl.focus();
+                }, 20);
+
+                const closeModal = (result) => {
+                    content.classList.remove('scale-100', 'opacity-100');
+                    content.classList.add('scale-95', 'opacity-0');
+                    setTimeout(() => {
+                        modal.classList.add('hidden');
+                        if (activeDeleteModalResolver) {
+                            activeDeleteModalResolver(result);
+                            activeDeleteModalResolver = null;
+                        }
+                    }, 200);
+                };
+
+                document.getElementById('deleteModalCancelBtn').onclick = () => closeModal(false);
+                document.getElementById('deleteModalConfirmBtn').onclick = () => {
+                    if (requireMatch && inputEl.value.trim() !== requireMatch) {
+                        inputError.classList.remove('hidden');
+                        inputEl.classList.add('border-red-500');
+                        inputEl.focus();
+                        return;
+                    }
+                    closeModal(true);
+                };
+            });
+        };
+
+        const esc = (v) => String(v == null ? '' : v)
+            .replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+        let availableDomains = [];
+        let allowedCapacities = [10, 20, 30, 40];
+
+        const fetchAdmins = async () => {
+            try {
+                const res = await fetch('/api/admin/proctors', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (!res.ok) {
+                    console.error('Failed to load proctors');
+                    return;
+                }
+
+                const data = await res.json();
+                availableDomains = data.availableDomains || [];
+                allowedCapacities = data.allowedCapacities || allowedCapacities;
+                const proctors = data.proctors || [];
+
+                const unassignedEl = document.getElementById('unassignedStudents');
+                if (unassignedEl) unassignedEl.innerText = data.unassignedStudents ?? 0;
+
+                const tbody = document.getElementById('adminsTableBody');
+                tbody.innerHTML = '';
+                if (proctors.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="5" class="px-6 py-6 text-center text-xs text-zinc-500">No invited admins found.</td></tr>`;
+                    return;
+                }
+
+                proctors.forEach(admin => {
+                    const safeUser = esc(admin.username);
+                    const held = new Set(admin.domains || []);
+
+                    const domainChips = availableDomains.map(d => {
+                        const on = held.has(d);
+                        return `<button type="button"
+                            onclick="toggleDomain(this)"
+                            data-domain="${esc(d)}"
+                            data-on="${on}"
+                            class="domain-chip px-2 py-0.5 rounded-md border text-[10px] font-bold transition cursor-pointer ${
+                                on ? 'bg-blue-500/15 border-blue-500/40 text-blue-300'
+                                   : 'bg-[#14141a] border-[#272733] text-zinc-500 hover:text-zinc-300'}">${esc(d)}</button>`;
+                    }).join('');
+
+                    const capOptions = allowedCapacities.map(c =>
+                        `<option value="${c}" ${Number(admin.capacity) === c ? 'selected' : ''}>${c} students</option>`).join('');
+
+                    const tr = document.createElement('tr');
+                    tr.className = "hover:bg-[#14141c] transition-colors border-b border-[#1f1f28]";
+                    tr.dataset.username = admin.username;
+                    tr.innerHTML = `
+                        <td class="px-6 py-3.5 text-white font-medium">
+                            <div class="flex items-center space-x-2.5">
+                                <div class="w-6 h-6 rounded-full bg-purple-900/40 text-purple-300 flex items-center justify-center text-[10px] font-bold">@</div>
+                                <span>${esc(admin.email)}</span>
+                            </div>
+                            ${admin.configured ? '' : '<div class="text-[10px] text-amber-400 font-semibold mt-1 ml-8.5">Not assigned — proctors nobody</div>'}
+                        </td>
+                        <td class="px-6 py-3.5">
+                            <div class="flex flex-wrap gap-1.5 max-w-[260px]">${domainChips}</div>
+                        </td>
+                        <td class="px-6 py-3.5">
+                            <select class="capacity-select premium-input rounded-lg px-2 py-1 text-xs font-semibold cursor-pointer">
+                                <option value="0" ${!admin.capacity ? 'selected' : ''}>Not set</option>
+                                ${capOptions}
+                            </select>
+                        </td>
+                        <td class="px-6 py-3.5">
+                            <span class="font-mono text-xs font-bold ${Number(admin.liveLoad) > 0 ? 'text-emerald-400' : 'text-zinc-500'}">${Number(admin.liveLoad)}</span>
+                            <span class="text-zinc-600 text-xs font-mono"> / ${Number(admin.capacity) || 0}</span>
+                        </td>
+                        <td class="px-6 py-3.5 text-right whitespace-nowrap">
+                            <button onclick="saveScope('${safeUser}', this)" class="text-blue-300 hover:text-blue-200 text-xs font-bold transition px-3 py-1.5 rounded-lg bg-blue-950/30 hover:bg-blue-900/50 border border-blue-900/40 cursor-pointer mr-1.5">
+                                Save
+                            </button>
+                            <button onclick="deleteAdmin('${safeUser}')" class="text-red-400 hover:text-red-300 text-xs font-bold transition px-3 py-1.5 rounded-lg bg-red-950/30 hover:bg-red-900/50 border border-red-900/40 cursor-pointer">
+                                Revoke
+                            </button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            } catch (err) {
+                console.error("Error fetching admins", err);
+            }
+        };
+
+        window.toggleDomain = (btn) => {
+            const on = btn.dataset.on !== 'true';
+            btn.dataset.on = String(on);
+            btn.className = `domain-chip px-2 py-0.5 rounded-md border text-[10px] font-bold transition cursor-pointer ${
+                on ? 'bg-blue-500/15 border-blue-500/40 text-blue-300'
+                   : 'bg-[#14141a] border-[#272733] text-zinc-500 hover:text-zinc-300'}`;
+        };
+
+        window.saveScope = async (username, btn) => {
+            const row = btn.closest('tr');
+            const domains = Array.from(row.querySelectorAll('.domain-chip'))
+                .filter(c => c.dataset.on === 'true')
+                .map(c => c.dataset.domain);
+            const capacity = Number(row.querySelector('.capacity-select').value);
+
+            if (domains.length === 0) {
+                showToast('Select at least one domain for this proctor.', 'error');
+                return;
+            }
+            if (!capacity) {
+                showToast('Choose how many students this proctor can handle.', 'error');
+                return;
+            }
+
+            btn.disabled = true;
+            try {
+                const res = await fetch(`/api/admin/proctors/${encodeURIComponent(username)}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify({ domains, capacity })
+                });
+                const data = await res.json().catch(() => ({}));
+
+                if (!res.ok) {
+                    showToast(data.error || 'Could not save the proctoring scope.', 'error');
+                    return;
+                }
+                showToast(`Assigned ${domains.join(', ')} · up to ${capacity} students.`);
+                fetchAdmins();
+            } catch (e) {
+                showToast('Connection error while saving the scope.', 'error');
+            } finally {
+                btn.disabled = false;
+            }
+        };
+
+        const addSingleAdmin = async (e) => {
+            e.preventDefault();
+            const emailInput = document.getElementById('singleAdminEmail');
+            const email = emailInput.value.trim();
+            if (!email) return;
+
+            const btn = document.getElementById('singleAdminBtn');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = `<span class="animate-spin text-lg">↻</span><span>Inviting...</span>`;
+            btn.disabled = true;
+
+            try {
+                const res = await fetch('/api/admin/admins', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}` 
+                    },
+                    body: JSON.stringify({ email })
+                });
+                
+                if (res.ok) {
+                    showToast(`Successfully invited ${email}`, "success");
+                    emailInput.value = '';
+                    fetchAdmins();
+                } else {
+                    const data = await res.json();
+                    showToast(data.error || "Failed to invite admin", "error");
+                }
+            } catch (err) {
+                showToast("Connection error", "error");
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        };
+
+        const deleteAdmin = async (username) => {
+            const confirmed = await showDeleteModal({
+                title: "Revoke Admin Access",
+                badge: "REVOKE ACCESS",
+                message: `Are you sure you want to revoke administrative access for ${username}? They will immediately lose access to the portal.`,
+                highlight: `Admin Account: ${username}`,
+                confirmText: "Revoke Access"
+            });
+            if (!confirmed) return;
+            
+            try {
+                const res = await fetch(`/api/admin/admins/${username}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                if (res.ok) {
+                    showToast("Admin access revoked successfully", "success");
+                    fetchAdmins();
+                } else {
+                    const data = await res.json();
+                    showToast(data.error || "Failed to delete admin", "error");
+                }
+            } catch (err) {
+                showToast("Connection error", "error");
+            }
+        };
+
+        const downloadAdminTemplate = () => {
+            window.location.href = '/api/admin/admins/template';
+        };
+
+        const uploadAdmins = async (e) => {
+            e.preventDefault();
+            const fileInput = document.getElementById('adminCsvFile');
+            if (!fileInput.files[0]) return;
+
+            const btn = document.getElementById('uploadAdminsBtn');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = `<span class="animate-spin text-lg">↻</span><span>Processing...</span>`;
+            btn.disabled = true;
+
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+
+            try {
+                const res = await fetch('/api/admin/upload-admins', {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` },
+                    body: formData
+                });
+                const data = await res.json();
+                
+                if (res.ok) {
+                    showToast(`Successfully created ${data.created} admins! Invitations sent.`, "success");
+                    if (data.failed > 0) {
+                        setTimeout(() => showToast(`${data.failed} failed: ${data.failedEmails.join(', ')}`, "error"), 2000);
+                    }
+                    fileInput.value = '';
+                    fetchAdmins();
+                } else {
+                    showToast(data.error || "Upload failed", "error");
+                }
+            } catch (err) {
+                showToast("Connection error", "error");
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        };
+
+        const logout = () => {
+            localStorage.clear();
+            window.location.href = '/adminlogin';
+        };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            fetch('/api/admin/me', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            })
+            .then(res => res.ok ? res.json() : null)
+            .then(data => {
+                if (data && data.email) {
+                    localStorage.setItem('admin_email', data.email);
+                    document.getElementById('sidebarUserEmail').innerText = data.email;
+                }
+            })
+            .catch(() => {});
+
+            fetchAdmins();
+        });
+    </script>
+</body>
+</html>

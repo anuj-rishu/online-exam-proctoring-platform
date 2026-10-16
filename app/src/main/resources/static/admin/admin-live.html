@@ -1,0 +1,1084 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>Live Proctoring | Admin Portal | SRM Insider</title>
+    <link rel="icon" type="image/x-icon" href="/icons/favicon.ico">
+    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192x192.png">
+    <link rel="apple-touch-icon" href="/icons/icon-192x192.png">
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="description" content="Monitor live student webcams and proctoring activity in real time.">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="/js/safe-dom.js"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        dark: {
+                            bg: '#000000',
+                            card: '#0f0f13',
+                            sidebar: '#0a0a0e',
+                            header: '#0a0a0d',
+                            border: '#1f1f28',
+                            input: '#14141a',
+                            inputBorder: '#272733',
+                            hover: '#16161e'
+                        }
+                    }
+                }
+            }
+        };
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { 
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
+            background-color: #000000;
+            color: #ffffff;
+        }
+        .font-mono { font-family: 'JetBrains Mono', monospace; }
+
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #08080a; }
+        ::-webkit-scrollbar-thumb { background: #22222c; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #3b3b4d; }
+
+        .premium-card {
+            background-color: #0f0f13;
+            border: 1px solid #1f1f28;
+            box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.6);
+        }
+        .premium-input {
+            background-color: #14141a !important;
+            border-color: #272733 !important;
+            color: #ffffff !important;
+        }
+        .premium-input:focus {
+            border-color: #3b82f6 !important;
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+        }
+
+        .snapshot-card {
+            transition: all 0.2s ease;
+            background-color: #0f0f13;
+            border-color: #1f1f28;
+        }
+        .snapshot-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 30px rgba(0,0,0,0.7);
+            border-color: #3b82f6;
+        }
+
+        .nav-item {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .nav-item.active {
+            background: linear-gradient(90deg, rgba(59, 130, 246, 0.15) 0%, rgba(59, 130, 246, 0.05) 100%);
+            color: #60a5fa;
+            border-left: 3px solid #3b82f6;
+            font-weight: 600;
+        }
+        .nav-item:not(.active):hover {
+            background-color: #16161e;
+            color: #f4f4f5;
+        }
+
+        @keyframes livePulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.4; transform: scale(1.15); }
+        }
+        .live-dot {
+            animation: livePulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        .snapshot-img { image-rendering: auto; }
+    </style>
+</head>
+<body class="min-h-screen flex bg-black text-white antialiased overflow-x-hidden">
+
+    <div id="toastContainer" class="fixed top-5 right-5 z-[70] flex flex-col space-y-3 pointer-events-none max-w-sm w-full px-4 sm:px-0"></div>
+
+    
+    <div id="sidebarBackdrop" onclick="toggleMobileSidebar()" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-40 hidden lg:hidden transition-opacity duration-300"></div>
+
+    
+    
+    
+    <aside id="adminSidebar" class="fixed inset-y-0 left-0 z-50 w-72 bg-dark-sidebar border-r border-dark-border flex flex-col transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out shadow-2xl">
+        
+        
+        <div class="h-20 px-6 border-b border-dark-border flex items-center justify-between">
+            <div class="flex items-center space-x-3.5">
+                <div class="relative">
+                    <img src="/icons/icon-192x192.png" 
+                         alt="Logo" class="w-10 h-10 rounded-xl object-contain shadow-lg ring-1 ring-white/10">
+                    <span class="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-emerald-500 border-2 border-[#0a0a0e] rounded-full"></span>
+                </div>
+                <div>
+                    <h1 class="font-extrabold text-white text-base tracking-tight leading-none">SRM INSIDER</h1>
+                    <div class="flex items-center space-x-1.5 mt-1">
+                        <span id="roleBadge" class="px-1.5 py-0.5 rounded text-[9px] font-extrabold tracking-wider bg-blue-500/10 text-blue-400 border border-blue-500/20 uppercase">
+                            ADMIN
+                        </span>
+                    </div>
+                </div>
+            </div>
+            <button onclick="toggleMobileSidebar()" class="lg:hidden p-1.5 text-zinc-400 hover:text-white rounded-lg hover:bg-zinc-800/50">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+        </div>
+
+        
+        <nav class="flex-1 px-4 py-6 space-y-1.5 overflow-y-auto">
+            <div class="px-3 pb-2 text-[10px] font-extrabold uppercase tracking-wider text-zinc-500">
+                Main Menu
+            </div>
+
+            
+            <a href="/admin/admin.html" class="nav-item w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium text-zinc-400 transition hover:text-white">
+                <div class="flex items-center space-x-3">
+                    <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
+                    <span>Problems Library</span>
+                </div>
+            </a>
+
+            
+            <a href="/admin/admin-add-problem.html" class="nav-item w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium text-zinc-400 transition hover:text-white">
+                <div class="flex items-center space-x-3">
+                    <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    <span>Add Question</span>
+                </div>
+            </a>
+
+            
+            <a href="/admin/admin-submissions.html" class="nav-item w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium text-zinc-400 transition hover:text-white">
+                <div class="flex items-center space-x-3">
+                    <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                    <span>Submissions</span>
+                </div>
+            </a>
+
+            
+            <a href="/admin/admin-live.html" class="nav-item active w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium transition cursor-pointer">
+                <div class="flex items-center space-x-3">
+                    <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                    <span>Live Students</span>
+                </div>
+                <div class="flex items-center space-x-1.5 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500 live-dot"></span>
+                    <span class="text-[10px] font-bold text-emerald-400 uppercase tracking-wider">Live</span>
+                </div>
+            </a>
+
+            
+            <a href="/admin/admin-blocked.html" class="nav-item w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium text-zinc-400 transition hover:text-white">
+                <div class="flex items-center space-x-3">
+                    <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"></path></svg>
+                    <span>Blocked Students</span>
+                </div>
+            </a>
+
+            
+            <div id="navManageAdminsWrapper" class="hidden pt-4">
+                <div class="px-3 pb-2 text-[10px] font-extrabold uppercase tracking-wider text-purple-400/80 flex items-center justify-between">
+                    <span>Administration</span>
+                    <span class="px-1 rounded bg-purple-500/20 text-purple-300 text-[9px] font-bold">SUPER</span>
+                </div>
+                <a href="/admin/admin-plagiarism.html" class="nav-item w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium text-zinc-400 transition hover:text-white">
+                    <div class="flex items-center space-x-3">
+                        <svg class="w-4 h-4 text-amber-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                        <span>Similarity Report</span>
+                    </div>
+                </a>
+                <a href="/admin/admin-admins.html" class="nav-item w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium text-zinc-400 transition hover:text-white">
+                    <div class="flex items-center space-x-3">
+                        <svg class="w-4 h-4 text-purple-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                        <span>Manage Admins</span>
+                    </div>
+                </a>
+                <a href="/admin/admin-students.html" class="nav-item w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium text-zinc-400 transition hover:text-white mt-1">
+                    <div class="flex items-center space-x-3">
+                        <svg class="w-4 h-4 text-emerald-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                        <span>Invite Students</span>
+                    </div>
+                </a>
+            </div>
+        </nav>
+
+        
+        <div class="p-4 border-t border-dark-border bg-[#07070a]">
+            <div class="bg-[#121218] border border-[#20202a] rounded-xl p-3 mb-2 flex items-center justify-between">
+                <div class="flex items-center space-x-2.5 overflow-hidden">
+                    <div id="userAvatar" class="w-8 h-8 rounded-lg bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center text-xs font-black text-white flex-shrink-0 shadow-md">
+                        AD
+                    </div>
+                    <div class="truncate">
+                        <div id="sidebarUserEmail" class="text-xs font-semibold text-zinc-200 truncate">Admin User</div>
+                        <div id="sidebarUserRole" class="text-[10px] text-zinc-400 font-mono">ROLE: ADMIN</div>
+                    </div>
+                </div>
+            </div>
+
+            <button onclick="logout()" class="w-full flex items-center justify-center space-x-1.5 py-2 px-2.5 rounded-lg border border-red-900/40 bg-red-950/20 text-red-400 text-xs font-semibold transition hover:bg-red-900/40 cursor-pointer">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                <span>Logout</span>
+            </button>
+        </div>
+
+    </aside>
+
+    
+    
+    
+    <div class="flex-1 lg:pl-72 flex flex-col min-w-0 min-h-screen bg-black">
+        
+        
+        <header class="h-16 px-6 lg:px-8 bg-dark-header/80 backdrop-blur-md border-b border-dark-border flex items-center justify-between sticky top-0 z-30 flex-shrink-0">
+            <div class="flex items-center space-x-3">
+                <button onclick="toggleMobileSidebar()" class="lg:hidden p-2 rounded-lg bg-[#14141a] border border-[#272733] text-zinc-300 hover:text-white focus:outline-none">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+                </button>
+                <div class="flex items-center space-x-2">
+                    <span class="text-xs text-zinc-500 font-medium">Dashboard /</span>
+                    <span class="text-sm font-bold text-white ml-1">Live Students</span>
+                </div>
+                <span id="connectionStatus" class="text-xs text-emerald-400 font-mono bg-emerald-900/10 px-2.5 py-0.5 rounded-full border border-emerald-900/30 hidden sm:inline-block">● Connected</span>
+            </div>
+
+            
+            <div class="flex items-center space-x-2.5">
+                <select id="filterYear" class="premium-input rounded-xl px-3 py-1.5 text-xs font-semibold cursor-pointer">
+                    <option value="1">Year 1</option>
+                    <option value="2">Year 2</option>
+                    <option value="3">Year 3</option>
+                    <option value="4">Year 4</option>
+                </select>
+                <select id="filterDomain" class="premium-input rounded-xl px-3 py-1.5 text-xs font-semibold cursor-pointer hidden sm:block">
+                    <option value="Web Dev">Web Dev</option>
+                    <option value="AIML">AIML</option>
+                    <option value="Cloud">Cloud</option>
+                    <option value="App Dev">App Dev</option>
+                </select>
+                <button onclick="sendFilterUpdate()" class="bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold px-3 py-1.5 rounded-xl shadow transition active:scale-[0.98] cursor-pointer">
+                    Filter
+                </button>
+
+                <div class="w-px h-6 bg-[#272733]"></div>
+                
+                <button id="globalMicBtn" onclick="toggleGlobalMic()" class="bg-[#14141a] hover:bg-[#1f1f28] border border-[#272733] text-zinc-300 text-xs font-semibold px-3 py-1.5 rounded-xl transition flex items-center gap-1.5 active:scale-[0.98] cursor-pointer">
+                    <span id="globalMicIcon">🔇</span>
+                    <span id="globalMicText" class="hidden sm:inline">Mic Off</span>
+                </button>
+
+                <div class="w-px h-6 bg-[#272733]"></div>
+
+                <a href="/admin/admin.html" class="hidden sm:flex items-center space-x-1.5 px-3 py-1.5 rounded-lg border border-[#272733] bg-[#14141a] text-zinc-300 text-xs font-semibold hover:bg-[#1f1f28] transition">
+                    <svg class="w-3.5 h-3.5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
+                    <span>Problems</span>
+                </a>
+            </div>
+        </header>
+
+        
+        <main class="flex-1 py-8 px-6 lg:px-8 max-w-7xl w-full mx-auto space-y-6 pb-16">
+
+            <div id="scopeBanner" class="hidden flex items-center gap-2.5 px-4 py-2.5 rounded-xl bg-blue-500/5 border border-blue-500/20 text-blue-300 text-xs font-semibold">
+                <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <span id="scopeBannerText">Loading your proctoring scope…</span>
+            </div>
+
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gradient-to-r from-[#121218] via-[#0f0f15] to-[#0a0a0f] p-6 rounded-2xl border border-[#1f1f28]">
+                <div>
+                    <div class="flex items-center space-x-2">
+                        <h2 class="text-2xl font-extrabold text-white tracking-tight">Live Student Proctoring</h2>
+                        <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-red-500/10 text-red-400 border border-red-500/20 uppercase">ACTIVE</span>
+                    </div>
+                    <p class="text-xs text-zinc-400 mt-1">Real-time student monitoring. Click any student camera snapshot to establish on-demand 2-way video & voice.</p>
+                </div>
+                <div class="flex items-center gap-3">
+                    <span id="studentCount" class="bg-[#14141a] border border-[#272733] text-blue-400 text-xs font-bold px-3.5 py-2 rounded-xl font-mono">0 Students Active</span>
+                    <div class="text-xs text-zinc-400 font-mono bg-[#14141a] px-3.5 py-2 rounded-xl border border-[#272733]">
+                        <span id="displayCountIndicator">Showing 0</span>
+                    </div>
+                </div>
+            </div>
+
+            <div id="studentGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 sm:gap-6">
+                
+            </div>
+
+            <div id="loadingIndicator" class="p-8 text-center text-zinc-500 text-xs font-mono hidden">
+                <svg class="animate-spin h-5 w-5 mx-auto mb-2 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                Loading more...
+            </div>
+
+        </main>
+
+
+
+    </div>
+
+    
+    
+    
+    <div id="liveModal" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-2 sm:p-4 backdrop-blur-sm">
+        <div class="premium-card rounded-2xl w-full max-w-[1400px] overflow-hidden flex flex-col max-h-[96vh]">
+            <div class="flex justify-between items-center px-6 py-4 border-b border-[#1f1f28] bg-[#121218]">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center justify-center text-red-500">
+                        <span class="w-2.5 h-2.5 bg-red-500 rounded-full live-dot shadow-[0_0_8px_rgba(239,68,68,0.8)]"></span>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-lg text-white">Live Student Proctoring Feed</h3>
+                        <p id="liveStudentName" class="text-xs text-zinc-400 font-mono mt-0.5">Student ID</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button id="viewIdentityBtn" onclick="toggleIdentity()" class="bg-indigo-900/30 border border-indigo-900/50 hover:bg-indigo-900/60 text-indigo-300 text-xs font-semibold px-4 py-2 rounded-xl transition cursor-pointer">🪪 Identity</button>
+                    <button id="talkBtn" class="bg-[#14141a] border border-[#272733] hover:bg-[#1f1f28] text-zinc-300 text-xs font-semibold px-4 py-2 rounded-xl transition cursor-pointer">🎙 Talk</button>
+                    <button onclick="stopLiveView()" class="bg-red-950/30 border border-red-900/50 hover:bg-red-900/50 text-red-400 text-xs font-semibold px-4 py-2 rounded-xl transition flex items-center gap-1 cursor-pointer">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                        Close
+                    </button>
+                </div>
+            </div>
+            
+            
+            <div id="identitySection" class="hidden bg-[#0a0a0f] border-b border-[#1f1f28] p-4">
+                <div id="identityLoading" class="text-center text-zinc-500 text-xs hidden py-4">Loading Identity Photos...</div>
+                <div id="identityError" class="text-center text-red-400 text-xs hidden py-4">Failed to load identity photos.</div>
+                <div id="identityPhotos" class="flex gap-4 h-64 hidden">
+                    <div class="flex-1 bg-[#14141a] rounded-xl overflow-hidden border border-[#1f1f28] relative group">
+                        <div class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                            <span class="text-xs text-white font-bold bg-black/80 px-2 py-1 rounded">Captured Face</span>
+                        </div>
+                        <img id="adminFacePhoto" class="w-full h-full object-contain transform scale-x-[-1]" alt="Face Photo">
+                    </div>
+                    <div class="flex-1 bg-[#14141a] rounded-xl overflow-hidden border border-[#1f1f28] relative group">
+                        <div class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                            <span class="text-xs text-white font-bold bg-black/80 px-2 py-1 rounded">ID Card</span>
+                        </div>
+                        <img id="adminIdPhoto" class="w-full h-full object-contain" alt="ID Card Photo">
+                    </div>
+                </div>
+            </div>
+
+
+            <div class="bg-black relative flex-1 min-h-[420px] max-h-[72vh]">
+                <video id="liveVideo" autoplay playsinline
+                       class="w-full h-full object-contain transform scale-x-[-1] absolute inset-0"></video>
+            </div>
+            
+            <div class="px-6 py-4 border-t border-[#1f1f28] bg-[#121218] flex flex-col sm:flex-row sm:items-center gap-3">
+                <div class="text-xs font-bold uppercase tracking-wider text-zinc-400 shrink-0">Issue Warning</div>
+                <div class="flex items-center gap-2 flex-1">
+                    <select id="warningSelect" class="flex-1 premium-input rounded-xl px-3 py-2 text-xs cursor-pointer">
+                        <option value="Please look at the screen.">Please look at the screen.</option>
+                        <option value="Multiple faces detected in camera.">Multiple faces detected in camera.</option>
+                        <option value="No face detected in camera.">No face detected in camera.</option>
+                        <option value="Audio anomaly detected. Please remain quiet.">Audio anomaly detected. Please remain quiet.</option>
+                        <option value="Please do not switch tabs or minimize the window.">Please do not switch tabs or minimize the window.</option>
+                        <option value="Use of mobile phone or external device detected.">Use of mobile phone or external device detected.</option>
+                        <option value="Please ensure your face is well lit.">Please ensure your face is well lit.</option>
+                        <option value="Talking detected. Please mute your surroundings.">Talking detected. Please mute your surroundings.</option>
+                        <option value="Suspicious eye movement detected.">Suspicious eye movement detected.</option>
+                        <option value="Final Warning: Test will be terminated if violations continue.">Final Warning: Test will be terminated if violations continue.</option>
+                    </select>
+                    <button onclick="sendWarning()" class="bg-yellow-600 hover:bg-yellow-500 text-white text-xs font-bold px-4 py-2 rounded-xl shadow transition active:scale-[0.98] whitespace-nowrap cursor-pointer">
+                        ⚠️ Send
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    
+    
+    
+    <div id="unblockModal" class="hidden fixed inset-0 bg-black/90 z-[60] flex items-center justify-center p-4 sm:p-8 backdrop-blur-md">
+        <div class="premium-card rounded-2xl border border-red-500/30 max-w-lg w-full overflow-hidden shadow-[0_0_40px_rgba(239,68,68,0.15)]">
+            <div class="flex items-center gap-3 px-6 py-4 border-b border-[#1f1f28] bg-[#121218]">
+                <div class="w-10 h-10 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center justify-center text-red-500 text-lg">🚫</div>
+                <div>
+                    <h3 class="font-bold text-lg text-white">Unblock Request</h3>
+                    <p id="unblockStudentName" class="text-xs text-zinc-400 font-mono mt-0.5">Student ID</p>
+                </div>
+            </div>
+            <div class="p-6">
+                <p class="text-sm text-zinc-300 mb-4 leading-relaxed">This student has been automatically blocked due to violations. Review the incident report before unlocking their session.</p>
+                <div id="anomalyReportContainer" class="bg-[#0c0c10] rounded-xl border border-[#1f1f28] p-4 max-h-60 overflow-y-auto font-mono text-[11px] sm:text-xs text-zinc-300 space-y-2">
+                    
+                </div>
+            </div>
+            <div class="px-6 py-4 border-t border-[#1f1f28] bg-[#121218] flex justify-end gap-3">
+                <button onclick="rejectUnblock()" class="bg-[#14141a] hover:bg-[#1f1f28] border border-[#272733] text-zinc-300 text-xs font-semibold px-4 py-2 rounded-xl transition active:scale-[0.98]">Keep Blocked</button>
+                <button id="approveUnblockBtn" onclick="approveUnblock()" class="bg-red-600 hover:bg-red-500 text-white text-xs font-bold px-4 py-2 rounded-xl shadow-lg shadow-red-900/20 transition active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed">Approve Unblock</button>
+            </div>
+        </div>
+    </div>
+
+    
+    
+    
+    <script>
+        const token = localStorage.getItem('token');
+        const role = localStorage.getItem('role') || 'ADMIN';
+        if (!token || (role !== 'ADMIN' && role !== 'SUPER_ADMIN')) {
+            window.location.href = '/admin/adminlogin.html';
+        }
+
+        const logout = () => {
+            localStorage.clear();
+            window.location.href = '/admin/adminlogin.html';
+        };
+
+        // STUN alone often can't establish a direct path between two real
+        // networks (unlike on a LAN during dev) — this fetches a TURN relay
+        // too, if one has been configured server-side. Falls back to the
+        // STUN-only default below if the request fails or none is set.
+        let iceServers = [{ urls: 'stun:stun.l.google.com:19302' }];
+        (async () => {
+            try {
+                const res = await fetch('/api/webrtc/ice-servers', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    if (Array.isArray(data.iceServers) && data.iceServers.length) {
+                        iceServers = data.iceServers;
+                    }
+                }
+            } catch (e) {
+                // Keep the STUN-only default.
+            }
+        })();
+
+        const toggleMobileSidebar = () => {
+            const sidebar = document.getElementById('adminSidebar');
+            const backdrop = document.getElementById('sidebarBackdrop');
+            if (sidebar.classList.contains('-translate-x-full')) {
+                sidebar.classList.remove('-translate-x-full');
+                backdrop.classList.remove('hidden');
+            } else {
+                sidebar.classList.add('-translate-x-full');
+                backdrop.classList.add('hidden');
+            }
+        };
+
+        const showToast = (message, type = 'success') => {
+            const container = document.getElementById('toastContainer');
+            if (!container) return;
+            const toast = document.createElement('div');
+            toast.className = `pointer-events-auto flex items-center space-x-3 p-4 rounded-xl shadow-2xl border transition-all duration-300 transform translate-y-[-12px] opacity-0 ${
+                type === 'error'
+                    ? 'bg-[#1a0a0a] border-red-800/90 text-red-200'
+                    : type === 'alert'
+                        ? 'bg-[#1a140a] border-amber-800/90 text-amber-200'
+                        : 'bg-[#0a1a0f] border-emerald-800/90 text-emerald-200'
+            }`;
+            const icon = type === 'error'
+                ? `<div class="w-8 h-8 rounded-lg bg-red-950/80 border border-red-800/70 flex items-center justify-center flex-shrink-0 text-red-400 font-bold text-sm">⚠️</div>`
+                : type === 'alert'
+                    ? `<div class="w-8 h-8 rounded-lg bg-amber-950/80 border border-amber-800/70 flex items-center justify-center flex-shrink-0 text-amber-400 font-bold text-sm">🔔</div>`
+                    : `<div class="w-8 h-8 rounded-lg bg-emerald-950/80 border border-emerald-800/70 flex items-center justify-center flex-shrink-0 text-emerald-400 font-bold text-sm">✓</div>`;
+
+            toast.innerHTML = `
+                ${icon}
+                <div class="flex-1 text-xs font-semibold leading-relaxed">${message}</div>
+                <button onclick="this.parentElement.remove()" class="text-zinc-400 hover:text-white transition p-1 cursor-pointer">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            `;
+            container.appendChild(toast);
+            requestAnimationFrame(() => {
+                toast.classList.remove('translate-y-[-12px]', 'opacity-0');
+                toast.classList.add('translate-y-0', 'opacity-100');
+            });
+            setTimeout(() => {
+                toast.classList.remove('translate-y-0', 'opacity-100');
+                toast.classList.add('translate-y-[-12px]', 'opacity-0');
+                setTimeout(() => toast.remove(), 350);
+            }, 6000);
+        };
+
+        // Short two-tone notification chime — no external audio file needed.
+        const playBell = () => {
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const now = ctx.currentTime;
+                [880, 1320].forEach((freq, i) => {
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.value = freq;
+                    gain.gain.setValueAtTime(0.0001, now + i * 0.16);
+                    gain.gain.linearRampToValueAtTime(0.22, now + i * 0.16 + 0.02);
+                    gain.gain.exponentialRampToValueAtTime(0.0001, now + i * 0.16 + 0.35);
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+                    osc.start(now + i * 0.16);
+                    osc.stop(now + i * 0.16 + 0.4);
+                });
+                setTimeout(() => ctx.close(), 900);
+            } catch (e) {
+                console.warn("Could not play notification sound:", e);
+            }
+        };
+
+        // State
+        const students = {};
+        let displayLimit = 24;
+        const LOAD_SIZE = 24;
+        let currentLiveStudentId = null;
+        let currentUnblockStudentId = null;
+        let currentUnblockYear = null;
+        let currentUnblockDomain = null;
+        let livePc = null;
+        let adminMicStream = null;
+        let adminAudioTrack = null;
+        let isTalking = false;
+
+        const grid = document.getElementById('studentGrid');
+
+        // WebSocket connection
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const ws = new WebSocket(`${protocol}//${window.location.host}/ws-signaling?token=${encodeURIComponent(token)}`);
+
+        ws.onopen = async () => {
+            console.log("[Admin] Connected to signaling server");
+            document.getElementById('connectionStatus').innerHTML = '<span class="text-emerald-400">● Connected</span>';
+
+            const savedYear = localStorage.getItem('admin_live_year');
+            if (savedYear) document.getElementById('filterYear').value = savedYear;
+            const savedDomain = localStorage.getItem('admin_live_domain');
+            if (savedDomain) document.getElementById('filterDomain').value = savedDomain;
+
+            const filterYear = document.getElementById('filterYear').value;
+            const filterDomain = document.getElementById('filterDomain').value;
+            ws.send(JSON.stringify({ type: 'join', role: 'admin', filterYear, filterDomain }));
+        };
+
+        ws.onclose = () => {
+            document.getElementById('connectionStatus').innerHTML = '<span class="text-red-400">● Disconnected</span>';
+        };
+
+        ws.onmessage = async (event) => {
+            const data = JSON.parse(event.data);
+
+            if (data.type === 'snapshot' && data.studentId) {
+                const sid = data.studentId;
+                if (!students[sid]) {
+                    students[sid] = { snapshot: null, timestamp: 0, helpRequested: false };
+                }
+                students[sid].snapshot = data.snapshot;
+                students[sid].timestamp = data.timestamp || Date.now();
+
+                updateStudentCount();
+                renderGrid();
+                return;
+            }
+
+            if (data.type === 'help_request' && data.studentId) {
+                const sid = data.studentId;
+                if (!students[sid]) {
+                    students[sid] = { snapshot: null, timestamp: Date.now(), helpRequested: true };
+                } else {
+                    students[sid].helpRequested = true;
+                }
+                renderGrid();
+                return;
+            }
+
+            if (data.type === 'proctor_alert' && data.studentId) {
+                const sid = data.studentId;
+                if (!students[sid]) {
+                    students[sid] = { snapshot: null, timestamp: Date.now() };
+                }
+                if (data.alertType === 'SCREENSHOT') {
+                    students[sid].screenshots = (students[sid].screenshots || 0) + 1;
+                    renderGrid();
+                }
+                playBell();
+                const safeId = String(sid).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+                const safeMsg = String(data.message || 'Proctoring alert').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+                showToast(`📸 <strong>${safeId}</strong> — ${safeMsg}`, 'alert');
+                return;
+            }
+
+            if (data.type === 'unblock_request' && data.studentId) {
+                currentUnblockStudentId = data.studentId;
+                currentUnblockYear = data.year;
+                currentUnblockDomain = data.domain;
+                document.getElementById('unblockStudentName').innerText = data.studentId;
+                loadAnomalyReport(data.studentId);
+                document.getElementById('unblockModal').classList.remove('hidden');
+                playBell();
+                const safeStudentId = String(data.studentId).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+                showToast(`<strong>${safeStudentId}</strong> requested to be unblocked.`, 'alert');
+                return;
+            }
+
+            if (data.type === 'offer' && data.studentId === currentLiveStudentId && livePc) {
+                await livePc.setRemoteDescription(new RTCSessionDescription(data.offer));
+                const answer = await livePc.createAnswer();
+                await livePc.setLocalDescription(answer);
+                ws.send(JSON.stringify({ type: 'answer', answer, target: currentLiveStudentId }));
+            }
+
+            if (data.type === 'ice-candidate' && data.studentId === currentLiveStudentId && livePc) {
+                try {
+                    await livePc.addIceCandidate(new RTCIceCandidate(data.candidate));
+                } catch (e) {
+                    console.error("ICE error:", e);
+                }
+            }
+        };
+
+        const renderGrid = () => {
+            const allIds = Object.keys(students).sort();
+            const visibleIds = allIds.slice(0, displayLimit);
+
+            document.getElementById('displayCountIndicator').innerText = `Showing ${visibleIds.length} of ${allIds.length}`;
+
+            while (grid.children.length > visibleIds.length) {
+                grid.removeChild(grid.lastChild);
+            }
+
+            visibleIds.forEach((sid, idx) => {
+                const s = students[sid];
+                const ago = Math.floor((Date.now() - s.timestamp) / 1000);
+                const staleClass = ago > 60 ? 'border-red-600/50' : ago > 35 ? 'border-yellow-500/50' : 'border-emerald-500/30';
+                const helpBadge = s.helpRequested ? `<div class="absolute top-2 left-2 bg-red-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full animate-bounce shadow-[0_0_8px_rgba(239,68,68,0.6)] z-10 flex items-center gap-1">✋ Help</div>` : '';
+                const shotBadge = s.screenshots ? `<div class="absolute top-2 right-2 bg-red-700 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-[0_0_8px_rgba(185,28,28,0.6)] z-10 flex items-center gap-1" title="Screenshot attempts detected">📸 ${s.screenshots}</div>` : '';
+
+                let card = grid.children[idx];
+                if (!card) {
+                    card = document.createElement('div');
+                    card.onclick = () => startLiveView(sid);
+                    grid.appendChild(card);
+                }
+
+                card.className = `snapshot-card rounded-2xl overflow-hidden border-2 ${staleClass} cursor-pointer relative flex flex-col group`;
+                card.innerHTML = `
+                    ${helpBadge}
+                    ${shotBadge}
+                    <div class="aspect-video bg-[#0c0c10] relative border-b border-[#1f1f28]">
+                        ${s.snapshot
+                            ? `<img src="${s.snapshot}" class="snapshot-img w-full h-full object-contain transform scale-x-[-1]" alt="${escapeHtml(sid)}">`
+                            : `<div class="flex items-center justify-center h-full text-zinc-700 text-xs font-medium font-mono">No Signal...</div>`
+                        }
+                        <div class="absolute bottom-2 right-2 bg-black/80 text-[10px] text-zinc-300 px-2 py-0.5 rounded-md font-mono shadow-sm backdrop-blur-sm">${ago}s ago</div>
+                    </div>
+                    <div class="px-3.5 py-2.5 flex justify-between items-center bg-[#121218] group-hover:bg-[#181822] transition-colors">
+                        <div class="text-xs font-bold text-white truncate max-w-[110px]">${escapeHtml(sid)}</div>
+                        <div class="text-[10px] text-blue-400 font-semibold group-hover:text-blue-300 transition flex items-center gap-1">
+                            <span class="w-1.5 h-1.5 rounded-full bg-blue-500 group-hover:animate-ping"></span>
+                            Live
+                        </div>
+                    </div>
+                `;
+                card.onclick = () => startLiveView(sid);
+            });
+
+            const loader = document.getElementById('loadingIndicator');
+            if (loader) {
+                loader.style.display = displayLimit >= allIds.length ? 'none' : 'block';
+            }
+        };
+
+        // The server only relays students assigned to this proctor, but the
+        // roster also drives the header counts and tells the admin when they
+        // have no scope configured yet. Polling it doubles as the lease
+        // heartbeat that keeps the claims from being handed to someone else.
+        let myRoster = { configured: true, capacity: 0, domains: [], assigned: 0 };
+
+        const refreshRoster = async () => {
+            try {
+                const res = await fetch('/api/admin/proctors/me/roster', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (!res.ok) return;
+
+                const data = await res.json();
+                myRoster = {
+                    configured: !!data.configured,
+                    capacity: Number(data.capacity) || 0,
+                    domains: data.domains || [],
+                    assigned: (data.assignedUsernames || []).length
+                };
+
+                const banner = document.getElementById('scopeBanner');
+                const text = document.getElementById('scopeBannerText');
+                if (banner && text) {
+                    if (!myRoster.configured || myRoster.capacity === 0 || myRoster.domains.length === 0) {
+                        text.innerText = 'No proctoring scope assigned yet. Ask a super admin to assign your domains and student limit.';
+                        banner.classList.remove('hidden');
+                    } else {
+                        text.innerText = `Proctoring ${myRoster.domains.join(', ')} — ${myRoster.assigned} of ${myRoster.capacity} students assigned to you.`;
+                        banner.classList.remove('hidden');
+                    }
+                }
+            } catch (e) {
+                // A failed heartbeat is not fatal; the next tick retries.
+            }
+        };
+
+        const updateStudentCount = () => {
+            document.getElementById('studentCount').innerText = `${Object.keys(students).length} Students Active`;
+        };
+
+        const loadAnomalyReport = async (studentId) => {
+            const container = document.getElementById('anomalyReportContainer');
+            container.innerHTML = '<div class="text-center text-zinc-500 py-4 font-sans">Loading report...</div>';
+            try {
+                const res = await fetch(`/api/admin/submissions/${studentId}/session`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (res.ok) {
+                    const sessionData = await res.json();
+                    const anomalies = sessionData.anomalies || [];
+
+                    const chip = (label, value, tone) =>
+                        `<span class="px-2 py-0.5 rounded-md border text-[10px] font-bold ${tone}">${label}: ${value}</span>`;
+
+                    const summary = `<div class="flex flex-wrap gap-1.5 mb-3 pb-3 border-b border-[#1f1f28] font-sans">
+                        ${chip('Screenshots', sessionData.screenshotCount || 0,
+                               (sessionData.screenshotCount || 0) > 0
+                                   ? 'bg-red-950/50 border-red-800 text-red-300'
+                                   : 'bg-[#14141a] border-[#272733] text-zinc-400')}
+                        ${chip('Tab switches', sessionData.tabSwitchCount || 0,
+                               (sessionData.tabSwitchCount || 0) > 0
+                                   ? 'bg-amber-950/50 border-amber-800 text-amber-300'
+                                   : 'bg-[#14141a] border-[#272733] text-zinc-400')}
+                        ${chip('Total events', anomalies.length, 'bg-[#14141a] border-[#272733] text-zinc-400')}
+                    </div>`;
+
+                    if (anomalies.length === 0) {
+                        container.innerHTML = summary + '<div class="text-emerald-400 text-center font-sans">No anomalies recorded.</div>';
+                    } else {
+                        container.innerHTML = summary + anomalies.map(a => {
+                            const timeStr = new Date(a.timestamp).toLocaleTimeString();
+                            const isShot = a.type === 'SCREENSHOT';
+                            return `<div class="border-b border-[#1f1f28] pb-2 last:border-0 last:pb-0"><span class="text-zinc-500">[${timeStr}]</span> <span class="${isShot ? 'text-red-400' : 'text-yellow-400'} font-bold">${isShot ? '📸 ' : ''}${a.type}</span>: <span class="text-zinc-300">${a.description}</span></div>`;
+                        }).join('');
+                    }
+                } else {
+                    container.innerHTML = '<div class="text-red-400 text-center font-sans">Failed to load report.</div>';
+                }
+            } catch (e) {
+                container.innerHTML = '<div class="text-red-400 text-center font-sans">Failed to load report.</div>';
+            }
+        };
+
+        let unblockInFlight = false;
+
+        const closeUnblockModal = () => {
+            document.getElementById('unblockModal').classList.add('hidden');
+            currentUnblockStudentId = null;
+            currentUnblockYear = null;
+            currentUnblockDomain = null;
+        };
+
+        const approveUnblock = async () => {
+            if (unblockInFlight || !currentUnblockStudentId) return;
+            const studentId = currentUnblockStudentId;
+            const btn = document.getElementById('approveUnblockBtn');
+
+            unblockInFlight = true;
+            if (btn) btn.disabled = true;
+
+            try {
+                const res = await fetch('/api/student/session/unblock', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify({ studentId, year: parseInt(currentUnblockYear), domain: currentUnblockDomain })
+                });
+                const data = await res.json().catch(() => ({}));
+
+                if (!res.ok) {
+                    showToast(data.error || `Could not unblock ${studentId}.`, 'error');
+                    closeUnblockModal();
+                    return;
+                }
+
+                if (ws && ws.readyState === WebSocket.OPEN) {
+                    ws.send(JSON.stringify({ type: 'unblock_approved', target: studentId }));
+                }
+                showToast(`Unblocked ${studentId}.`, 'success');
+                closeUnblockModal();
+            } catch (e) {
+                showToast("Connection error — could not unblock the student.", 'error');
+            } finally {
+                unblockInFlight = false;
+                if (btn) btn.disabled = false;
+            }
+        };
+
+        const rejectUnblock = () => {
+            if (!currentUnblockStudentId) return;
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({ type: 'unblock_rejected', target: currentUnblockStudentId }));
+            }
+            closeUnblockModal();
+        };
+
+        const toggleGlobalMic = async () => {
+            const btn = document.getElementById('globalMicBtn');
+            const icon = document.getElementById('globalMicIcon');
+            const text = document.getElementById('globalMicText');
+
+            if (adminMicStream) {
+                adminMicStream.getTracks().forEach(t => t.stop());
+                adminMicStream = null;
+                icon.innerText = '🔇';
+                text.innerText = 'Mic Off';
+                btn.classList.remove('text-emerald-400', 'border-emerald-900/50', 'bg-emerald-950/20');
+                btn.classList.add('text-zinc-300', 'border-[#272733]', 'bg-[#14141a]');
+                
+                if (isTalking) toggleTalk();
+                if (currentLiveStudentId) alert("Mic disabled. Close and reopen current feed to fully apply.");
+            } else {
+                try {
+                    adminMicStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    icon.innerText = '🎙️';
+                    text.innerText = 'Mic Ready';
+                    btn.classList.remove('text-zinc-300', 'border-[#272733]', 'bg-[#14141a]');
+                    btn.classList.add('text-emerald-400', 'border-emerald-900/50', 'bg-emerald-950/20');
+                    if (currentLiveStudentId) alert("Mic enabled. Reopen live feed to start voice transmission.");
+                } catch (e) {
+                    alert("Microphone access denied. Please grant microphone permissions in your browser.");
+                }
+            }
+        };
+
+        const startLiveView = (sid) => {
+            if (currentLiveStudentId) stopLiveView();
+
+            if (students[sid]) {
+                students[sid].helpRequested = false;
+                renderGrid();
+            }
+
+            currentLiveStudentId = sid;
+            document.getElementById('liveStudentName').innerText = sid;
+            document.getElementById('liveModal').classList.remove('hidden');
+
+            livePc = new RTCPeerConnection({ iceServers });
+
+            if (adminMicStream) {
+                const track = adminMicStream.getAudioTracks()[0];
+                if (track) {
+                    adminAudioTrack = track.clone();
+                    adminAudioTrack.enabled = false;
+                    livePc.addTrack(adminAudioTrack, adminMicStream);
+                }
+            }
+
+            livePc.ontrack = (e) => {
+                document.getElementById('liveVideo').srcObject = e.streams[0];
+            };
+
+            livePc.onicecandidate = (e) => {
+                if (e.candidate) {
+                    ws.send(JSON.stringify({ type: 'ice-candidate', candidate: e.candidate, target: sid }));
+                }
+            };
+
+            ws.send(JSON.stringify({ type: 'request_live', target: sid }));
+
+            const talkBtn = document.getElementById('talkBtn');
+            isTalking = false;
+            talkBtn.innerHTML = '🎙 Talk';
+            talkBtn.className = 'bg-[#14141a] border border-[#272733] hover:bg-[#1f1f28] text-zinc-300 text-xs font-semibold px-4 py-2 rounded-xl transition active:scale-[0.98] cursor-pointer';
+            talkBtn.onclick = () => toggleTalk();
+            
+            document.getElementById('identitySection').classList.add('hidden');
+            document.getElementById('viewIdentityBtn').className = 'bg-indigo-900/30 border border-indigo-900/50 hover:bg-indigo-900/60 text-indigo-300 text-xs font-semibold px-4 py-2 rounded-xl transition cursor-pointer';
+        };
+
+        const toggleIdentity = async () => {
+            const section = document.getElementById('identitySection');
+            const btn = document.getElementById('viewIdentityBtn');
+            const loading = document.getElementById('identityLoading');
+            const error = document.getElementById('identityError');
+            const photos = document.getElementById('identityPhotos');
+
+            if (!section.classList.contains('hidden')) {
+                section.classList.add('hidden');
+                btn.classList.remove('bg-indigo-600', 'text-white', 'border-indigo-500');
+                btn.classList.add('bg-indigo-900/30', 'border-indigo-900/50', 'text-indigo-300');
+                return;
+            }
+
+            section.classList.remove('hidden');
+            btn.classList.add('bg-indigo-600', 'text-white', 'border-indigo-500');
+            btn.classList.remove('bg-indigo-900/30', 'border-indigo-900/50', 'text-indigo-300');
+            loading.classList.remove('hidden');
+            error.classList.add('hidden');
+            photos.classList.add('hidden');
+
+            try {
+                const res = await fetch(`/api/admin/submissions/${currentLiveStudentId}/identity`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.facePhotoUrl || data.idCardPhotoUrl) {
+                        document.getElementById('adminFacePhoto').src = data.facePhotoUrl;
+                        document.getElementById('adminIdPhoto').src = data.idCardPhotoUrl;
+                        photos.classList.remove('hidden');
+                    } else {
+                        error.innerText = "No identity photos found for this student.";
+                        error.classList.remove('hidden');
+                    }
+                } else {
+                    error.innerText = "Failed to load photos.";
+                    error.classList.remove('hidden');
+                }
+            } catch (e) {
+                error.innerText = "Network error while loading photos.";
+                error.classList.remove('hidden');
+            } finally {
+                loading.classList.add('hidden');
+            }
+        };
+
+        const stopLiveView = () => {
+            if (currentLiveStudentId) {
+                ws.send(JSON.stringify({ type: 'stop_live', target: currentLiveStudentId }));
+            }
+            if (livePc) { livePc.close(); livePc = null; }
+            if (adminAudioTrack) { adminAudioTrack.stop(); adminAudioTrack = null; }
+            currentLiveStudentId = null;
+            document.getElementById('liveModal').classList.add('hidden');
+            document.getElementById('liveVideo').srcObject = null;
+        };
+
+        const toggleTalk = () => {
+            if (!adminMicStream || !adminAudioTrack) {
+                alert("Please enable your microphone globally from the top bar first, then restart this live feed.");
+                return;
+            }
+
+            isTalking = !isTalking;
+            if (adminAudioTrack) adminAudioTrack.enabled = isTalking;
+
+            const btn = document.getElementById('talkBtn');
+            if (isTalking) {
+                btn.innerHTML = '🔴 Transmitting Voice...';
+                btn.className = 'bg-red-600 hover:bg-red-500 text-white text-xs font-bold px-4 py-2 rounded-xl shadow-lg shadow-red-900/20 transition active:scale-[0.98] animate-pulse cursor-pointer';
+            } else {
+                btn.innerHTML = '🎙 Talk';
+                btn.className = 'bg-[#14141a] border border-[#272733] hover:bg-[#1f1f28] text-zinc-300 text-xs font-semibold px-4 py-2 rounded-xl transition active:scale-[0.98] cursor-pointer';
+            }
+        };
+
+        const sendWarning = () => {
+            if (!currentLiveStudentId) return;
+            const msg = document.getElementById('warningSelect').value;
+            ws.send(JSON.stringify({
+                type: 'admin_warning',
+                target: currentLiveStudentId,
+                message: msg
+            }));
+            
+            const btn = document.querySelector('button[onclick="sendWarning()"]');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '✅ Warning Sent';
+            btn.classList.add('bg-emerald-600', 'hover:bg-emerald-700');
+            btn.classList.remove('bg-yellow-600', 'hover:bg-yellow-700');
+            setTimeout(() => {
+                btn.innerHTML = originalText;
+                btn.classList.remove('bg-emerald-600', 'hover:bg-emerald-700');
+                btn.classList.add('bg-yellow-600', 'hover:bg-yellow-700');
+            }, 2000);
+        };
+
+        const sendFilterUpdate = () => {
+            for (let key in students) delete students[key];
+            displayLimit = LOAD_SIZE;
+            grid.innerHTML = '';
+            updateStudentCount();
+
+            if (currentLiveStudentId) stopLiveView();
+
+            const filterYear = document.getElementById('filterYear').value;
+            const filterDomain = document.getElementById('filterDomain').value;
+            localStorage.setItem('admin_live_year', filterYear);
+            localStorage.setItem('admin_live_domain', filterDomain);
+            ws.send(JSON.stringify({ type: 'update_filter', role: 'admin', filterYear, filterDomain }));
+            ws.send(JSON.stringify({ type: 'join', role: 'admin', filterYear, filterDomain }));
+        };
+
+        setInterval(renderGrid, 5000);
+
+        const observer = new IntersectionObserver((entries) => {
+            if (entries[0].isIntersecting) {
+                const allIds = Object.keys(students);
+                if (displayLimit < allIds.length) {
+                    displayLimit += LOAD_SIZE;
+                    renderGrid();
+                }
+            }
+        }, { rootMargin: '100px' });
+
+        // Claim/renew this proctor's roster well inside the server's lease
+        // window, so an open dashboard never has its students reassigned.
+        refreshRoster();
+        setInterval(refreshRoster, 20000);
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const currentRole = localStorage.getItem('role') || 'ADMIN';
+            let userEmail = localStorage.getItem('admin_email');
+            if (!userEmail || userEmail === 'superadmin@srminsider.in') {
+                userEmail = (currentRole === 'SUPER_ADMIN' ? 'admin@srminsider.in' : (localStorage.getItem('username') || 'admin@srminsider.in'));
+                localStorage.setItem('admin_email', userEmail);
+            }
+            
+            document.getElementById('sidebarUserEmail').innerText = userEmail;
+            document.getElementById('sidebarUserRole').innerText = `ROLE: ${currentRole}`;
+
+            // Fetch verified admin email from backend
+            fetch('/api/admin/me', {
+                headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+            })
+            .then(res => res.ok ? res.json() : null)
+            .then(data => {
+                if (data && data.email) {
+                    localStorage.setItem('admin_email', data.email);
+                    const emailEl = document.getElementById('sidebarUserEmail');
+                    if (emailEl) emailEl.innerText = data.email;
+                }
+            })
+            .catch(() => {});
+            
+            if (currentRole === 'SUPER_ADMIN') {
+                document.getElementById('roleBadge').innerText = 'SUPER ADMIN';
+                document.getElementById('roleBadge').className = 'px-1.5 py-0.5 rounded text-[9px] font-extrabold tracking-wider bg-purple-500/10 text-purple-400 border border-purple-500/20 uppercase';
+                document.getElementById('userAvatar').className = 'w-8 h-8 rounded-lg bg-gradient-to-tr from-purple-600 to-indigo-600 flex items-center justify-center text-xs font-black text-white flex-shrink-0 shadow-md';
+                document.getElementById('userAvatar').innerText = 'SA';
+                document.getElementById('navManageAdminsWrapper').classList.remove('hidden');
+            } else {
+                document.getElementById('roleBadge').innerText = 'ADMIN';
+                document.getElementById('userAvatar').innerText = 'AD';
+            }
+
+            const loader = document.getElementById('loadingIndicator');
+            if (loader) observer.observe(loader);
+        });
+
+        window.onbeforeunload = () => {
+            if (currentLiveStudentId) stopLiveView();
+            ws.close();
+        };
+    </script>
+</body>
+</html>

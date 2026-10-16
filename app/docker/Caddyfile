@@ -1,0 +1,10 @@
+{$DOMAIN} {
+	reverse_proxy app:8080
+
+	# Clears the app's own 20MB multipart cap for identity photos.
+	request_body {
+		max_size 25MB
+	}
+
+	encode gzip
+}

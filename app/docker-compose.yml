@@ -1,0 +1,66 @@
+name: labs
+
+services:
+  app:
+    image: ghcr.io/srm-insider/srm-insider-lab:${APP_VERSION:-latest}
+    restart: unless-stopped
+    depends_on: [mongo, redis]
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ${EXEC_TMPDIR:-/opt/labs/exec}:${EXEC_TMPDIR:-/opt/labs/exec}
+    
+    env_file: [.env]
+    environment:
+      MONGODB_URI: mongodb://mongo:27017/labs_db
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      CORS_ALLOWED_ORIGINS: https://${DOMAIN}
+      EXEC_TMPDIR: ${EXEC_TMPDIR:-/opt/labs/exec}
+      JAVA_OPTS: ${JAVA_OPTS:--Xms2g -Xmx5g -XX:+UseG1GC}
+      TZ: ${TZ:-Asia/Kolkata}
+    expose: ["8080"]
+
+  mongo:
+   
+    image: ${MONGO_IMAGE:-mongo:8}
+    restart: unless-stopped
+    command: ["--wiredTigerCacheSizeGB", "3"]
+    volumes:
+      - mongo-data:/data/db
+    environment:
+      TZ: ${TZ:-Asia/Kolkata}
+
+  redis:
+    image: redis:7
+    restart: unless-stopped
+    command:
+      - redis-server
+      - --maxmemory
+      - 1gb
+    
+      - --maxmemory-policy
+      - noeviction
+      - --appendonly
+      - "yes"
+    volumes:
+      - redis-data:/data
+
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    depends_on: [app]
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./docker/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    environment:
+      DOMAIN: ${DOMAIN}
+
+volumes:
+  mongo-data:
+  redis-data:
+  caddy-data:
+  caddy-config:

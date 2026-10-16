@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>Add Question | SRM Insider Labs</title>
+    <link rel="icon" type="image/x-icon" href="/icons/favicon.ico">
+    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192x192.png">
+    <link rel="apple-touch-icon" href="/icons/icon-192x192.png">
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="description" content="Add MCQ or coding questions to the SRM Insider Labs question bank.">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        dark: {
+                            bg: '#000000',
+                            card: '#0f0f13',
+                            sidebar: '#0a0a0e',
+                            header: '#0a0a0d',
+                            border: '#1f1f28',
+                            hover: '#16161e',
+                            input: '#14141a',
+                            inputBorder: '#272733'
+                        }
+                    }
+                }
+            }
+        };
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { 
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
+            background-color: #000000;
+            color: #ffffff;
+        }
+        .font-mono { font-family: 'JetBrains Mono', monospace; }
+
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #08080a; }
+        ::-webkit-scrollbar-thumb { background: #22222c; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #3b3b4d; }
+
+        .premium-card {
+            background-color: #0f0f13;
+            border: 1px solid #1f1f28;
+            box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.6);
+        }
+        .premium-card:hover {
+            border-color: rgba(59, 130, 246, 0.25);
+        }
+
+        .premium-input {
+            background-color: #14141a !important;
+            border-color: #272733 !important;
+            color: #ffffff !important;
+        }
+        .premium-input:focus {
+            border-color: #3b82f6 !important;
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+        }
+
+        .nav-item {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .nav-item.active {
+            background: linear-gradient(90deg, rgba(59, 130, 246, 0.15) 0%, rgba(59, 130, 246, 0.05) 100%);
+            color: #60a5fa;
+            border-left: 3px solid #3b82f6;
+            font-weight: 600;
+        }
+        .nav-item:not(.active):hover {
+            background-color: #16161e;
+            color: #f4f4f5;
+        }
+
+        @keyframes livePulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.4; transform: scale(1.15); }
+        }
+        .live-dot {
+            animation: livePulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+    </style>
+    <script src="/js/safe-dom.js"></script>
+</head>
+<body class="min-h-screen flex bg-black text-white antialiased overflow-x-hidden">
+
+    
+    <div id="toastContainer" class="fixed top-5 right-5 z-50 flex flex-col space-y-3 pointer-events-none max-w-sm w-full px-4 sm:px-0"></div>
+
+    
+    <div id="sidebarBackdrop" onclick="toggleMobileSidebar()" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-40 hidden lg:hidden transition-opacity duration-300"></div>
+
+    
+    
+    
+    <aside id="adminSidebar" class="fixed inset-y-0 left-0 z-50 w-72 bg-dark-sidebar border-r border-dark-border flex flex-col transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out shadow-2xl">
+        
+        
+        <div class="h-20 px-6 border-b border-dark-border flex items-center justify-between">
+            <div class="flex items-center space-x-3.5">
+                <div class="relative">
+                    <img src="/icons/icon-192x192.png" 
+                         alt="Logo" class="w-10 h-10 rounded-xl object-contain shadow-lg ring-1 ring-white/10">
+                    <span class="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-emerald-500 border-2 border-[#0a0a0e] rounded-full"></span>
+                </div>
+                <div>
+                    <h1 class="font-extrabold text-white text-base tracking-tight leading-none">SRM INSIDER</h1>
+                    <div class="flex items-center space-x-1.5 mt-1">
+                        <span id="roleBadge" class="px-1.5 py-0.5 rounded text-[9px] font-extrabold tracking-wider bg-blue-500/10 text-blue-400 border border-blue-500/20 uppercase">
+                            ADMIN
+                        </span>
+                    </div>
+                </div>
+            </div>
+            
+            <button onclick="toggleMobileSidebar()" class="lg:hidden p-1.5 text-zinc-400 hover:text-white rounded-lg hover:bg-zinc-800/50">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+        </div>
+
+        
+        <nav class="flex-1 px-4 py-6 space-y-1.5 overflow-y-auto">
+            
+            <div class="px-3 pb-2 text-[10px] font-extrabold uppercase tracking-wider text-zinc-500">
+                Main Menu
+            </div>
+
+            
+            <a href="/admin/admin.html" class="nav-item w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium text-zinc-400 transition hover:text-white">
+                <div class="flex items-center space-x-3">
+                    <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
+                    <span>Problems Library</span>
+                </div>
+            </a>
+
+            
+            <a href="/admin/admin-add-problem.html" class="nav-item active w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium transition cursor-pointer">
+                <div class="flex items-center space-x-3">
+                    <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    <span>Add Question</span>
+                </div>
+                <span class="text-[10px] px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20 font-bold">ACTIVE</span>
+            </a>
+
+            
+            <a href="/admin/admin-submissions.html" class="nav-item w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium text-zinc-400 transition hover:text-white">
+                <div class="flex items-center space-x-3">
+                    <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                    <span>Submissions</span>
+                </div>
+                <svg class="w-3.5 h-3.5 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+            </a>
+
+            
+            <a href="/admin/admin-live.html" class="nav-item w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium text-zinc-400 transition hover:text-white">
+                <div class="flex items-center space-x-3">
+                    <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                    <span>Live Students</span>
+                </div>
+                <div class="flex items-center space-x-1.5 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500 live-dot"></span>
+                    <span class="text-[10px] font-bold text-emerald-400 uppercase tracking-wider">Live</span>
+                </div>
+            </a>
+
+            
+            <a href="/admin/admin-blocked.html" class="nav-item w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium text-zinc-400 transition hover:text-white">
+                <div class="flex items-center space-x-3">
+                    <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"></path></svg>
+                    <span>Blocked Students</span>
+                </div>
+            </a>
+
+            
+            <div id="navManageAdminsWrapper" class="hidden pt-4">
+                <div class="px-3 pb-2 text-[10px] font-extrabold uppercase tracking-wider text-purple-400/80 flex items-center justify-between">
+                    <span>Administration</span>
+                    <span class="px-1 rounded bg-purple-500/20 text-purple-300 text-[9px] font-bold">SUPER</span>
+                </div>
+                <a href="/admin/admin-plagiarism.html" class="nav-item w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium text-zinc-400 transition hover:text-white">
+                    <div class="flex items-center space-x-3">
+                        <svg class="w-4 h-4 text-amber-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                        <span>Similarity Report</span>
+                    </div>
+                </a>
+                <a href="/admin/admin-admins.html" class="nav-item w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium text-zinc-400 transition hover:text-white">
+                    <div class="flex items-center space-x-3">
+                        <svg class="w-4 h-4 text-purple-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                        <span>Manage Admins</span>
+                    </div>
+                    <span class="text-[10px] px-1.5 py-0.5 rounded bg-purple-950/40 text-purple-300 border border-purple-800/40 font-bold">Access</span>
+                </a>
+                <a href="/admin/admin-students.html" class="nav-item w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium text-zinc-400 transition hover:text-white mt-1">
+                    <div class="flex items-center space-x-3">
+                        <svg class="w-4 h-4 text-emerald-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                        <span>Invite Students</span>
+                    </div>
+                </a>
+            </div>
+
+        </nav>
+
+        
+        <div class="p-4 border-t border-dark-border bg-[#07070a]">
+            <div class="bg-[#121218] border border-[#20202a] rounded-xl p-3 mb-2 flex items-center justify-between">
+                <div class="flex items-center space-x-2.5 overflow-hidden">
+                    <div id="userAvatar" class="w-8 h-8 rounded-lg bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center text-xs font-black text-white flex-shrink-0 shadow-md">
+                        AD
+                    </div>
+                    <div class="truncate">
+                        <div id="sidebarUserEmail" class="text-xs font-semibold text-zinc-200 truncate">Admin User</div>
+                        <div id="sidebarUserRole" class="text-[10px] text-zinc-400 font-mono">ROLE: ADMIN</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2">
+                
+                <button id="resetPasswordBtn" onclick="openResetPasswordModal()" class="w-full hidden items-center justify-center space-x-1.5 py-2 px-2.5 rounded-lg border border-blue-900/40 bg-blue-950/20 text-blue-400 text-xs font-semibold transition hover:bg-blue-900/40 cursor-pointer">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path></svg>
+                    <span>Password</span>
+                </button>
+
+                
+                <button onclick="logout()" class="w-full col-span-2 col-start-1 flex items-center justify-center space-x-1.5 py-2 px-2.5 rounded-lg border border-red-900/40 bg-red-950/20 text-red-400 text-xs font-semibold transition hover:bg-red-900/40 cursor-pointer">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                    <span>Logout</span>
+                </button>
+            </div>
+        </div>
+
+    </aside>
+
+    
+    
+    
+    <div class="flex-1 lg:pl-72 flex flex-col min-w-0 min-h-screen bg-black">
+        
+        
+        <header class="h-16 px-6 lg:px-8 bg-dark-header/80 backdrop-blur-md border-b border-dark-border flex items-center justify-between sticky top-0 z-30 flex-shrink-0">
+            <div class="flex items-center space-x-3">
+                
+                <button onclick="toggleMobileSidebar()" class="lg:hidden p-2 rounded-lg bg-[#14141a] border border-[#272733] text-zinc-300 hover:text-white focus:outline-none">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+                </button>
+                
+                <div>
+                    <span class="text-xs text-zinc-500 font-medium">Dashboard /</span>
+                    <span class="text-sm font-bold text-white ml-1">Add New Question</span>
+                </div>
+            </div>
+
+            
+            <div class="flex items-center space-x-3">
+                <a href="/admin/admin.html" class="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg border border-[#272733] bg-[#14141a] text-zinc-300 text-xs font-semibold hover:bg-[#1f1f28] transition">
+                    <svg class="w-3.5 h-3.5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
+                    <span>View Problems</span>
+                </a>
+            </div>
+        </header>
+
+        
+        <main class="flex-1 py-8 px-6 lg:px-8 max-w-7xl w-full mx-auto pb-16">
+            <section class="space-y-6">
+                
+                
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gradient-to-r from-[#121218] via-[#0f0f15] to-[#0a0a0f] p-6 rounded-2xl border border-[#1f1f28]">
+                    <div>
+                        <h2 class="text-2xl font-extrabold text-white tracking-tight">Add New Question</h2>
+                        <p class="text-xs text-zinc-400 mt-1">Create individual questions manually or import hundreds at once via CSV.</p>
+                    </div>
+                    
+                    <div class="flex rounded-xl bg-[#0c0c10] border border-[#272733] p-1">
+                        <button id="tabBtnManual" onclick="switchAddSubTab('manual')" class="px-4 py-1.5 rounded-lg text-xs font-bold transition bg-blue-600 text-white shadow">
+                            Manual Entry
+                        </button>
+                        <button id="tabBtnBulk" onclick="switchAddSubTab('bulk')" class="px-4 py-1.5 rounded-lg text-xs font-bold text-zinc-400 hover:text-white transition">
+                            Bulk CSV Upload
+                        </button>
+                    </div>
+                </div>
+
+                
+                <div id="subPanelManual" class="premium-card rounded-2xl p-6 sm:p-8">
+                    <form id="problemForm" class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                        
+                        <div class="md:col-span-2 space-y-1.5">
+                            <label class="block text-xs font-bold uppercase tracking-wider text-zinc-400">Title / Question Text</label>
+                            <input type="text" id="title" class="w-full px-4 py-2.5 rounded-xl text-sm font-medium premium-input transition" required placeholder="Enter the complete question text...">
+                        </div>
+                        
+                        <div class="space-y-1.5">
+                            <label class="block text-xs font-bold uppercase tracking-wider text-zinc-400">Academic Year</label>
+                            <select id="year" class="w-full px-4 py-2.5 rounded-xl text-sm font-semibold premium-input transition cursor-pointer">
+                                <option value="1">Year 1</option>
+                                <option value="2">Year 2</option>
+                                <option value="3">Year 3</option>
+                                <option value="4">Year 4</option>
+                            </select>
+                        </div>
+                        
+                        <div class="space-y-1.5">
+                            <label class="block text-xs font-bold uppercase tracking-wider text-zinc-400">Domain</label>
+                            <select id="domain" class="w-full px-4 py-2.5 rounded-xl text-sm font-semibold premium-input transition cursor-pointer">
+                                <option>Web Dev</option>
+                                <option>AIML</option>
+                                <option>Cloud</option>
+                                <option>App Dev</option>
+                            </select>
+                        </div>
+                        
+                        <div class="md:col-span-2 space-y-1.5">
+                            <label class="block text-xs font-bold uppercase tracking-wider text-zinc-400">Section Type</label>
+                            <select id="section" class="w-full px-4 py-2.5 rounded-xl text-sm font-semibold premium-input transition cursor-pointer">
+                                <option>Aptitude MCQ</option>
+                                <option>Programming MCQ</option>
+                                <option>Academics</option>
+                                <option>Programming Question</option>
+                            </select>
+                        </div>
+                        
+                        
+                        <div id="descContainer" class="md:col-span-2 space-y-1.5 hidden">
+                            <label class="block text-xs font-bold uppercase tracking-wider text-zinc-400">Detailed Description / Statement</label>
+                            <textarea id="description" class="w-full px-4 py-3 rounded-xl text-sm font-medium premium-input transition h-32" placeholder="Enter problem statement, input/output formats, constraints, and test cases..."></textarea>
+                        </div>
+                        
+                        
+                        <div id="mcqContainer" class="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-5 pt-3 border-t border-[#1f1f28]">
+                            <div class="space-y-1.5">
+                                <label class="block text-xs font-bold uppercase tracking-wider text-zinc-400">Option A</label>
+                                <input type="text" id="optionA" class="w-full px-4 py-2.5 rounded-xl text-sm font-medium premium-input transition" placeholder="Value for Option A">
+                            </div>
+                            <div class="space-y-1.5">
+                                <label class="block text-xs font-bold uppercase tracking-wider text-zinc-400">Option B</label>
+                                <input type="text" id="optionB" class="w-full px-4 py-2.5 rounded-xl text-sm font-medium premium-input transition" placeholder="Value for Option B">
+                            </div>
+                            <div class="space-y-1.5">
+                                <label class="block text-xs font-bold uppercase tracking-wider text-zinc-400">Option C</label>
+                                <input type="text" id="optionC" class="w-full px-4 py-2.5 rounded-xl text-sm font-medium premium-input transition" placeholder="Value for Option C">
+                            </div>
+                            <div class="space-y-1.5">
+                                <label class="block text-xs font-bold uppercase tracking-wider text-zinc-400">Option D</label>
+                                <input type="text" id="optionD" class="w-full px-4 py-2.5 rounded-xl text-sm font-medium premium-input transition" placeholder="Value for Option D">
+                            </div>
+                            <div class="md:col-span-2 space-y-1.5 pt-2">
+                                <label class="block text-xs font-bold uppercase tracking-wider text-emerald-400">Correct Option</label>
+                                <select id="correctOption" class="w-full px-4 py-2.5 rounded-xl text-sm font-bold premium-input border-emerald-900/50 focus:border-emerald-500 transition cursor-pointer">
+                                    <option value="A">Option A</option>
+                                    <option value="B">Option B</option>
+                                    <option value="C">Option C</option>
+                                    <option value="D">Option D</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        
+                        <div class="md:col-span-2 space-y-1.5 pt-3 border-t border-[#1f1f28]">
+                            <label class="block text-xs font-bold uppercase tracking-wider text-zinc-400">Optional Diagram / Image Attachment</label>
+                            <div class="relative group cursor-pointer mt-1">
+                                <div class="absolute inset-0 bg-blue-500/5 rounded-xl border-2 border-dashed border-blue-500/20 group-hover:border-blue-500/50 transition pointer-events-none"></div>
+                                <input type="file" id="problemImage" accept="image/*" class="block w-full text-sm text-zinc-400 file:mr-4 file:py-2.5 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-blue-900/30 file:text-blue-400 hover:file:bg-blue-900/50 file:cursor-pointer file:transition cursor-pointer relative z-10 p-2">
+                            </div>
+                        </div>
+
+                        <div class="md:col-span-2 pt-4 flex justify-between items-center">
+                            <a href="/admin/admin.html" class="px-5 py-2.5 rounded-xl border border-[#272733] bg-[#14141a] text-zinc-300 text-xs font-semibold hover:bg-[#1f1f28] transition">
+                                Cancel & Back
+                            </a>
+
+                            <button type="submit" id="saveProblemBtn" class="bg-blue-600 hover:bg-blue-500 active:scale-[0.98] text-white font-bold py-2.5 px-6 rounded-xl shadow-lg shadow-blue-900/25 transition flex items-center space-x-2 text-sm cursor-pointer">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+                                <span>Save Problem</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                
+                <div id="subPanelBulk" class="premium-card rounded-2xl p-6 sm:p-8 hidden space-y-6">
+                    <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 p-5 bg-[#121218] border border-[#1f1f28] rounded-xl">
+                        <div class="flex items-center space-x-3.5">
+                            <div class="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 flex-shrink-0">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-white text-base">Bulk Questions CSV Import</h3>
+                                <p class="text-xs text-zinc-400 mt-0.5">Download the standardized CSV template, populate your questions, and upload.</p>
+                            </div>
+                        </div>
+                        <button onclick="downloadTemplate()" class="flex items-center space-x-2 py-2.5 px-4 rounded-xl border border-blue-900/50 bg-blue-950/30 text-blue-400 font-semibold text-xs hover:bg-blue-900/50 transition cursor-pointer">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                            <span>Download MCQ Template</span>
+                        </button>
+                    </div>
+
+                    <div class="border-2 border-dashed border-[#272733] hover:border-blue-500/40 rounded-2xl p-8 text-center bg-[#0d0d12] transition">
+                        <svg class="w-12 h-12 text-blue-400/60 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                        <h4 class="text-sm font-bold text-white mb-1">Select Questions CSV File</h4>
+                        <p class="text-xs text-zinc-500 max-w-sm mx-auto mb-4">Supports questions formatted with title, year, domain, section, options A-D, and correct option.</p>
+                        
+                        <div class="max-w-md mx-auto">
+                            <input type="file" id="csvFile" accept=".csv" class="block w-full text-xs text-zinc-400 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-blue-900/30 file:text-blue-400 hover:file:bg-blue-900/50 file:cursor-pointer file:transition cursor-pointer bg-[#14141a] border border-[#272733] rounded-xl p-2">
+                        </div>
+
+                        <div class="mt-6 flex justify-center">
+                            <button onclick="uploadCSV()" id="uploadCsvBtn" class="bg-blue-600 hover:bg-blue-500 active:scale-[0.98] text-white font-bold py-2.5 px-6 rounded-xl shadow-lg shadow-blue-900/25 transition flex items-center space-x-2 text-xs cursor-pointer">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                                <span>Import Questions CSV</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+            </section>
+        </main>
+    </div>
+
+    
+    <div id="resetPasswordModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm hidden">
+        <div class="bg-[#0f0f13] border border-[#272733] rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
+            <div class="flex items-center justify-between pb-3 border-b border-[#1f1f28]">
+                <h3 class="text-base font-bold text-white">Reset Your Password</h3>
+                <button onclick="closeResetPasswordModal()" class="text-zinc-400 hover:text-white p-1 cursor-pointer">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+            <form onsubmit="handleResetPassword(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-zinc-400 mb-1.5">New Password</label>
+                    <input type="password" id="newPasswordInput" required minlength="8" placeholder="Minimum 8 characters..." class="w-full px-4 py-2.5 rounded-xl text-sm font-medium premium-input transition">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-zinc-400 mb-1.5">Confirm Password</label>
+                    <input type="password" id="confirmPasswordInput" required minlength="8" placeholder="Confirm your new password..." class="w-full px-4 py-2.5 rounded-xl text-sm font-medium premium-input transition">
+                </div>
+                <div class="flex justify-end space-x-3 pt-2">
+                    <button type="button" onclick="closeResetPasswordModal()" class="px-4 py-2 rounded-xl border border-[#272733] bg-[#14141a] text-zinc-300 text-xs font-semibold hover:bg-[#1f1f28] transition cursor-pointer">Cancel</button>
+                    <button type="submit" id="submitResetPasswordBtn" class="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold transition shadow cursor-pointer">Update Password</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const token = localStorage.getItem('token');
+        const role = localStorage.getItem('role');
+
+        if (!token || (role !== 'ADMIN' && role !== 'SUPER_ADMIN' && role !== 'ROLE_ADMIN' && role !== 'ROLE_SUPER_ADMIN')) {
+            window.location.href = '/adminlogin';
+        }
+
+        const isSuperAdmin = role === 'SUPER_ADMIN' || role === 'ROLE_SUPER_ADMIN';
+
+        const toggleMobileSidebar = () => {
+            const sidebar = document.getElementById('adminSidebar');
+            const backdrop = document.getElementById('sidebarBackdrop');
+            if (!sidebar || !backdrop) return;
+            if (sidebar.classList.contains('-translate-x-full')) {
+                sidebar.classList.remove('-translate-x-full');
+                backdrop.classList.remove('hidden');
+            } else {
+                sidebar.classList.add('-translate-x-full');
+                backdrop.classList.add('hidden');
+            }
+        };
+
+        const showToast = (message, type = 'success') => {
+            const container = document.getElementById('toastContainer');
+            if (!container) return;
+            const toast = document.createElement('div');
+            toast.className = `pointer-events-auto flex items-center space-x-3 p-4 rounded-xl shadow-2xl border transition-all duration-300 transform translate-y-[-12px] opacity-0 ${
+                type === 'error'
+                    ? 'bg-[#1a0a0a] border-red-800/90 text-red-200'
+                    : 'bg-[#0a1a0f] border-emerald-800/90 text-emerald-200'
+            }`;
+            const icon = type === 'error'
+                ? `<div class="w-8 h-8 rounded-lg bg-red-950/80 border border-red-800/70 flex items-center justify-center flex-shrink-0 text-red-400 font-bold text-sm">⚠️</div>`
+                : `<div class="w-8 h-8 rounded-lg bg-emerald-950/80 border border-emerald-800/70 flex items-center justify-center flex-shrink-0 text-emerald-400 font-bold text-sm">✓</div>`;
+
+            toast.innerHTML = `
+                ${icon}
+                <div class="flex-1 text-xs font-semibold leading-relaxed">${message}</div>
+                <button onclick="this.parentElement.remove()" class="text-zinc-400 hover:text-white transition p-1 cursor-pointer">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            `;
+            container.appendChild(toast);
+            requestAnimationFrame(() => {
+                toast.classList.remove('translate-y-[-12px]', 'opacity-0');
+                toast.classList.add('translate-y-0', 'opacity-100');
+            });
+            setTimeout(() => {
+                toast.classList.remove('translate-y-0', 'opacity-100');
+                toast.classList.add('translate-y-[-12px]', 'opacity-0');
+                setTimeout(() => toast.remove(), 350);
+            }, 4500);
+        };
+
+        const switchAddSubTab = (subTab) => {
+            const tabManual = document.getElementById('tabBtnManual');
+            const tabBulk = document.getElementById('tabBtnBulk');
+            const panelManual = document.getElementById('subPanelManual');
+            const panelBulk = document.getElementById('subPanelBulk');
+
+            if (!tabManual || !tabBulk || !panelManual || !panelBulk) return;
+
+            if (subTab === 'manual') {
+                tabManual.className = "px-4 py-1.5 rounded-lg text-xs font-bold transition bg-blue-600 text-white shadow";
+                tabBulk.className = "px-4 py-1.5 rounded-lg text-xs font-bold text-zinc-400 hover:text-white transition";
+                panelManual.classList.remove('hidden');
+                panelBulk.classList.add('hidden');
+            } else {
+                tabBulk.className = "px-4 py-1.5 rounded-lg text-xs font-bold transition bg-blue-600 text-white shadow";
+                tabManual.className = "px-4 py-1.5 rounded-lg text-xs font-bold text-zinc-400 hover:text-white transition";
+                panelBulk.classList.remove('hidden');
+                panelManual.classList.add('hidden');
+            }
+            localStorage.setItem('admin_add_subtab', subTab);
+        };
+
+        // Initialize User Profile in Sidebar
+        document.addEventListener('DOMContentLoaded', () => {
+            const currentRole = localStorage.getItem('role') || 'ADMIN';
+            let userEmail = localStorage.getItem('admin_email');
+            if (!userEmail || userEmail === 'superadmin@srminsider.in') {
+                userEmail = (isSuperAdmin ? 'admin@srminsider.in' : (localStorage.getItem('username') || 'admin@srminsider.in'));
+                localStorage.setItem('admin_email', userEmail);
+            }
+            
+            document.getElementById('sidebarUserEmail').innerText = userEmail;
+            document.getElementById('sidebarUserRole').innerText = `ROLE: ${currentRole}`;
+
+            fetch('/api/admin/me', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            })
+            .then(res => res.ok ? res.json() : null)
+            .then(data => {
+                if (data && data.email) {
+                    localStorage.setItem('admin_email', data.email);
+                    document.getElementById('sidebarUserEmail').innerText = data.email;
+                }
+            })
+            .catch(() => {});
+
+            if (isSuperAdmin) {
+                document.getElementById('roleBadge').innerText = 'SUPER ADMIN';
+                document.getElementById('roleBadge').className = 'px-1.5 py-0.5 rounded text-[9px] font-extrabold tracking-wider bg-purple-500/10 text-purple-400 border border-purple-500/20 uppercase';
+                document.getElementById('userAvatar').className = 'w-8 h-8 rounded-lg bg-gradient-to-tr from-purple-600 to-indigo-600 flex items-center justify-center text-xs font-black text-white flex-shrink-0 shadow-md';
+                document.getElementById('userAvatar').innerText = 'SA';
+                document.getElementById('navManageAdminsWrapper').classList.remove('hidden');
+            } else {
+                document.getElementById('roleBadge').innerText = 'ADMIN';
+                document.getElementById('userAvatar').innerText = 'AD';
+                const resetBtn = document.getElementById('resetPasswordBtn');
+                if (resetBtn) {
+                    resetBtn.classList.remove('hidden');
+                    resetBtn.classList.add('flex');
+                }
+            }
+
+            const savedSubTab = localStorage.getItem('admin_add_subtab') || 'manual';
+            switchAddSubTab(savedSubTab);
+        });
+
+        // Toggle Form fields based on Section
+        document.getElementById('section').addEventListener('change', (e) => {
+            if (e.target.value === 'Programming Question') {
+                document.getElementById('descContainer').classList.remove('hidden');
+                document.getElementById('mcqContainer').classList.add('hidden');
+                document.getElementById('description').required = true;
+            } else {
+                document.getElementById('descContainer').classList.add('hidden');
+                document.getElementById('mcqContainer').classList.remove('hidden');
+                document.getElementById('description').required = false;
+            }
+        });
+
+        // Submit Manual Problem
+        document.getElementById('problemForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const section = document.getElementById('section').value;
+            const submitBtn = document.getElementById('saveProblemBtn');
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span>Saving...</span>';
+
+            let imageBase64 = null;
+            const fileInput = document.getElementById('problemImage');
+            if (fileInput.files.length > 0) {
+                const file = fileInput.files[0];
+                imageBase64 = await new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = () => resolve(reader.result);
+                    reader.onerror = reject;
+                    reader.readAsDataURL(file);
+                });
+            }
+
+            const problem = {
+                title: document.getElementById('title').value,
+                year: parseInt(document.getElementById('year').value),
+                domain: document.getElementById('domain').value,
+                section: section,
+                description: document.getElementById('description').value,
+                optionA: document.getElementById('optionA').value,
+                optionB: document.getElementById('optionB').value,
+                optionC: document.getElementById('optionC').value,
+                optionD: document.getElementById('optionD').value,
+                correctOption: document.getElementById('correctOption').value,
+                type: section === 'Programming Question' ? 'TEXT' : 'MCQ',
+                imageBase64: imageBase64
+            };
+
+            try {
+                const res = await fetch('/api/admin/problems', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}` 
+                    },
+                    body: JSON.stringify(problem)
+                });
+
+                if (res.ok) {
+                    showToast("Problem added successfully!", "success");
+                    document.getElementById('problemForm').reset();
+                    document.getElementById('descContainer').classList.add('hidden');
+                    document.getElementById('mcqContainer').classList.remove('hidden');
+                    setTimeout(() => {
+                        window.location.href = '/admin/admin.html';
+                    }, 1200);
+                } else {
+                    showToast("Failed to add problem.", "error");
+                }
+            } catch (err) {
+                showToast("Connection error while saving.", "error");
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = `
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+                    <span>Save Problem</span>
+                `;
+            }
+        });
+
+        // Download Template
+        const downloadTemplate = async () => {
+            try {
+                const res = await fetch('/api/admin/problems/template', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (res.ok) {
+                    const blob = await res.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = "mcq_problems_template.csv";
+                    document.body.appendChild(a);
+                    a.click();
+                    a.remove();
+                } else {
+                    showToast("Failed to download template.", "error");
+                }
+            } catch (e) {
+                showToast("Connection error while downloading template.", "error");
+            }
+        };
+
+        // Upload Bulk CSV
+        const uploadCSV = async () => {
+            const fileInput = document.getElementById('csvFile');
+            if (fileInput.files.length === 0) return showToast("Please select a CSV file first.", "error");
+            
+            const btn = document.getElementById('uploadCsvBtn');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = `<span class="animate-spin text-lg">↻</span><span>Processing...</span>`;
+            btn.disabled = true;
+
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+
+            try {
+                const res = await fetch('/api/admin/problems/upload', {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` },
+                    body: formData
+                });
+                const result = await res.json();
+                if (res.ok) {
+                    showToast(`Successfully uploaded ${result.count || ''} problems!`, "success");
+                    fileInput.value = '';
+                    setTimeout(() => {
+                        window.location.href = '/admin/admin.html';
+                    }, 1400);
+                } else {
+                    showToast(result.error || "Failed to upload CSV.", "error");
+                    if (Array.isArray(result.rowErrors) && result.rowErrors.length) {
+                        result.rowErrors.forEach((msg, i) => {
+                            setTimeout(() => showToast(msg, "error"), 400 * (i + 1));
+                        });
+                    }
+                }
+            } catch (err) {
+                showToast("Connection error while uploading CSV.", "error");
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        };
+
+        // Reset Password Modal
+        const openResetPasswordModal = () => {
+            document.getElementById('resetPasswordModal').classList.remove('hidden');
+        };
+
+        const closeResetPasswordModal = () => {
+            document.getElementById('resetPasswordModal').classList.add('hidden');
+            document.getElementById('newPasswordInput').value = '';
+            document.getElementById('confirmPasswordInput').value = '';
+        };
+
+        const handleResetPassword = async (e) => {
+            e.preventDefault();
+            const newPassword = document.getElementById('newPasswordInput').value;
+            const confirmPassword = document.getElementById('confirmPasswordInput').value;
+
+            if (newPassword !== confirmPassword) {
+                showToast("Passwords do not match.", "error");
+                return;
+            }
+
+            try {
+                const res = await fetch('/api/admin/reset-password', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ newPassword })
+                });
+
+                if (res.ok) {
+                    showToast("Password updated successfully!", "success");
+                    closeResetPasswordModal();
+                } else {
+                    const data = await res.json();
+                    showToast(data.error || "Failed to update password.", "error");
+                }
+            } catch (err) {
+                showToast("Connection error while updating password.", "error");
+            }
+        };
+
+        const logout = () => {
+            localStorage.clear();
+            window.location.href = '/adminlogin';
+        };
+    </script>
+</body>
+</html>
